@@ -70,7 +70,10 @@ def test_api_contract_and_trace() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["trace_id"]
-    assert client.get(f"/api/agent/traces/{payload['trace_id']}").status_code == 200
+    assert len(payload["answer"]) < 5_000
+    trace = client.get(f"/api/agent/traces/{payload['trace_id']}")
+    assert trace.status_code == 200
+    assert trace.json()["verified_results"]
 
 
 def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:

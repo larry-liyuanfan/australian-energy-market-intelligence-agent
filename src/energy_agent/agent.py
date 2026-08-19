@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Literal
 
-from .schemas import AgentQueryRequest, AgentQueryResponse, Region, ToolCall
+from .schemas import AgentQueryRequest, AgentQueryResponse, Region, ToolCall, ToolResult
 from .tools import ToolRegistry
 
 
@@ -41,6 +41,36 @@ class EnergyAgent:
             calls.append(("detect_price_events", {"region": region.value, "window": window}))
         calls.append(("search_official_evidence", {"query": request.question, "top_k": 5}))
         return calls[: request.max_tool_calls]
+
+    @staticmethod
+    def _summarize(result: ToolResult) -> str:
+        data = result.data
+        if result.tool_name == "optimize_battery_dispatch":
+            return (
+                f"{result.tool_name}: gross_margin_aud={data.get('gross_margin_aud')}, "
+                f"equivalent_full_cycles={data.get('equivalent_full_cycles')}, "
+                f"solver_seconds={data.get('solve_seconds')}, intervals={len(data.get('charge_mw', []))}; "
+                f"{data.get('economic_boundary')}"
+            )
+        if result.tool_name == "forecast_price_risk":
+            point = data.get("point", [])
+            lower = data.get("lower", [])
+            upper = data.get("upper", [])
+            return (
+                f"{result.tool_name}: horizon={len(point)}, point_range={EnergyAgent._range(point)}, "
+                f"interval_range={EnergyAgent._range(lower)}..{EnergyAgent._range(upper)}"
+            )
+        if result.tool_name == "detect_price_events":
+            events = data.get("events", [])
+            return f"{result.tool_name}: events={len(events)}, top={events[:3]}"
+        return f"{result.tool_name}: {data}"
+
+    @staticmethod
+    def _range(values: object) -> str:
+        if not isinstance(values, list) or not values:
+            return "empty"
+        numeric = [float(value) for value in values]
+        return f"[{min(numeric):.2f}, {max(numeric):.2f}]"
 
     def run(self, request: AgentQueryRequest) -> AgentQueryResponse:
         trace_id = str(uuid.uuid4())
@@ -152,11 +182,7 @@ class EnergyAgent:
         status: Literal["completed", "insufficient_evidence"] = (
             "completed" if results and citations else "insufficient_evidence"
         )
-        answer = (
-            "Verified tool outputs: " + "; ".join(f"{r.tool_name}={r.data}" for r in results)
-            if results
-            else "No verified result."
-        )
+        answer = "Verified tool outputs: " + "; ".join(self._summarize(result) for result in results) if results else "No verified result."
         response = AgentQueryResponse(
             trace_id=trace_id,
             status=status,
@@ -168,6 +194,7 @@ class EnergyAgent:
         self.traces[trace_id] = {
             "trace_id": trace_id,
             "states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
+            "verified_results": [result.model_dump(mode="json") for result in results],
             "response": response.model_dump(mode="json"),
         }
         return response
