@@ -62,18 +62,20 @@ def test_registry_rejects_unknown_dsl() -> None:
 
 
 def test_api_contract_and_trace() -> None:
-    client = TestClient(app)
-    tools = client.get("/api/tools")
-    assert tools.status_code == 200
-    assert len(tools.json()["tools"]) == 8
-    response = client.post("/api/agent/query", json={"question": "Explain SA1 battery risk and price spike 2025-01-01"})
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["trace_id"]
-    assert len(payload["answer"]) < 5_000
-    trace = client.get(f"/api/agent/traces/{payload['trace_id']}")
-    assert trace.status_code == 200
-    assert trace.json()["verified_results"]
+    with TestClient(app) as client:
+        tools = client.get("/api/tools")
+        assert tools.status_code == 200
+        assert len(tools.json()["tools"]) == 8
+        response = client.post(
+            "/api/agent/query", json={"question": "Explain SA1 battery risk and price spike 2025-01-01"}
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["trace_id"]
+        assert len(payload["answer"]) < 5_000
+        trace = client.get(f"/api/agent/traces/{payload['trace_id']}")
+        assert trace.status_code == 200
+        assert trace.json()["verified_results"]
 
 
 def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:

@@ -17,10 +17,14 @@ def main() -> None:
     digest = hashlib.sha256(args.data.read_bytes()).hexdigest()
     if digest != manifest["data_sha256"]:
         raise SystemExit("data hash does not match final manifest")
-    if coverage["incomplete_region_days"] or coverage["unexpected_intervals"]:
+    if coverage["status"] != "complete" or coverage["incomplete_region_days"]:
         raise SystemExit("coverage validation is not complete")
     expected_rows = int(manifest["requested_days"]) * 288 * len(manifest["regions"])
-    if int(manifest["rows"]) != expected_rows or int(coverage["rows"]) != expected_rows:
+    if (
+        int(coverage["observed_days"]) != int(manifest["requested_days"])
+        or int(manifest["rows"]) != expected_rows
+        or int(coverage["total_rows"]) != expected_rows
+    ):
         raise SystemExit("row count does not match requested day-region grid")
     manifest["complete_1440_row_days"] = int(manifest["requested_days"])
     manifest["manifest_reconciled_from_coverage"] = args.coverage.name
