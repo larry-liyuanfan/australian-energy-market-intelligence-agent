@@ -8,7 +8,9 @@
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.err
 
 set -euo pipefail
-module load Python/3.11.3-GCCcore-12.3.0
+module purge
+module load GCCcore/11.3.0
+module load Python/3.11.3
 artifact_root=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m
 python scripts/finalize_ingest_manifest.py \
   --manifest "$artifact_root/final_manifest.json" \
