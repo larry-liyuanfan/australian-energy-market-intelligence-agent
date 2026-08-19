@@ -4,8 +4,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=2G
-#SBATCH --time=01:00:00
+#SBATCH --mem=1G
+#SBATCH --time=00:30:00
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
 set -euo pipefail
 cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent

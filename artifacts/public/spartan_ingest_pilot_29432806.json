@@ -1,0 +1,22 @@
+{
+  "status": "verified",
+  "job_id": 29432806,
+  "git_sha": "d2bd465",
+  "date_window": ["2026-08-15", "2026-08-17"],
+  "requested_days": 3,
+  "completed_days": 3,
+  "complete_1440_row_days": 3,
+  "failed_days": 0,
+  "rows": 4320,
+  "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "data_sha256": "07c7e6b706b6a219a937b525b609d25ed1ac9a67ad900cdce45d5ad8a2ae0ee0",
+  "provenance_sha256": "3f96293e29a2edf81ad9cf7ab797bd0a36c7bafb4a70d98c7dae09a9227804d0",
+  "data_bytes": 88076,
+  "pipeline_seconds": 4.299,
+  "job_elapsed_seconds": 8,
+  "max_rss_kb": 40320,
+  "full_year_linear_estimate_seconds": 523.04,
+  "full_year_linear_estimate_bytes": 10715913,
+  "full_year_request": {"memory": "1G", "walltime": "00:30:00"},
+  "scope_boundary": "Resource and schema pilot only; not a forecast, Agent evaluation or economic backtest."
+}
