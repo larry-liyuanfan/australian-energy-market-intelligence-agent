@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -19,16 +20,60 @@ store = load_dispatch_store(Path(data_path), Path(manifest_path)) if data_path a
 evidence_index = HybridEvidenceIndex(load_official_chunks(Path(evidence_path))) if evidence_path else None
 registry = ToolRegistry(store, evidence_index)
 agent = EnergyAgent(registry)
+redis_client = None
+elasticsearch_client = None
+if redis_url := os.getenv("ENERGY_REDIS_URL"):
+    try:
+        from redis import Redis
+
+        redis_client = Redis.from_url(redis_url, decode_responses=True)
+        redis_client.ping()
+    except Exception:
+        redis_client = None
+if elasticsearch_url := os.getenv("ENERGY_ELASTICSEARCH_URL"):
+    try:
+        from elasticsearch import Elasticsearch
+
+        elasticsearch_client = Elasticsearch(elasticsearch_url)
+        elasticsearch_client.info()
+    except Exception:
+        elasticsearch_client = None
 app = FastAPI(title="Australian Energy Market Intelligence Agent", version="0.1.0")
+
+
+@app.get("/healthz")
+def health() -> dict[str, object]:
+    return {
+        "status": "ok",
+        "data_version": store.data_version,
+        "rows": len(store.rows),
+        "evidence_chunks": len(evidence_index.documents) if evidence_index else 0,
+        "redis": "connected" if redis_client else "disabled_or_unavailable",
+        "elasticsearch": "connected" if elasticsearch_client else "disabled_or_unavailable",
+        "model_provider": "deterministic",
+    }
 
 
 @app.post("/api/agent/query", response_model=AgentQueryResponse)
 def query(request: AgentQueryRequest) -> AgentQueryResponse:
-    return agent.run(request)
+    response = agent.run(request)
+    if redis_client:
+        redis_client.setex(
+            f"energy:trace:{response.trace_id}",
+            86400,
+            json.dumps(agent.traces[response.trace_id]),
+        )
+    return response
 
 
 @app.get("/api/agent/traces/{trace_id}")
 def trace(trace_id: str) -> dict[str, object]:
+    if trace_id not in agent.traces and redis_client:
+        cached = redis_client.get(f"energy:trace:{trace_id}")
+        if cached:
+            decoded = json.loads(cached)
+            if isinstance(decoded, dict):
+                return decoded
     if trace_id not in agent.traces:
         raise HTTPException(404, "trace not found")
     return agent.traces[trace_id]

@@ -135,6 +135,7 @@ def main() -> None:
     final_manifest = {
         **base_manifest,
         "status": "complete",
+        "complete_1440_row_days": base_manifest["requested_days"],
         "rows": retained + len(replacement),
         "standard_rows": retained + len(replacement),
         "intervention_rows": 0,

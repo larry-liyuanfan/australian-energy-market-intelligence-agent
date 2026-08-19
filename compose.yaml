@@ -1,0 +1,71 @@
+services:
+  energy-agent:
+    build: .
+    restart: unless-stopped
+    mem_limit: 1280m
+    cpus: 1.0
+    environment:
+      ENERGY_DATA_PATH: /data/dispatch_features_repaired.csv.gz
+      ENERGY_DATA_MANIFEST: /data/final_manifest.json
+      ENERGY_EVIDENCE_PATH: /data/evidence_documents.jsonl
+      ENERGY_REDIS_URL: redis://redis:6379/0
+      ENERGY_ELASTICSEARCH_URL: http://elasticsearch:9200
+    volumes:
+      - ./deploy-data:/data:ro
+    ports:
+      - "127.0.0.1:8091:8080"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=5)"]
+      interval: 15s
+      timeout: 6s
+      retries: 10
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.0
+    restart: unless-stopped
+    mem_limit: 1024m
+    cpus: 0.75
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - energy-es:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9200/_cluster/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - energy-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=3d"]
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - energy-prometheus:/prometheus
+    ports:
+      - "127.0.0.1:9093:9090"
+
+volumes:
+  energy-es:
+  energy-redis:
+  energy-prometheus:
