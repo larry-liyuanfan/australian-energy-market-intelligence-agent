@@ -101,9 +101,12 @@ class EnergyAgent:
                     )
         for name, arguments in failed:
             started = time.perf_counter()
+            # A transient timeout needs a longer bounded recovery window; retrying
+            # with the identical deadline deterministically reproduces the fault.
+            retry_timeout = min(30.0, max(0.25, self.timeout_seconds * 10))
             try:
                 with ThreadPoolExecutor(max_workers=1) as pool:
-                    result = pool.submit(self.registry.execute, name, arguments).result(timeout=self.timeout_seconds)
+                    result = pool.submit(self.registry.execute, name, arguments).result(timeout=retry_timeout)
                 if result.data or result.evidence:
                     results.append(result)
                     records.append(

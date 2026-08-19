@@ -91,11 +91,11 @@ def main() -> None:
     tables: dict[str, dict[tuple[str, str], dict[str, str]]] = {}
     provenance = []
     for table, url in SOURCES.items():
-        payload, source = download(url)
+        payload, source_metadata = download(url)
         tables[table] = parse_monthly(payload, table, args.day)
-        source["table"] = table
-        source["selected_rows"] = len(tables[table])
-        provenance.append(source)
+        source_metadata["table"] = table
+        source_metadata["selected_rows"] = len(tables[table])
+        provenance.append(source_metadata)
     replacement = tables["PRICE"]
     for key, values in tables["REGIONSUM"].items():
         replacement.setdefault(key, values).update(
@@ -106,10 +106,10 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     retained = 0
     with (
-        gzip.open(args.input, "rt", encoding="utf-8", newline="") as source,
+        gzip.open(args.input, "rt", encoding="utf-8", newline="") as source_handle,
         gzip.open(args.output, "wt", encoding="utf-8", newline="") as target,
     ):
-        reader = csv.DictReader(source)
+        reader = csv.DictReader(source_handle)
         writer = csv.DictWriter(target, fieldnames=FIELDS)
         writer.writeheader()
         for row in reader:

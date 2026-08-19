@@ -6,6 +6,7 @@ import io
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 from urllib.request import Request, urlopen
 
 from pypdf import PdfReader
@@ -61,7 +62,7 @@ def main() -> None:
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     documents: list[OfficialChunk] = []
-    provenance = []
+    provenance: list[dict[str, Any]] = []
     for source_id, title, published_at, url in SOURCES:
         request = Request(url, headers={"User-Agent": "energy-agent-research/0.1"})
         with urlopen(request, timeout=120) as response:  # fixed official origins
@@ -71,10 +72,17 @@ def main() -> None:
         reader = PdfReader(io.BytesIO(payload))
         text = "\n".join(page.extract_text() or "" for page in reader.pages)
         source_chunks = chunks(text)
-        for index, chunk in enumerate(source_chunks):
+        for chunk_index, chunk in enumerate(source_chunks):
             documents.append(
                 OfficialChunk(
-                    f"{source_id}-{index:04d}", source_id, title, chunk, url, published_at, retrieved_at, digest
+                    f"{source_id}-{chunk_index:04d}",
+                    source_id,
+                    title,
+                    chunk,
+                    url,
+                    published_at,
+                    retrieved_at,
+                    digest,
                 )
             )
         provenance.append(
@@ -95,15 +103,15 @@ def main() -> None:
     docs_path.write_text("".join(json.dumps(doc.__dict__) + "\n" for doc in documents), encoding="utf-8")
     provenance_path = args.output / "source_provenance.jsonl"
     provenance_path.write_text("".join(json.dumps(row) + "\n" for row in provenance), encoding="utf-8")
-    index = HybridEvidenceIndex(documents)
+    evidence_index = HybridEvidenceIndex(documents)
     smoke_queries = {
         "21 22 June 2026 cold still transmission constraints restricted imports South Australia": "aemo-qed-q2-2026",
         "significant prices Tasmania January 2026": "aer-significant-q1-2026",
         "battery price setting dispatch intervals": "aemo-qed-q2-2026",
     }
-    outcomes = []
+    outcomes: list[dict[str, Any]] = []
     for query, expected in smoke_queries.items():
-        hits = index.search(query, top_k=5)
+        hits = evidence_index.search(query, top_k=5)
         outcomes.append(
             {
                 "query": query,
@@ -119,7 +127,7 @@ def main() -> None:
         "documents_sha256": hashlib.sha256(docs_path.read_bytes()).hexdigest(),
         "provenance_sha256": hashlib.sha256(provenance_path.read_bytes()).hexdigest(),
         "retrieval": "BM25 + TF-IDF/TruncatedSVD dense + RRF + deterministic rerank",
-        "smoke_mrr": sum(row["reciprocal_rank"] for row in outcomes) / len(outcomes),
+        "smoke_mrr": sum(float(row["reciprocal_rank"]) for row in outcomes) / len(outcomes),
         "smoke_queries": outcomes,
         "scope_boundary": "Smoke queries validate plumbing only; not the 100-task Agent evaluation.",
     }

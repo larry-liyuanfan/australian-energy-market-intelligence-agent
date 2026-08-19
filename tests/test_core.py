@@ -2,12 +2,27 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from energy_agent.agent import EnergyAgent
 from energy_agent.api import app
 from energy_agent.battery import optimize_dispatch
 from energy_agent.forecast import seasonal_conformal
 from energy_agent.market import fixture_store, robust_events
-from energy_agent.schemas import TOOL_MODELS, BatterySpec
+from energy_agent.schemas import TOOL_MODELS, AgentQueryRequest, BatterySpec, ToolResult
 from energy_agent.tools import ToolRegistry
+
+
+class TransientSlowRegistry(ToolRegistry):
+    def __init__(self) -> None:
+        super().__init__(fixture_store())
+        self.slow_once = True
+
+    def execute(self, name: str, arguments: dict[str, object]) -> ToolResult:
+        import time
+
+        if self.slow_once:
+            self.slow_once = False
+            time.sleep(0.08)
+        return super().execute(name, arguments)
 
 
 def test_eight_strict_typed_tools() -> None:
@@ -56,3 +71,11 @@ def test_api_contract_and_trace() -> None:
     payload = response.json()
     assert payload["trace_id"]
     assert client.get(f"/api/agent/traces/{payload['trace_id']}").status_code == 200
+
+
+def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
+    response = EnergyAgent(TransientSlowRegistry(), timeout_seconds=0.01).run(
+        AgentQueryRequest(question="Detect SA1 price events 2025-01-01")
+    )
+    assert response.status == "completed"
+    assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
