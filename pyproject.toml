@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "australian-energy-market-intelligence-agent"
+version = "0.1.0"
+description = "Evidence-grounded NEM price-risk and battery dispatch agent"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["fastapi>=0.115,<1", "pydantic>=2.10,<3", "numpy>=2,<3", "scipy>=1.14,<2", "uvicorn>=0.34,<1"]
+
+[project.optional-dependencies]
+ml = ["lightgbm>=4.5,<5", "scikit-learn>=1.6,<2"]
+search = ["elasticsearch>=8.15,<9"]
+redis = ["redis>=5.2,<7"]
+test = ["httpx>=0.28,<1", "pytest>=8.3,<10", "ruff>=0.9,<1", "mypy>=1.14,<2", "pip-audit>=2.7,<3"]
+
+[project.scripts]
+energy-agent = "energy_agent.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/energy_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+ignore = ["BLE001"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+ignore_missing_imports = true

@@ -1,0 +1,15 @@
+{
+  "status": "verified-real-ingest-preflight",
+  "market_time_zone": "Australia/Brisbane (UTC+10; NEM market time)",
+  "source_url": "https://nemweb.com.au/Reports/Archive/DispatchIS_Reports/PUBLIC_DISPATCHIS_20260817.zip",
+  "retrieved_at_utc": "2026-08-19T14:30:25.705495+00:00",
+  "sha256": "c66316c537e69d818785788cb7e12c4e7d13b07d72bbb26b744bb61ecee86160",
+  "bytes": 5742617,
+  "parsed_price_rows": 1440,
+  "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "first_interval": "2026-08-17T00:05:00+10:00",
+  "last_interval": "2026-08-18T00:00:00+10:00",
+  "intervention_rows": 0,
+  "scope_boundary": "One complete dispatch day; validates official download and PRICE parsing only. It is not a 12-month forecast, retrieval, Agent evaluation or BESS backtest result.",
+  "licence_boundary": "Source remains subject to AEMO terms; raw archive is excluded from this repository."
+}

@@ -1,0 +1,58 @@
+import pytest
+from fastapi.testclient import TestClient
+from pydantic import ValidationError
+
+from energy_agent.api import app
+from energy_agent.battery import optimize_dispatch
+from energy_agent.forecast import seasonal_conformal
+from energy_agent.market import fixture_store, robust_events
+from energy_agent.schemas import TOOL_MODELS, BatterySpec
+from energy_agent.tools import ToolRegistry
+
+
+def test_eight_strict_typed_tools() -> None:
+    assert len(TOOL_MODELS) == 8
+    with pytest.raises(ValidationError):
+        TOOL_MODELS["explain_data_coverage"].model_validate({"sql": "drop table market"})
+
+
+def test_battery_golden_arbitrage_and_constraints() -> None:
+    spec = BatterySpec()
+    result = optimize_dispatch([-100.0] * 12 + [1000.0] * 12, spec)
+    assert result.gross_margin_aud > 0
+    assert min(result.soc_mwh) >= 0.2 - 1e-6
+    assert max(result.soc_mwh) <= 1.8 + 1e-6
+    assert result.soc_mwh[0] == pytest.approx(1.0)
+    assert result.soc_mwh[-1] == pytest.approx(1.0)
+    assert all(not (c > 1e-7 and d > 1e-7) for c, d in zip(result.charge_mw, result.discharge_mw, strict=True))
+
+
+def test_forecast_intervals_are_ordered() -> None:
+    forecast = seasonal_conformal([float(i % 50) for i in range(400)], 12)
+    assert len(forecast.point) == 12
+    assert all(lo <= point <= hi for lo, point, hi in zip(forecast.lower, forecast.point, forecast.upper, strict=True))
+
+
+def test_anomaly_detection() -> None:
+    store = fixture_store()
+    rows = [row for row in store.rows if row.region.value == "SA1"]
+    events = robust_events(rows, 5000, 5)
+    assert any(float(event["rrp"]) >= 6000 for event in events)
+
+
+def test_registry_rejects_unknown_dsl() -> None:
+    registry = ToolRegistry(fixture_store())
+    with pytest.raises(ValueError):
+        registry.validate("raw_sql", {"sql": "select *"})
+
+
+def test_api_contract_and_trace() -> None:
+    client = TestClient(app)
+    tools = client.get("/api/tools")
+    assert tools.status_code == 200
+    assert len(tools.json()["tools"]) == 8
+    response = client.post("/api/agent/query", json={"question": "Explain SA1 battery risk and price spike 2025-01-01"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["trace_id"]
+    assert client.get(f"/api/agent/traces/{payload['trace_id']}").status_code == 200
