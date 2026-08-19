@@ -128,8 +128,10 @@ def run(start: date, end: date, output: Path, max_failures: int) -> dict[str, An
                 parsed = parse(payload, day)
                 writer.writerows(parsed)
                 source["parsed_rows"] = len(parsed)
+                source["standard_rows"] = sum(row["intervention"] == "0" for row in parsed)
+                source["intervention_rows"] = sum(row["intervention"] != "0" for row in parsed)
                 source["expected_rows"] = 1440
-                source["complete"] = len(parsed) == 1440
+                source["complete"] = source["standard_rows"] == 1440
                 provenance.append(source)
                 row_count += len(parsed)
                 print(json.dumps({"day": day.isoformat(), "rows": len(parsed), "total_rows": row_count}), flush=True)
@@ -143,7 +145,9 @@ def run(start: date, end: date, output: Path, max_failures: int) -> dict[str, An
     errors_path.write_text("".join(json.dumps(row) + "\n" for row in failures), encoding="utf-8")
     requested_days = len(days(start, end))
     manifest = {
-        "status": "complete" if not failures and len(provenance) == requested_days else "incomplete",
+        "status": "complete"
+        if not failures and len(provenance) == requested_days and all(bool(row["complete"]) for row in provenance)
+        else "incomplete",
         "created_at": datetime.now(UTC).isoformat(),
         "start": start.isoformat(),
         "end": end.isoformat(),
@@ -152,6 +156,8 @@ def run(start: date, end: date, output: Path, max_failures: int) -> dict[str, An
         "complete_1440_row_days": sum(bool(row["complete"]) for row in provenance),
         "failed_days": len(failures),
         "rows": row_count,
+        "standard_rows": sum(int(row["standard_rows"]) for row in provenance),
+        "intervention_rows": sum(int(row["intervention_rows"]) for row in provenance),
         "regions": sorted(REGIONS),
         "fields": list(FIELDS),
         "data_sha256": hashlib.sha256(data_path.read_bytes()).hexdigest(),

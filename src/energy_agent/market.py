@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import gzip
 import hashlib
 import io
 import json
@@ -83,6 +84,39 @@ def fixture_store() -> MarketStore:
         )
     ]
     return MarketStore(rows, evidence, "synthetic-fixture-v1")
+
+
+def load_dispatch_store(data_path: Path, manifest_path: Path) -> MarketStore:
+    manifest_bytes = manifest_path.read_bytes()
+    manifest = json.loads(manifest_bytes)
+    rows: list[MarketRow] = []
+    with gzip.open(data_path, "rt", encoding="utf-8", newline="") as handle:
+        for raw in csv.DictReader(handle):
+            rows.append(
+                MarketRow(
+                    interval=datetime.strptime(raw["interval"], "%Y/%m/%d %H:%M:%S").replace(
+                        tzinfo=timezone(timedelta(hours=10))
+                    ),
+                    region=Region(raw["region"]),
+                    rrp=float(raw["rrp"]),
+                    demand_mw=float(raw["total_demand_mw"] or 0),
+                    available_mw=float(raw["available_generation_mw"] or 0),
+                    net_interchange_mw=float(raw["net_interchange_mw"] or 0),
+                    intervention=raw["intervention"] != "0",
+                )
+            )
+    evidence = [
+        Evidence(
+            evidence_id="aemo-dispatch-12m",
+            title="AEMO NEMWeb DispatchIS structured market data",
+            url="https://nemweb.com.au/Reports/Archive/DispatchIS_Reports/",
+            retrieved_at=datetime.fromisoformat(manifest["created_at"]),
+            sha256=manifest["data_sha256"],
+            snippet=f"{manifest['rows']} rows from {manifest['start']} through {manifest['end']}; five NEM regions.",
+            evidence_type="numeric",
+        )
+    ]
+    return MarketStore(rows, evidence, f"aemo-dispatch-{manifest['data_sha256'][:12]}")
 
 
 def download_dispatch_day(day: str, output: Path) -> dict[str, object]:

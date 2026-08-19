@@ -5,14 +5,16 @@ from datetime import timedelta
 from typing import Any
 
 from .battery import optimize_dispatch
+from .evidence import HybridEvidenceIndex
 from .forecast import seasonal_conformal
 from .market import MarketStore, robust_events
-from .schemas import TOOL_MODELS, StrictModel, ToolResult
+from .schemas import TOOL_MODELS, Evidence, StrictModel, ToolResult
 
 
 class ToolRegistry:
-    def __init__(self, store: MarketStore) -> None:
+    def __init__(self, store: MarketStore, evidence_index: HybridEvidenceIndex | None = None) -> None:
         self.store = store
+        self.evidence_index = evidence_index
 
     def validate(self, name: str, arguments: dict[str, object]) -> StrictModel:
         if name not in TOOL_MODELS:
@@ -57,6 +59,27 @@ class ToolRegistry:
             }
             return ToolResult(tool_name=name, data=data, evidence=self.store.evidence)
         if name == "search_official_evidence":
+            if self.evidence_index is not None:
+                hits = self.evidence_index.search(args.query, args.top_k)
+                evidence = [
+                    Evidence(
+                        evidence_id=hit["chunk_id"],
+                        title=hit["title"],
+                        url=hit["url"],
+                        published_at=hit["published_at"],
+                        retrieved_at=hit["retrieved_at"],
+                        sha256=hit["sha256"],
+                        snippet=hit["text"][:500],
+                        evidence_type="explanatory",
+                        score=hit["score"],
+                    )
+                    for hit in hits
+                ]
+                return ToolResult(
+                    tool_name=name,
+                    data={"retrieval": "BM25+dense+RRF+rerank", "hits": len(evidence)},
+                    evidence=evidence,
+                )
             query = args.query.lower()
             ranked = sorted(
                 self.store.evidence, key=lambda ev: (query in (ev.title + ev.snippet).lower(), ev.score), reverse=True

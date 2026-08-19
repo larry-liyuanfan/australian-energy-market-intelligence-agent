@@ -4,7 +4,7 @@ import re
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Literal
 
 from .schemas import AgentQueryRequest, AgentQueryResponse, Region, ToolCall
@@ -26,8 +26,9 @@ class EnergyAgent:
         start = end - timedelta(days=2)
         dates = re.findall(r"20\d\d-\d\d-\d\d", text)
         if dates:
-            start = datetime.fromisoformat(dates[0]).replace(tzinfo=UTC)
-            end = datetime.fromisoformat(dates[-1]).replace(tzinfo=UTC) + timedelta(days=1)
+            nem_time = timezone(timedelta(hours=10))
+            start = datetime.fromisoformat(dates[0]).replace(tzinfo=nem_time)
+            end = datetime.fromisoformat(dates[-1]).replace(tzinfo=nem_time) + timedelta(days=1)
         window = {"start": start.isoformat(), "end": end.isoformat()}
         calls: list[tuple[str, dict[str, object]]] = []
         if "coverage" in text or "覆盖" in text:
@@ -46,20 +47,83 @@ class EnergyAgent:
         records: list[ToolCall] = []
         results = []
         seen: set[str] = set()
+        calls: list[tuple[str, dict[str, object]]] = []
         for name, arguments in self._plan(request):
             signature = f"{name}:{arguments}"
             if signature in seen:
                 records.append(ToolCall(name=name, arguments=arguments, status="skipped"))
                 continue
             seen.add(signature)
+            calls.append((name, arguments))
+        failed: list[tuple[str, dict[str, object]]] = []
+        with ThreadPoolExecutor(max_workers=min(4, len(calls) or 1)) as pool:
+            pending = [
+                (name, arguments, time.perf_counter(), pool.submit(self.registry.execute, name, arguments))
+                for name, arguments in calls
+            ]
+            for name, arguments, started, future in pending:
+                try:
+                    result = future.result(timeout=self.timeout_seconds)
+                    if result.data or result.evidence:
+                        results.append(result)
+                        records.append(
+                            ToolCall(name=name, arguments=arguments, duration_ms=(time.perf_counter() - started) * 1000)
+                        )
+                    else:
+                        failed.append((name, arguments))
+                        records.append(
+                            ToolCall(
+                                name=name,
+                                arguments=arguments,
+                                status="error",
+                                duration_ms=(time.perf_counter() - started) * 1000,
+                            )
+                        )
+                except TimeoutError:
+                    failed.append((name, arguments))
+                    records.append(
+                        ToolCall(
+                            name=name,
+                            arguments=arguments,
+                            status="timeout",
+                            duration_ms=(time.perf_counter() - started) * 1000,
+                        )
+                    )
+                except Exception:
+                    failed.append((name, arguments))
+                    records.append(
+                        ToolCall(
+                            name=name,
+                            arguments=arguments,
+                            status="error",
+                            duration_ms=(time.perf_counter() - started) * 1000,
+                        )
+                    )
+        for name, arguments in failed:
             started = time.perf_counter()
             try:
                 with ThreadPoolExecutor(max_workers=1) as pool:
                     result = pool.submit(self.registry.execute, name, arguments).result(timeout=self.timeout_seconds)
-                results.append(result)
-                records.append(
-                    ToolCall(name=name, arguments=arguments, duration_ms=(time.perf_counter() - started) * 1000)
-                )
+                if result.data or result.evidence:
+                    results.append(result)
+                    records.append(
+                        ToolCall(
+                            name=name,
+                            arguments=arguments,
+                            duration_ms=(time.perf_counter() - started) * 1000,
+                            recovered=True,
+                        )
+                    )
+                else:
+                    records.append(
+                        ToolCall(
+                            name=name,
+                            arguments=arguments,
+                            status="error",
+                            duration_ms=(time.perf_counter() - started) * 1000,
+                            recovered=True,
+                        )
+                    )
             except TimeoutError:
                 records.append(
                     ToolCall(
@@ -67,6 +131,7 @@ class EnergyAgent:
                         arguments=arguments,
                         status="timeout",
                         duration_ms=(time.perf_counter() - started) * 1000,
+                        recovered=True,
                     )
                 )
             except Exception:
@@ -76,6 +141,7 @@ class EnergyAgent:
                         arguments=arguments,
                         status="error",
                         duration_ms=(time.perf_counter() - started) * 1000,
+                        recovered=True,
                     )
                 )
         citations = [ev for result in results for ev in result.evidence]
