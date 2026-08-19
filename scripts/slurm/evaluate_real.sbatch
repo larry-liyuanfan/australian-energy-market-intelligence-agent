@@ -17,5 +17,5 @@ module load Python/3.11.3
 python -m venv "${VENV}"
 "${VENV}/bin/python" -m pip install -e '.[ml]'
 /usr/bin/time -v "${VENV}/bin/python" scripts/evaluate_real_market.py \
-  --input /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features.csv.gz \
+  --input /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz \
   --output /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval
