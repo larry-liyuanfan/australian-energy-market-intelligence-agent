@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=energy-preflight
+#SBATCH --partition=sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
@@ -17,4 +18,4 @@ python -m venv "${ENERGY_VENV}"
 "${ENERGY_VENV}/bin/python" -m pip install -e '.[test]'
 /usr/bin/time -v "${ENERGY_VENV}/bin/python" -m pytest -q
 "${ENERGY_VENV}/bin/ruff" check .
-"${ENERGY_VENV}/bin/mypy" src
+"${ENERGY_VENV}/bin/mypy" src scripts
