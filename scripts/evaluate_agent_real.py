@@ -138,6 +138,9 @@ def main() -> None:
                 validity = all(registry.validate(call.name, call.arguments) is not None for call in calls)
                 recovered = any(call.recovered and call.status == "ok" for call in calls)
             observed = {call.name for call in calls if call.status == "ok"}
+            expected_observed = len(set(task.expected_tools) & observed) / len(task.expected_tools)
+            attempted = [call for call in calls if call.status != "skipped"]
+            successful_attempts = sum(call.status == "ok" for call in attempted)
             success = status == "completed" and all(name in observed for name in task.expected_tools) and citations > 0
             rows.append(
                 {
@@ -150,6 +153,8 @@ def main() -> None:
                     "schema_valid": validity,
                     "citations": citations,
                     "recovered": recovered,
+                    "logical_tool_success": expected_observed,
+                    "attempt_success": successful_attempts / len(attempted) if attempted else 0.0,
                     "task_success": success,
                     "latency_ms": (time.perf_counter() - started) * 1000,
                 }
@@ -165,6 +170,8 @@ def main() -> None:
                 "task_success": statistics.fmean(row["task_success"] for row in selected),
                 "schema_validity": statistics.fmean(row["schema_valid"] for row in selected),
                 "citation_completeness": statistics.fmean(row["citations"] > 0 for row in selected),
+                "logical_tool_success": statistics.fmean(row["logical_tool_success"] for row in selected),
+                "attempt_success": statistics.fmean(row["attempt_success"] for row in selected),
                 "failure_recovery": statistics.fmean(row["recovered"] for row in selected)
                 if split == "fault_fixture"
                 else None,
