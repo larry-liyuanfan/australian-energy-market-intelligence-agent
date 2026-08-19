@@ -8,6 +8,7 @@
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.err
 
 set -euo pipefail
+cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
 module purge
 module load GCCcore/11.3.0
 module load Python/3.11.3
