@@ -129,7 +129,23 @@ def main() -> None:
         "sources": provenance,
         "boundary": "Missing official daily intervals repaired only from official AEMO monthly MMSDM archive; no interpolation or synthetic fill.",
     }
-    (args.output.parent / "repair_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    repair_path = args.output.parent / "repair_manifest.json"
+    repair_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    base_manifest = json.loads((args.input.parent / "run_manifest.json").read_text(encoding="utf-8"))
+    final_manifest = {
+        **base_manifest,
+        "status": "complete",
+        "rows": retained + len(replacement),
+        "standard_rows": retained + len(replacement),
+        "intervention_rows": 0,
+        "data_bytes": args.output.stat().st_size,
+        "data_sha256": manifest["output_sha256"],
+        "original_data_sha256": manifest["input_sha256"],
+        "repair_manifest_sha256": hashlib.sha256(repair_path.read_bytes()).hexdigest(),
+        "repair_day": args.day,
+        "repair_source": "official AEMO monthly MMSDM archive",
+    }
+    (args.output.parent / "final_manifest.json").write_text(json.dumps(final_manifest, indent=2), encoding="utf-8")
     print(json.dumps(manifest, indent=2))
 
 

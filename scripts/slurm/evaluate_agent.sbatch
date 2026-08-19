@@ -18,6 +18,6 @@ python -m venv "${VENV}"
 "${VENV}/bin/python" -m pip install -e '.[search]'
 /usr/bin/time -v "${VENV}/bin/python" scripts/evaluate_agent_real.py \
   --data /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz \
-  --data-manifest /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/run_manifest.json \
+  --data-manifest /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/final_manifest.json \
   --evidence /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/evidence-index/evidence_documents.jsonl \
   --output /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/agent-eval
