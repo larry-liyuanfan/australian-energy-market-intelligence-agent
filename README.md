@@ -2,7 +2,7 @@
 
 An evidence-first Agentic AI system for the Australian National Electricity Market (NEM): price-event detection, official-evidence retrieval, price-risk forecasting, constrained battery dispatch and auditable answers.
 
-> **Current status (2026-08-20): engineering preflight.** The typed agent, API, deterministic planner, conformal seasonal baseline, constrained BESS MILP and synthetic fault fixtures are implemented and tested. A one-day official AEMO NEMWeb ingest is used only as a provenance/parser preflight. No 12-month real-market forecast, retrieval, Agent-evaluation, dispatch-backtest or cloud-deployment claim is made yet.
+> **Current status (2026-08-20): engineering preflight.** The typed agent, API, deterministic planner, conformal seasonal baseline, constrained BESS MILP and synthetic fault fixtures are implemented and tested locally and by Spartan job `29432568`. A one-day official AEMO NEMWeb ingest is used only as a provenance/parser preflight. No 12-month real-market forecast, retrieval, Agent-evaluation, dispatch-backtest or cloud-deployment claim is made yet.
 
 ## System
 
