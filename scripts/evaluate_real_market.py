@@ -141,6 +141,7 @@ def bootstrap_mean(values: list[float], seed: int = 20260820, samples: int = 100
 def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
     from lightgbm import LGBMRegressor
 
+    region_started = time.perf_counter()
     x, y, times = features(rows)
     n = len(y)
     train_end = int(n * 0.70)
@@ -242,26 +243,29 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "interval": {
             "fixed_conformal_90_ablation": interval_metrics(y_test, fixed_conformal_lower, fixed_conformal_upper),
             "rolling_conformal_90": interval_metrics(y_test, np.asarray(rolling_lower), np.asarray(rolling_upper)),
-            "fixed_quantile_conformal_80_ablation": interval_metrics(
+            "fixed_quantile_conformal_90_ablation": interval_metrics(
                 y_test, fixed_quantile_lower, fixed_quantile_upper
             ),
-            "rolling_quantile_conformal_80": interval_metrics(
+            "rolling_quantile_conformal_90": interval_metrics(
                 y_test, np.asarray(rolling_q_lower), np.asarray(rolling_q_upper)
             ),
         },
         "anomaly_stability": {"robust_z_counts": anomaly_counts, "rrp_ge_5000": int(np.sum(prices_all >= 5000))},
         "bess": {
             "test_days": len(daily),
+            "no_storage_margin_aud": 0.0,
             "gross_spot_margin_aud": forecast_total,
             "aud_per_mw_year": forecast_total * annualizer / spec.power_mw,
             "equivalent_full_cycles": sum(float(row["forecast_cycles"]) for row in daily),
             "rule_margin_aud": rule_total,
             "relative_rule_lift": (forecast_total - rule_total) / abs(rule_total) if rule_total else None,
             "oracle_margin_aud": oracle_total,
+            "capture_rate": forecast_total / oracle_total if oracle_total else None,
             "oracle_regret_aud": oracle_total - forecast_total,
             "daily_forecast_margin_mean_95_interval": bootstrap_mean(forecast_margins),
             "economic_boundary": "historical spot-market gross-margin proxy; excludes CAPEX, degradation, network fees, FCAS and investment returns",
         },
+        "calculation_seconds": time.perf_counter() - region_started,
     }
 
 
