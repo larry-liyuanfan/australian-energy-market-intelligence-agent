@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
@@ -7,6 +9,7 @@ from energy_agent.api import app
 from energy_agent.battery import optimize_dispatch
 from energy_agent.forecast import seasonal_conformal
 from energy_agent.market import fixture_store, robust_events
+from energy_agent.providers import ModelStudioPlanner
 from energy_agent.schemas import TOOL_MODELS, AgentQueryRequest, BatterySpec, ToolResult
 from energy_agent.tools import ToolRegistry
 
@@ -84,3 +87,29 @@ def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
     )
     assert response.status == "completed"
     assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
+
+
+def test_model_studio_adapter_accepts_only_registered_typed_calls() -> None:
+    response = {
+        "choices": [
+            {
+                "message": {
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "explain_data_coverage",
+                                "arguments": json.dumps({"region": "SA1"}),
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+    provider = ModelStudioPlanner(
+        "https://workspace.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+        "test-only-not-a-secret",
+        transport=lambda _request, _timeout: json.dumps(response).encode(),
+    )
+    calls = provider.plan("Explain SA1 data coverage", ToolRegistry(fixture_store()), 3)
+    assert calls == [("explain_data_coverage", {"region": "SA1"})]

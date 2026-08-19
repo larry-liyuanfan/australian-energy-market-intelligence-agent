@@ -10,6 +10,7 @@ from fastapi.responses import PlainTextResponse
 from .agent import EnergyAgent
 from .evidence import HybridEvidenceIndex, load_official_chunks
 from .market import fixture_store, load_dispatch_store
+from .providers import ModelStudioPlanner
 from .schemas import AgentQueryRequest, AgentQueryResponse
 from .tools import ToolRegistry
 
@@ -19,7 +20,8 @@ evidence_path = os.getenv("ENERGY_EVIDENCE_PATH")
 store = load_dispatch_store(Path(data_path), Path(manifest_path)) if data_path and manifest_path else fixture_store()
 evidence_index = HybridEvidenceIndex(load_official_chunks(Path(evidence_path))) if evidence_path else None
 registry = ToolRegistry(store, evidence_index)
-agent = EnergyAgent(registry)
+planner_provider = ModelStudioPlanner.from_environment()
+agent = EnergyAgent(registry, planner_provider=planner_provider)
 redis_client = None
 elasticsearch_client = None
 if redis_url := os.getenv("ENERGY_REDIS_URL"):
@@ -50,7 +52,7 @@ def health() -> dict[str, object]:
         "evidence_chunks": len(evidence_index.documents) if evidence_index else 0,
         "redis": "connected" if redis_client else "disabled_or_unavailable",
         "elasticsearch": "connected" if elasticsearch_client else "disabled_or_unavailable",
-        "model_provider": "deterministic",
+        "model_provider": planner_provider.name if planner_provider else "deterministic",
     }
 
 

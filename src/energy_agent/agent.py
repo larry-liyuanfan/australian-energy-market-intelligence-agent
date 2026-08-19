@@ -5,21 +5,32 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from .schemas import AgentQueryRequest, AgentQueryResponse, Region, ToolCall, ToolResult
 from .tools import ToolRegistry
+
+if TYPE_CHECKING:
+    from .providers import ModelStudioPlanner
 
 
 class EnergyAgent:
     """Bounded deterministic state machine; provider planners may only emit registered typed calls."""
 
-    def __init__(self, registry: ToolRegistry, timeout_seconds: float = 5) -> None:
+    def __init__(
+        self,
+        registry: ToolRegistry,
+        timeout_seconds: float = 5,
+        planner_provider: ModelStudioPlanner | None = None,
+    ) -> None:
         self.registry = registry
         self.timeout_seconds = timeout_seconds
+        self.planner_provider = planner_provider
         self.traces: dict[str, dict[str, object]] = {}
 
     def _plan(self, request: AgentQueryRequest) -> list[tuple[str, dict[str, object]]]:
+        if self.planner_provider is not None:
+            return self.planner_provider.plan(request.question, self.registry, request.max_tool_calls)
         text = request.question.lower()
         region = next((r for r in Region if r.value.lower() in text or r.value[:-1].lower() in text), Region.NSW1)
         end = datetime.now(UTC)
