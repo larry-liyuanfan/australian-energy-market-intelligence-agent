@@ -1,0 +1,94 @@
+{
+  "release_date": "2026-08-20",
+  "scope": "Compact public evidence summary; large data, report text and row-level predictions remain on Spartan.",
+  "data": {
+    "source": "AEMO NEMWeb DispatchIS plus official monthly MMSDM gap repair",
+    "window": ["2025-08-18", "2026-08-17"],
+    "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+    "days": 365,
+    "intervals_per_day": 288,
+    "rows": 525600,
+    "standard_rows": 525600,
+    "intervention_rows": 0,
+    "sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+    "gap": {
+      "day": "2026-03-10",
+      "daily_archive_intervals_per_region": 267,
+      "repair": "Official monthly MMSDM DISPATCHPRICE and DISPATCHREGIONSUM; no interpolation or synthetic fill."
+    },
+    "jobs": {
+      "full_ingest": "29432818",
+      "fail_closed_validation": "29432904",
+      "official_repair": "29432961",
+      "manifest_reconciliation": "29433652"
+    }
+  },
+  "official_evidence": {
+    "sources": 5,
+    "chunks": 735,
+    "documents_sha256": "f3cd5fc3727c924bed509605cffb5b205a68d9c567aad28ade7e10f6927dbb04",
+    "build_job": "29432944",
+    "retrieval_job": "29433586",
+    "retrieval_git_sha": "2e56e61febfca95cf833c5945076689068b29f71",
+    "benchmark_boundary": "20-query curated official-source routing labels; not passage-level factuality.",
+    "metrics": {
+      "bm25": {"mrr": 0.8916666667, "recall_at_5": 1.0},
+      "dense": {"mrr": 0.95, "recall_at_5": 0.95},
+      "rrf": {"mrr": 0.95, "recall_at_5": 0.95},
+      "hybrid_rerank": {
+        "mrr": 0.9666666667,
+        "recall_at_5": 1.0,
+        "mrr_bootstrap_95_interval": [0.9, 1.0]
+      }
+    }
+  },
+  "agent_eval": {
+    "job": "29433653",
+    "git_sha": "39d6b2619c7ed11961c57ce8941875982445d7bc",
+    "tasks": {"real_window": 80, "fault_fixture": 20},
+    "state_machine": {
+      "task_success": 1.0,
+      "schema_validity": 1.0,
+      "citation_completeness": 1.0,
+      "logical_tool_success": 1.0,
+      "fault_recovery": 1.0,
+      "real_window_attempt_success": 1.0,
+      "fault_fixture_attempt_success": 0.6666666667,
+      "p95_latency_ms": 644.2602
+    },
+    "attempt_boundary": "Each fault fixture deliberately injects one failed first attempt; logical recovery and raw attempts are reported separately.",
+    "provider": "deterministic",
+    "provider_cost_usd": 0.0
+  },
+  "rolling_real_eval": {
+    "job": "29433654",
+    "git_sha": "39d6b2619c7ed11961c57ce8941875982445d7bc",
+    "elapsed_seconds": 529.387,
+    "split": "chronological 70% train / 15% calibration / 15% test",
+    "regions": {
+      "NSW1": {"lightgbm_mae": 7.0864, "rolling_conformal_90_coverage": 0.8963, "aud_per_mw_year": 48651.47, "capture_rate": 0.6582},
+      "QLD1": {"lightgbm_mae": 5.3931, "rolling_conformal_90_coverage": 0.9033, "aud_per_mw_year": 55965.82, "capture_rate": 0.7642},
+      "SA1": {"lightgbm_mae": 13.5826, "rolling_conformal_90_coverage": 0.9152, "aud_per_mw_year": 86767.60, "capture_rate": 0.6707},
+      "TAS1": {"lightgbm_mae": 11.6702, "rolling_conformal_90_coverage": 0.8864, "aud_per_mw_year": 56838.89, "capture_rate": 0.4858},
+      "VIC1": {"lightgbm_mae": 11.0506, "rolling_conformal_90_coverage": 0.8995, "aud_per_mw_year": 59582.42, "capture_rate": 0.5027}
+    },
+    "negative_result": "LightGBM did not consistently beat persistence on MAE; TAS1 improved and VIC1 was approximately tied.",
+    "economic_boundary": "Historical spot-market gross-margin proxy only; excludes CAPEX, degradation, network fees, FCAS, bidding/settlement complexity and investment returns."
+  },
+  "deployment": {
+    "evidence_file": "artifacts/public/sg_deployment_20260820.json",
+    "model_studio_live": false,
+    "model_studio_boundary": "Constrained provider adapter verified offline; credentials and live provider behavior/cost unavailable."
+  },
+  "quality": {
+    "clean_room_job": "29433844",
+    "clean_room_git_sha": "d6c763581920413bef0a8081fc81ca67efdb708c",
+    "pytest": "10 passed",
+    "ruff": "passed",
+    "mypy": "src and scripts passed",
+    "pip_audit_known_vulnerabilities": 0,
+    "secret_scan_high_confidence_matches": 0,
+    "pii_scan_candidate_matches": 0,
+    "license_direct_gplv3_or_agpl": 0
+  }
+}

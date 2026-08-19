@@ -1,0 +1,54 @@
+{
+  "verified_at": "2026-08-20T01:28:31+10:00",
+  "git_sha": "97c439cf1365f4aeb29b1781c11fc6a047419996",
+  "deployment": "Alibaba Cloud SG isolated Docker Compose stack",
+  "services": {
+    "fastapi": {
+      "binding": "127.0.0.1:8091",
+      "cpu_limit": 1.0,
+      "memory_limit": "1.25GiB",
+      "observed_memory": "407.9MiB"
+    },
+    "elasticsearch": {
+      "cpu_limit": 0.75,
+      "memory_limit": "1GiB",
+      "observed_memory": "962.7MiB"
+    },
+    "redis": {
+      "cpu_limit": 0.25,
+      "memory_limit": "128MiB",
+      "observed_memory": "4.41MiB"
+    },
+    "prometheus": {
+      "cpu_limit": 0.25,
+      "memory_limit": "128MiB",
+      "observed_memory": "47.29MiB"
+    }
+  },
+  "health": {
+    "status": "ok",
+    "data_version": "aemo-dispatch-7a82656c7571",
+    "rows": 525600,
+    "evidence_chunks": 735,
+    "redis": "connected",
+    "elasticsearch": "connected",
+    "model_provider": "deterministic"
+  },
+  "query_verification": {
+    "question": "Explain SA1 battery price setting on 2026-06-22",
+    "trace_id": "c352ad83-ee37-49d7-9c43-cb33267d5184",
+    "status": "completed",
+    "answer_characters": 354,
+    "logical_tool_calls": 2,
+    "citations": 6,
+    "trace_states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
+    "verified_results_in_trace": 2,
+    "redis_trace_exists": true
+  },
+  "boundaries": [
+    "Loopback deployment evidence, not a public-internet SLA or throughput benchmark.",
+    "No large language model is self-hosted on the SG instance.",
+    "Model Studio credentials were absent; deterministic typed planning is the verified provider path.",
+    "Only processed public AEMO/AER artifacts were copied; no private keys, career files or restricted corpora were deployed."
+  ]
+}
