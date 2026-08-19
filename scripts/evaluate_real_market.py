@@ -138,6 +138,13 @@ def bootstrap_mean(values: list[float], seed: int = 20260820, samples: int = 100
     return [float(np.quantile(means, 0.025)), float(np.quantile(means, 0.975))]
 
 
+def daily_mean_interval(times: list[datetime], values: np.ndarray) -> list[float]:
+    grouped: dict[str, list[float]] = defaultdict(list)
+    for timestamp, value in zip(times, values, strict=True):
+        grouped[timestamp.date().isoformat()].append(float(value))
+    return bootstrap_mean([float(np.mean(day_values)) for day_values in grouped.values()])
+
+
 def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
     from lightgbm import LGBMRegressor
 
@@ -236,9 +243,12 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "rows": len(rows),
         "split": {"train": len(y_train), "calibration": len(y_cal), "test": len(y_test)},
         "point": {
-            "persistence": point_metrics(y_test, persistence),
-            "seasonal": point_metrics(y_test, seasonal),
-            "lightgbm": point_metrics(y_test, point),
+            "persistence": point_metrics(y_test, persistence)
+            | {"daily_mae_mean_95_interval": daily_mean_interval(test_times, np.abs(y_test - persistence))},
+            "seasonal": point_metrics(y_test, seasonal)
+            | {"daily_mae_mean_95_interval": daily_mean_interval(test_times, np.abs(y_test - seasonal))},
+            "lightgbm": point_metrics(y_test, point)
+            | {"daily_mae_mean_95_interval": daily_mean_interval(test_times, np.abs(y_test - point))},
         },
         "interval": {
             "fixed_conformal_90_ablation": interval_metrics(y_test, fixed_conformal_lower, fixed_conformal_upper),
@@ -250,7 +260,19 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
                 y_test, np.asarray(rolling_q_lower), np.asarray(rolling_q_upper)
             ),
         },
-        "anomaly_stability": {"robust_z_counts": anomaly_counts, "rrp_ge_5000": int(np.sum(prices_all >= 5000))},
+        "anomaly_stability": {
+            "robust_z_counts": anomaly_counts,
+            "rrp_ge_5000": int(np.sum(prices_all >= 5000)),
+            "z4_to_z5_jaccard": anomaly_counts["5"] / anomaly_counts["4"] if anomaly_counts["4"] else None,
+            "z5_to_z6_jaccard": anomaly_counts["6"] / anomaly_counts["5"] if anomaly_counts["5"] else None,
+            "z5_daily_event_rate_mean_95_interval": bootstrap_mean(
+                [
+                    float(np.mean(np.abs(0.6745 * (prices_all[start : start + 288] - median) / mad) >= 5))
+                    for start in range(0, len(prices_all), 288)
+                ]
+            ),
+            "label_boundary": "No anomaly ground truth is claimed; fixed-price and robust-z counts are baselines, with threshold and day-level stability only.",
+        },
         "bess": {
             "test_days": len(daily),
             "no_storage_margin_aud": 0.0,

@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from energy_agent.evidence import HybridEvidenceIndex, load_official_chunks
 
 TASKS = [
@@ -68,6 +70,18 @@ def main() -> None:
         metrics[mode] = {
             "mrr": sum(reciprocal_ranks) / len(reciprocal_ranks),
             "recall_at_5": sum(recalls) / len(recalls),
+            "mrr_bootstrap_95_interval": [
+                float(value)
+                for value in np.quantile(
+                    np.mean(
+                        np.random.default_rng(20260820).choice(
+                            np.asarray(reciprocal_ranks), size=(2_000, len(reciprocal_ranks)), replace=True
+                        ),
+                        axis=1,
+                    ),
+                    [0.025, 0.975],
+                )
+            ],
         }
     results_path = args.output / "predictions.jsonl"
     results_path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
