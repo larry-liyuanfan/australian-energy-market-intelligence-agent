@@ -6,7 +6,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -89,7 +89,12 @@ class HybridEvidenceIndex:
     def _ranks(scores: np.ndarray) -> dict[int, int]:
         return {index: rank for rank, index in enumerate(np.argsort(-scores), start=1)}
 
-    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
+    ) -> list[dict[str, Any]]:
         bm25 = self._bm25(query)
         dense = self._dense(query)
         bm25_ranks, dense_ranks = self._ranks(bm25), self._ranks(dense)
@@ -99,7 +104,15 @@ class HybridEvidenceIndex:
             rrf = 1 / (60 + bm25_ranks[index]) + 1 / (60 + dense_ranks[index])
             title_overlap = len(query_terms & set(tokens(doc.title))) / max(1, len(query_terms))
             exact_boost = 0.02 if query.lower() in doc.text.lower() else 0.0
-            candidates.append((rrf + 0.03 * title_overlap + exact_boost, index))
+            if mode == "bm25":
+                score = float(bm25[index])
+            elif mode == "dense":
+                score = float(dense[index])
+            elif mode == "rrf":
+                score = rrf
+            else:
+                score = rrf + 0.03 * title_overlap + exact_boost
+            candidates.append((score, index))
         output = []
         for rank, (score, index) in enumerate(sorted(candidates, reverse=True)[:top_k], start=1):
             doc = self.documents[index]
