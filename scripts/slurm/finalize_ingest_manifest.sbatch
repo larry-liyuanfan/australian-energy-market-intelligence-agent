@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=energy-finalize-manifest
-#SBATCH --partition=cascade
+#SBATCH --partition=sapphire
 #SBATCH --time=00:05:00
 #SBATCH --mem=512M
 #SBATCH --cpus-per-task=1

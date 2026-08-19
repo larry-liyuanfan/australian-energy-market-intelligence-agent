@@ -1,6 +1,7 @@
 #!/bin/bash
 # Submit with --dependency=afterok:<ingest-job> after full ingest passes.
 #SBATCH --job-name=energy-real-eval
+#SBATCH --partition=sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2

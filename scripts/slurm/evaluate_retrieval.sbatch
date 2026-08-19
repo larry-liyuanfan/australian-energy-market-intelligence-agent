@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=energy-retrieval-eval
-#SBATCH --partition=cascade
+#SBATCH --partition=sapphire
 #SBATCH --time=00:10:00
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=2

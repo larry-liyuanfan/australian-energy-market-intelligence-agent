@@ -1,6 +1,7 @@
 #!/bin/bash
 # Submit with afterok dependencies on ingest and evidence build.
 #SBATCH --job-name=energy-agent-eval
+#SBATCH --partition=sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
