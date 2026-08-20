@@ -63,6 +63,8 @@ These are **historical spot-market operating-margin proxy metrics only**. The cy
 
 Decision-focused evaluation exposed why MAE is not the release metric: LightGBM won MAE in only **9/20** folds but produced the higher realised BESS net proxy in **17/20**, with MAE/net-margin rank agreement in only **8/20**. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. The five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year, so the CVaR path is published as a failed ablation, not an improvement. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
 
+An additional SA1 pilot used training-only perfect-foresight optimiser actions to up-weight charge/discharge intervals in the LightGBM L1 loss. The raw weighted candidate increased the 112-day net proxy by **AUD 180.20** (annualised **AUD 53,319.81 vs 52,732.55/MW-year**) but worsened daily CVaR05 from **-9.36 to -12.45 AUD**. A pre-test mean-plus-tail calibration gate therefore selected the baseline in all four seasonal folds, giving zero selected-policy lift. The five-region run was deliberately not submitted. This is an optimiser-informed loss-proxy negative gate, not SPO+ or a claimed improvement; see the [compact pilot artifact](artifacts/public/decision_weighted_sa1_gate_20260821.json).
+
 An exact-SHA five-region reproduction then evaluated the full predeclared
 `0/25/50/100 AUD/MWh` cost grid. Its normalised `50 AUD/MWh` projection is
 byte-for-byte identical to the published decision run
@@ -134,6 +136,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Retrieved report text is treated as untrusted data: a deterministic indirect-prompt-injection fixture verifies that embedded instructions cannot alter the typed plan or enter the answer narrative. This is one regression case, not an AgentDojo benchmark or a general robustness claim.
 - Slurm evaluation code and manifest SHAs are pinned to the same detached, job-local Git worktree. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
 - Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
+- Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; the leakage-safe calibration selector rejected it in 4/4 folds, so no five-region expansion or positive gain claim was made.
 
 ## Attribution
 

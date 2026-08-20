@@ -74,6 +74,22 @@ reliability, and honest business boundaries.
   career materials. Feasibility, calibration-overfit diagnosis and safe
   fallback remain valid engineering evidence.
 
+### Optimiser-informed loss proxy
+
+- Motivation: the verified 9/20 MAE wins versus 17/20 BESS-value wins show that
+  uniform point-error weighting is misaligned with the constrained dispatch
+  decision.
+- Implemented pilot: perfect-foresight schedules from training days only create
+  bounded sample weights for charge/discharge intervals. A separate preceding
+  calibration window chooses between the baseline and weighted model using mean
+  realised margin plus a tail guardrail; unseen seasonal prices are used only
+  for settlement.
+- SA1 result: the raw candidate added AUD 180.20 over 112 test days, but worsened
+  daily CVaR05 from -9.36 to -12.45 AUD. The selector therefore retained the
+  baseline in 4/4 folds and the five-region expansion was stopped.
+- Boundary: this is a tested optimiser-informed regression proxy, not an SPO+
+  implementation or a positive revenue/risk result.
+
 ### ALCE and RAGChecker
 
 - Primary sources: Gao et al., [Enabling Large Language Models to Generate Text

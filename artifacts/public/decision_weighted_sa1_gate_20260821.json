@@ -1,0 +1,35 @@
+{
+  "evidence_status": "verified-real-negative-selection-gate",
+  "scope": "AEMO NEMWeb SA1; four 28-day out-of-time seasonal folds; 112 region-days; 50 AUD/MWh-discharged operating-cost proxy",
+  "job": {
+    "slurm_job_id": "29460703",
+    "git_sha": "21d460355b54f6fc5eda91f39a34b7aec72ea69b",
+    "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+    "full_metrics_sha256": "ff33ed02e6a99342b962541c28c3fe88c7f1d9ed2923cf83de1dee201abe7a7a",
+    "elapsed": "00:02:49",
+    "max_rss_kib": 791124
+  },
+  "method": {
+    "training_signal": "perfect-foresight optimiser actions from training days only",
+    "action_emphasis": 4.0,
+    "selection": "preceding calibration mean improvement plus 20% lower-tail guardrail",
+    "boundary": "optimiser-informed L1 sample weighting; not SPO+"
+  },
+  "unseen_test": {
+    "baseline_aud_per_mw_year": 52732.55475127302,
+    "decision_weighted_aud_per_mw_year": 53319.80786488643,
+    "raw_weighted_delta_aud_over_112_days": 180.1982156841168,
+    "baseline_daily_cvar05_aud": -9.3623478925783,
+    "decision_weighted_daily_cvar05_aud": -12.451930947696207,
+    "baseline_positive_day_share": 0.9107142857142857,
+    "decision_weighted_positive_day_share": 0.9107142857142857
+  },
+  "selection_result": {
+    "baseline_folds": 4,
+    "decision_weighted_folds": 0,
+    "selected_policy_delta_aud": 0.0,
+    "full_five_region_run_submitted": false,
+    "decision": "rejected; small raw mean gain did not pass the pre-test calibration/tail gate"
+  },
+  "economic_boundary": "Historical spot-market operating-margin proxy only. Excludes CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and investment returns."
+}
