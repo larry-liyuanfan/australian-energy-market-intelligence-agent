@@ -26,11 +26,13 @@ from energy_agent.evaluation import (
     optimizer_action_weights,
     seasonal_fold_windows,
     select_decision_weighted_model,
+    select_dispatch_ensemble_weight,
 )
 from energy_agent.schemas import BatterySpec
 
 EVALUATION_COST_AUD_PER_MWH = 50.0
 ACTION_EMPHASIS = 4.0
+ENSEMBLE_WEIGHTS = (0.25, 0.5, 0.75, 1.0)
 
 
 def _complete_day_positions(times: list[datetime], positions: list[int]) -> list[list[int]]:
@@ -139,6 +141,7 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "baseline": [],
         "decision_weighted": [],
         "selected": [],
+        "ensemble_selected": [],
     }
     for fold in folds:
         train_indices = [index for index, timestamp in enumerate(times) if timestamp < fold.calibration_start]
@@ -165,6 +168,20 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         if min(len(baseline_validation), len(weighted_validation)) < 27:
             raise ValueError(f"calibration day gate failed for {region}/{fold.name}")
         selection = select_decision_weighted_model(baseline_validation, weighted_validation)
+        calibration_candidates: dict[str, list[float]] = {}
+        for ensemble_weight in ENSEMBLE_WEIGHTS:
+            candidate = (
+                cal_weighted
+                if ensemble_weight == 1.0
+                else (1 - ensemble_weight) * cal_baseline + ensemble_weight * cal_weighted
+            )
+            calibration_candidates[str(ensemble_weight)] = _daily_net_values(
+                calibration_times, y_cal, candidate, spec
+            )
+        ensemble_selection = select_dispatch_ensemble_weight(
+            baseline_validation, calibration_candidates
+        )
+        selected_weight = float(ensemble_selection["selected_weight"])
 
         test_baseline = np.asarray(baseline.predict(x_test), dtype=float)
         test_weighted = np.asarray(weighted.predict(x_test), dtype=float)
@@ -172,11 +189,14 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         baseline_values = _daily_net_values(test_times, y_test, test_baseline, spec)
         weighted_values = _daily_net_values(test_times, y_test, test_weighted, spec)
         selected_values = weighted_values if selection["selected_model"] == "decision_weighted" else baseline_values
-        if min(len(baseline_values), len(weighted_values), len(selected_values)) < 27:
+        test_ensemble = (1 - selected_weight) * test_baseline + selected_weight * test_weighted
+        ensemble_values = _daily_net_values(test_times, y_test, test_ensemble, spec)
+        if min(len(baseline_values), len(weighted_values), len(selected_values), len(ensemble_values)) < 27:
             raise ValueError(f"test day gate failed for {region}/{fold.name}")
         aggregate["baseline"].extend(baseline_values)
         aggregate["decision_weighted"].extend(weighted_values)
         aggregate["selected"].extend(selected_values)
+        aggregate["ensemble_selected"].extend(ensemble_values)
         fold_metrics[fold.name] = {
             "train_end_exclusive": fold.calibration_start.isoformat(),
             "calibration_window": [fold.calibration_start.isoformat(), fold.test_start.isoformat()],
@@ -188,20 +208,27 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
             },
             "training_weight_provenance": weight_metrics,
             "selection": selection,
+            "ensemble_selection": {
+                **ensemble_selection,
+                "candidate_weights": list(ENSEMBLE_WEIGHTS),
+            },
             "point_mae": {
                 "baseline": point_metrics(y_test, test_baseline)["mae"],
                 "decision_weighted": point_metrics(y_test, test_weighted)["mae"],
                 "selected": point_metrics(y_test, test_selected)["mae"],
+                "ensemble_selected": point_metrics(y_test, test_ensemble)["mae"],
             },
             "test_economics": {
                 "baseline": _economic_metrics(baseline_values),
                 "decision_weighted": _economic_metrics(weighted_values),
                 "selected": _economic_metrics(selected_values),
+                "ensemble_selected": _economic_metrics(ensemble_values),
             },
         }
     baseline_total = sum(aggregate["baseline"])
     weighted_total = sum(aggregate["decision_weighted"])
     selected_total = sum(aggregate["selected"])
+    ensemble_total = sum(aggregate["ensemble_selected"])
     return {
         "region": region,
         "folds": fold_metrics,
@@ -209,6 +236,7 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
         "test_delta_aud": {
             "decision_weighted_vs_baseline": weighted_total - baseline_total,
             "calibration_selected_vs_baseline": selected_total - baseline_total,
+            "calibration_ensemble_vs_baseline": ensemble_total - baseline_total,
         },
         "selected_model_counts": {
             "baseline": sum(
@@ -218,6 +246,13 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
                 fold["selection"]["selected_model"] == "decision_weighted"
                 for fold in fold_metrics.values()
             ),
+        },
+        "selected_ensemble_weight_counts": {
+            str(weight): sum(
+                float(fold["ensemble_selection"]["selected_weight"]) == weight
+                for fold in fold_metrics.values()
+            )
+            for weight in (0.0, *ENSEMBLE_WEIGHTS)
         },
         "calculation_seconds": time.perf_counter() - started,
     }
@@ -249,8 +284,9 @@ def main() -> None:
         "scope": "AEMO NEMWeb four-season out-of-time decision-weighted forecast gate",
         "evaluation_cost_aud_per_mwh_discharged": EVALUATION_COST_AUD_PER_MWH,
         "action_emphasis": ACTION_EMPHASIS,
+        "ensemble_weights": ENSEMBLE_WEIGHTS,
         "regions": results,
-        "boundary": "Training-only perfect-foresight optimiser actions form sample weights; calibration selects the model; unseen test prices are settlement-only. This is an optimiser-informed loss proxy, not SPO+ or an investment-return claim.",
+        "boundary": "Training-only perfect-foresight optimiser actions form sample weights; a fixed convex-weight grid is selected on the preceding calibration window with a tail guardrail; unseen test prices are settlement-only. This is an optimiser-informed loss proxy and leakage-safe forecast ensemble, not SPO+ or an investment-return claim.",
     }
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     manifest = {
@@ -260,6 +296,7 @@ def main() -> None:
         "selected_regions": requested,
         "evaluation_cost_aud_per_mwh_discharged": EVALUATION_COST_AUD_PER_MWH,
         "action_emphasis": ACTION_EMPHASIS,
+        "ensemble_weights": ENSEMBLE_WEIGHTS,
         "metrics_sha256": hashlib.sha256((args.output / "metrics.json").read_bytes()).hexdigest(),
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

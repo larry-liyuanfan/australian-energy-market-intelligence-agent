@@ -12,6 +12,7 @@ from energy_agent.evaluation import (
     residual_price_scenarios,
     seasonal_fold_windows,
     select_decision_weighted_model,
+    select_dispatch_ensemble_weight,
     select_tail_policy,
 )
 
@@ -34,6 +35,14 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     assert 'git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"' in merge_script
     assert "export ENERGY_GIT_COMMIT" in merge_script
     assert 'cd "${CODE_ROOT}"' in merge_script
+
+    ensemble_script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "evaluate_dispatch_ensemble.sbatch"
+    ).read_text(encoding="utf-8")
+    assert '${ENERGY_GIT_COMMIT:?set exact pushed commit}' in ensemble_script
+    assert 'checkout --detach "${ENERGY_GIT_COMMIT}"' in ensemble_script
+    assert '[[ "$(git -C "${CODE_ROOT}" rev-parse HEAD)" == "${ENERGY_GIT_COMMIT}" ]]' in ensemble_script
+    assert 'REGION="${REGION:-SA1}"' in ensemble_script
 
 
 def test_residual_scenarios_are_deterministic_and_use_complete_days() -> None:
@@ -137,3 +146,19 @@ def test_decision_weighted_selector_uses_mean_and_tail_guardrail() -> None:
         [-10.0, -9.0, 20.0, 20.0, 20.0],
     )
     assert rejected["selected_model"] == "baseline"
+
+
+def test_dispatch_ensemble_selector_uses_fixed_grid_and_tail_guardrail() -> None:
+    selected = select_dispatch_ensemble_weight(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {
+            "0.25": [2.0, 3.0, 10.0, 10.0, 10.0],
+            "0.5": [2.0, 3.0, 12.0, 12.0, 12.0],
+        },
+    )
+    assert selected["selected_weight"] == pytest.approx(0.5)
+    fallback = select_dispatch_ensemble_weight(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {"0.25": [-10.0, -9.0, 20.0, 20.0, 20.0]},
+    )
+    assert fallback["selected_weight"] == pytest.approx(0.0)
