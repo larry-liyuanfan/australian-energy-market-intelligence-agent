@@ -110,6 +110,13 @@ class EnergyAgent:
         numeric = [float(value) for value in values]
         return f"[{min(numeric):.2f}, {max(numeric):.2f}]"
 
+    @classmethod
+    def _cited_summary(cls, result: ToolResult) -> str:
+        summary = cls._summarize(result)
+        evidence_ids = [evidence.evidence_id for evidence in result.evidence[:2]]
+        citations = " ".join(f"[@{evidence_id}]" for evidence_id in evidence_ids)
+        return f"- {summary} {citations}".rstrip()
+
     def run(self, request: AgentQueryRequest) -> AgentQueryResponse:
         trace_id = str(uuid.uuid4())
         records: list[ToolCall] = []
@@ -220,7 +227,12 @@ class EnergyAgent:
         status: Literal["completed", "insufficient_evidence"] = (
             "completed" if results and citations else "insufficient_evidence"
         )
-        answer = "Verified tool outputs: " + "; ".join(self._summarize(result) for result in results) if results else "No verified result."
+        answer = (
+            "Verified tool outputs (citations identify provenance records; they are not a semantic-entailment score):\n"
+            + "\n".join(self._cited_summary(result) for result in results)
+            if results
+            else "No verified result."
+        )
         response = AgentQueryResponse(
             trace_id=trace_id,
             status=status,

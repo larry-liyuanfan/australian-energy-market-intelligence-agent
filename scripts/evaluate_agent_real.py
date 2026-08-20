@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from energy_agent.agent import EnergyAgent
+from energy_agent.evaluation import citation_structure_metrics
 from energy_agent.evidence import HybridEvidenceIndex, load_official_chunks
 from energy_agent.market import MarketStore, load_dispatch_store
 from energy_agent.schemas import AgentQueryRequest, ToolResult
@@ -126,6 +127,10 @@ def main() -> None:
                 citations = 0
                 validity = True
                 recovered = False
+                citation_structure = {
+                    "claim_citation_completeness": 0.0,
+                    "citation_id_validity": 0.0,
+                }
             else:
                 registry = FaultRegistry(store, evidence, task.fault)
                 timeout = 0.01 if task.fault == "timeout" else 10.0
@@ -137,6 +142,10 @@ def main() -> None:
                 citations = len(response.citations)
                 validity = all(registry.validate(call.name, call.arguments) is not None for call in calls)
                 recovered = any(call.recovered and call.status == "ok" for call in calls)
+                citation_structure = citation_structure_metrics(
+                    response.answer,
+                    {citation.evidence_id for citation in response.citations},
+                )
             observed = {call.name for call in calls if call.status == "ok"}
             expected_observed = len(set(task.expected_tools) & observed) / len(task.expected_tools)
             attempted = [call for call in calls if call.status != "skipped"]
@@ -152,6 +161,8 @@ def main() -> None:
                     "observed_tools": sorted(observed),
                     "schema_valid": validity,
                     "citations": citations,
+                    "claim_citation_completeness": citation_structure["claim_citation_completeness"],
+                    "citation_id_validity": citation_structure["citation_id_validity"],
                     "recovered": recovered,
                     "logical_tool_success": expected_observed,
                     "attempt_success": successful_attempts / len(attempted) if attempted else 0.0,
@@ -170,6 +181,10 @@ def main() -> None:
                 "task_success": statistics.fmean(row["task_success"] for row in selected),
                 "schema_validity": statistics.fmean(row["schema_valid"] for row in selected),
                 "citation_completeness": statistics.fmean(row["citations"] > 0 for row in selected),
+                "claim_citation_completeness": statistics.fmean(
+                    row["claim_citation_completeness"] for row in selected
+                ),
+                "citation_id_validity": statistics.fmean(row["citation_id_validity"] for row in selected),
                 "logical_tool_success": statistics.fmean(row["logical_tool_success"] for row in selected),
                 "attempt_success": statistics.fmean(row["attempt_success"] for row in selected),
                 "failure_recovery": statistics.fmean(row["recovered"] for row in selected)

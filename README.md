@@ -34,6 +34,11 @@ API: `POST /api/agent/query`, `GET /api/agent/traces/{trace_id}`, `GET /api/tool
 
 ## Experiments
 
+Implementation choices are tied to sampled Australian hiring signals and primary
+research in [the paper-to-hiring map](docs/PAPER_TO_HIRING.md). Paper names are
+not treated as accomplishments: the map distinguishes method-inspired code,
+verified evaluation and work that remains outside the evidence gate.
+
 The verified terminal-split results use chronological 70% train / 15% calibration / 15% test splits. The repository also supports four independent 28-day seasonal test folds, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules.
 
 ### Retrieval

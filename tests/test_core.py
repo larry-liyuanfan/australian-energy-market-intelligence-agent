@@ -8,7 +8,8 @@ from pydantic import ValidationError
 from energy_agent import api as api_module
 from energy_agent.agent import EnergyAgent
 from energy_agent.api import app
-from energy_agent.battery import optimize_dispatch
+from energy_agent.battery import optimize_dispatch, optimize_dispatch_cvar
+from energy_agent.evaluation import citation_structure_metrics
 from energy_agent.forecast import seasonal_conformal
 from energy_agent.market import MarketRow, MarketStore, fixture_store, robust_events
 from energy_agent.providers import ModelStudioPlanner
@@ -77,6 +78,36 @@ def test_battery_rejects_negative_variable_degradation_cost() -> None:
             BatterySpec(),
             variable_degradation_cost_aud_per_mwh_discharged=-1.0,
         )
+
+
+def test_cvar_dispatch_trades_expected_value_for_tail_protection() -> None:
+    spec = BatterySpec()
+    upside = [-100.0] * 12 + [1_000.0] * 12
+    downside = [-100.0] * 12 + [-500.0] * 12
+    risk_neutral = optimize_dispatch_cvar(
+        [upside, downside], spec, alpha=0.5, risk_aversion=0.0
+    )
+    protected = optimize_dispatch_cvar(
+        [upside, downside], spec, alpha=0.5, risk_aversion=2.0
+    )
+    assert protected.lower_tail_cvar_aud >= risk_neutral.lower_tail_cvar_aud - 1e-6
+    assert protected.expected_net_margin_aud <= risk_neutral.expected_net_margin_aud + 1e-6
+    assert all(
+        not (charge > 1e-7 and discharge > 1e-7)
+        for charge, discharge in zip(
+            protected.dispatch.charge_mw,
+            protected.dispatch.discharge_mw,
+            strict=True,
+        )
+    )
+    assert protected.dispatch.soc_mwh[0] == pytest.approx(1.0)
+    assert protected.dispatch.soc_mwh[-1] == pytest.approx(1.0)
+    assert protected.solver_mip_gap == pytest.approx(0.0)
+
+
+def test_cvar_dispatch_rejects_misaligned_scenarios() -> None:
+    with pytest.raises(ValueError, match="identical horizons"):
+        optimize_dispatch_cvar([[1.0, 2.0], [1.0]], BatterySpec())
 
 
 def test_forecast_intervals_are_ordered() -> None:
@@ -189,6 +220,19 @@ def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
     )
     assert response.status == "completed"
     assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
+
+
+def test_agent_answer_has_claim_level_valid_citations() -> None:
+    response = EnergyAgent(ToolRegistry(fixture_store())).run(
+        AgentQueryRequest(question="Explain SA1 data coverage")
+    )
+    diagnostics = citation_structure_metrics(
+        response.answer,
+        {citation.evidence_id for citation in response.citations},
+    )
+    assert diagnostics["claims"] == 2
+    assert diagnostics["claim_citation_completeness"] == 1.0
+    assert diagnostics["citation_id_validity"] == 1.0
 
 
 def test_agent_trace_cache_is_bounded_and_reports_evictions() -> None:
