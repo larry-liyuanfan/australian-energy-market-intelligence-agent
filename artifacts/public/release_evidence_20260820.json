@@ -77,7 +77,7 @@
   },
   "deployment": {
     "evidence_file": "artifacts/public/sg_deployment_20260820.json",
-    "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
+    "git_sha": "a95b95185fe324bbb44f7f621ee67bd122902197",
     "elasticsearch_indexed_chunks": 735,
     "deployed_retrieval_hybrid_mrr": 0.9666666667,
     "production_loopback_requests": 100,

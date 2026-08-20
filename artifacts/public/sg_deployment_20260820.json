@@ -1,28 +1,28 @@
 {
-  "verified_at": "2026-08-20T17:52:00+10:00",
-  "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
+  "verified_at": "2026-08-20T18:00:00+10:00",
+  "git_sha": "a95b95185fe324bbb44f7f621ee67bd122902197",
   "deployment": "Alibaba Cloud SG isolated Docker Compose stack",
   "services": {
     "fastapi": {
       "binding": "127.0.0.1:8091",
       "cpu_limit": 1.0,
       "memory_limit": "1.25GiB",
-      "observed_memory": "761.2MiB"
+      "observed_memory": "385.8MiB"
     },
     "elasticsearch": {
       "cpu_limit": 0.75,
-      "memory_limit": "1GiB",
-      "observed_memory": "968.3MiB"
+      "memory_limit": "1.25GiB",
+      "observed_memory": "949.5MiB"
     },
     "redis": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "8.668MiB"
+      "observed_memory": "8.641MiB"
     },
     "prometheus": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "31.97MiB"
+      "observed_memory": "31.46MiB"
     }
   },
   "health": {
@@ -38,17 +38,18 @@
     "model_provider": "deterministic"
   },
   "query_verification": {
-    "question": "Explain SA1 battery price spike risk 2026-02-10",
-    "trace_id": "e3e1a226-d90b-4926-b2e3-9ee8223979b1",
+    "question": "Explain VIC1 coverage and price risk 2026-02-10",
+    "trace_id": "dac409b5-efd5-4793-8a04-2de3d8b94b66",
     "status": "completed",
-    "answer_characters": 791,
-    "logical_tool_calls": 4,
+    "answer_characters": 441,
+    "logical_tool_calls": 3,
     "citations": 6,
     "trace_states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
-    "verified_results_in_trace": 4,
+    "verified_results_in_trace": 3,
     "redis_trace_exists": true
   },
   "production_service_gate": {
+    "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
     "requests": 100,
     "concurrency": 4,
     "http_success_rate": 1.0,
@@ -60,6 +61,7 @@
     "boundary": "Single-host Docker loopback; not a public-internet SLA or independent answer-quality benchmark."
   },
   "deployed_retrieval_regression": {
+    "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
     "tasks": 20,
     "label_boundary": "Curated official-source routing; not passage-level factuality.",
     "elasticsearch_bm25": {"mrr": 0.8583333333, "recall_at_5": 1.0},
