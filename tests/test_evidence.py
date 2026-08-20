@@ -87,3 +87,15 @@ def test_elasticsearch_bm25_is_indexed_and_fused_without_user_dsl() -> None:
     assert index.indexed_documents == 2
     assert index.index_name in client.indices.aliases[index.alias]
     assert result[0]["chunk_id"] == "b"
+
+
+def test_external_bm25_results_are_source_diversified() -> None:
+    common = {"published_at": "2026-01-01", "retrieved_at": "2026-08-20", "sha256": "0" * 64}
+    documents = [
+        OfficialChunk(str(index), "dominant", "Dominant", "price", f"https://a/{index}", **common)
+        for index in range(4)
+    ] + [OfficialChunk("other", "other", "Other", "constraint", "https://b", **common)]
+    index = HybridEvidenceIndex(documents, dense_dimensions=2)
+    scores = {str(position): 10.0 - position for position in range(4)} | {"other": 1.0}
+    hits = index.search("price", top_k=3, mode="bm25", lexical_scores=scores, max_per_source=2)
+    assert [hit["source_id"] for hit in hits] == ["dominant", "dominant", "other"]

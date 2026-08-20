@@ -109,22 +109,27 @@ class HybridEvidenceIndex:
         top_k: int = 5,
         mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
         lexical_scores: dict[str, float] | None = None,
+        max_per_source: int | None = None,
     ) -> list[dict[str, Any]]:
-        bm25 = (
+        local_bm25 = self._bm25(query)
+        external_bm25 = (
             np.asarray([lexical_scores.get(doc.chunk_id, 0.0) for doc in self.documents], dtype=float)
             if lexical_scores is not None
-            else self._bm25(query)
+            else None
         )
         dense = self._dense(query)
-        bm25_ranks, dense_ranks = self._ranks(bm25), self._ranks(dense)
+        local_bm25_ranks, dense_ranks = self._ranks(local_bm25), self._ranks(dense)
+        external_bm25_ranks = self._ranks(external_bm25) if external_bm25 is not None else None
         query_terms = set(tokens(query))
         candidates: list[tuple[float, int]] = []
         for index, doc in enumerate(self.documents):
-            rrf = 1 / (60 + bm25_ranks[index]) + 1 / (60 + dense_ranks[index])
+            rrf = 1 / (60 + local_bm25_ranks[index]) + 1 / (60 + dense_ranks[index])
+            if external_bm25_ranks is not None:
+                rrf += 1 / (60 + external_bm25_ranks[index])
             title_overlap = len(query_terms & set(tokens(doc.title))) / max(1, len(query_terms))
             exact_boost = 0.02 if query.lower() in doc.text.lower() else 0.0
             if mode == "bm25":
-                score = float(bm25[index])
+                score = float(external_bm25[index] if external_bm25 is not None else local_bm25[index])
             elif mode == "dense":
                 score = float(dense[index])
             elif mode == "rrf":
@@ -132,18 +137,26 @@ class HybridEvidenceIndex:
             else:
                 score = rrf + 0.03 * title_overlap + exact_boost
             candidates.append((score, index))
-        output = []
-        for rank, (score, index) in enumerate(sorted(candidates, reverse=True)[:top_k], start=1):
+        output: list[dict[str, Any]] = []
+        source_counts: Counter[str] = Counter()
+        for score, index in sorted(candidates, reverse=True):
             doc = self.documents[index]
+            if max_per_source is not None and source_counts[doc.source_id] >= max_per_source:
+                continue
+            source_counts[doc.source_id] += 1
+            rank = len(output) + 1
             output.append(
                 {
                     "rank": rank,
                     "score": score,
-                    "bm25_score": float(bm25[index]),
+                    "bm25_score": float(external_bm25[index] if external_bm25 is not None else local_bm25[index]),
+                    "local_bm25_score": float(local_bm25[index]),
                     "dense_score": float(dense[index]),
                     **doc.__dict__,
                 }
             )
+            if len(output) >= top_k:
+                break
         return output
 
 
@@ -231,7 +244,7 @@ class ElasticsearchHybridEvidenceIndex:
             str(hit["_source"]["chunk_id"]): float(hit.get("_score") or 0.0)
             for hit in response["hits"]["hits"]
         }
-        return self.local.search(query, top_k, mode, lexical_scores=scores)
+        return self.local.search(query, top_k, mode, lexical_scores=scores, max_per_source=2)
 
 
 def load_official_chunks(path: Path) -> list[OfficialChunk]:
