@@ -5,9 +5,38 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from datetime import UTC, datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
+
+
+@dataclass(frozen=True)
+class SeasonalFold:
+    name: str
+    calibration_start: datetime
+    test_start: datetime
+    test_end: datetime
+
+
+def seasonal_fold_windows(start: datetime, end: datetime) -> tuple[SeasonalFold, ...]:
+    """Return complete 28-day spring/summer/autumn/winter test windows.
+
+    Each fold reserves the immediately preceding 28 days for calibration and
+    requires at least 30 days of earlier training history.
+    """
+
+    seasons = ((2, "summer"), (5, "autumn"), (7, "winter"), (11, "spring"))
+    folds: list[SeasonalFold] = []
+    for year in range(start.year, end.year + 1):
+        for month, season in seasons:
+            test_start = datetime(year, month, 1, tzinfo=UTC)
+            test_end = test_start + timedelta(days=28)
+            calibration_start = test_start - timedelta(days=28)
+            if calibration_start - start < timedelta(days=30) or test_end > end:
+                continue
+            folds.append(SeasonalFold(f"{season}-{year}", calibration_start, test_start, test_end))
+    return tuple(sorted(folds, key=lambda item: item.test_start))
 
 
 def parse_degradation_costs(value: str) -> tuple[float, ...]:

@@ -23,6 +23,10 @@ fi
 OUTPUT_DIR="${OUTPUT_DIR:-${OUTPUT_ROOT}/${ENERGY_REGIONS}}"
 # Colons survive `sbatch --export`; commas are parsed by Slurm as variable separators.
 DEGRADATION_COSTS="${DEGRADATION_COSTS:-0:25:50:100}"
+EXTRA_ARGS=()
+if [[ "${SEASONAL_BESS:-0}" == "1" ]]; then
+  EXTRA_ARGS+=(--seasonal-bess)
+fi
 VENV="/tmp/energy-eval-${SLURM_JOB_ID:?}"
 trap 'rm -rf -- "${VENV}"' EXIT
 module purge
@@ -34,4 +38,5 @@ python -m venv "${VENV}"
   --input /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz \
   --output "${OUTPUT_DIR}" \
   --regions "${ENERGY_REGIONS}" \
-  --degradation-costs "${DEGRADATION_COSTS}"
+  --degradation-costs "${DEGRADATION_COSTS}" \
+  "${EXTRA_ARGS[@]}"

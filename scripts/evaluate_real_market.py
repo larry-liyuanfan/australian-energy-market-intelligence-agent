@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 
 from energy_agent.battery import DispatchResult, optimize_dispatch, threshold_dispatch
-from energy_agent.evaluation import parse_degradation_costs
+from energy_agent.evaluation import parse_degradation_costs, seasonal_fold_windows
 from energy_agent.schemas import BatterySpec
 
 DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
@@ -322,6 +322,183 @@ def evaluate_region(
     }
 
 
+def evaluate_seasonal_region(
+    region: str,
+    rows: list[dict[str, Any]],
+    degradation_costs: tuple[float, ...],
+) -> dict[str, Any]:
+    """Evaluate four leakage-safe seasonal BESS folds on one NEM region."""
+
+    from lightgbm import LGBMRegressor
+
+    started = time.perf_counter()
+    x, y, times = features(rows)
+    folds = seasonal_fold_windows(times[0], times[-1])
+    if {fold.name.split("-")[0] for fold in folds} != {"spring", "summer", "autumn", "winter"}:
+        raise ValueError(f"four-season fold gate failed for {region}: {[fold.name for fold in folds]}")
+    spec = BatterySpec()
+    aggregated: dict[str, dict[str, list[float]]] = {
+        str(int(cost)): defaultdict(list) for cost in degradation_costs
+    }
+    fold_metrics: dict[str, Any] = {}
+    common: dict[str, Any] = {
+        "n_estimators": 200,
+        "learning_rate": 0.05,
+        "num_leaves": 31,
+        "random_state": 20260820,
+        "verbosity": -1,
+        "n_jobs": 2,
+    }
+    for fold in folds:
+        train_indices = [index for index, timestamp in enumerate(times) if timestamp < fold.calibration_start]
+        calibration_indices = [
+            index
+            for index, timestamp in enumerate(times)
+            if fold.calibration_start <= timestamp < fold.test_start
+        ]
+        test_indices = [
+            index for index, timestamp in enumerate(times) if fold.test_start <= timestamp < fold.test_end
+        ]
+        if min(len(train_indices), len(calibration_indices), len(test_indices)) == 0:
+            raise ValueError(f"empty seasonal split for {region}/{fold.name}")
+        x_train, y_train = x[train_indices], y[train_indices]
+        x_cal, y_cal = x[calibration_indices], y[calibration_indices]
+        x_test, y_test = x[test_indices], y[test_indices]
+        test_times = [times[index] for index in test_indices]
+        model = LGBMRegressor(objective="regression_l1", **common).fit(x_train, y_train)
+        calibration_predictions = np.asarray(model.predict(x_cal), dtype=float)
+        predictions = np.asarray(model.predict(x_test), dtype=float)
+        conformal_radius = float(
+            np.quantile(np.abs(y_cal - calibration_predictions), 0.9, method="higher")
+        )
+        by_day: dict[str, list[float]] = defaultdict(list)
+        forecast_by_day: dict[str, list[float]] = defaultdict(list)
+        for timestamp, actual, predicted in zip(test_times, y_test, predictions, strict=True):
+            by_day[timestamp.date().isoformat()].append(float(actual))
+            forecast_by_day[timestamp.date().isoformat()].append(float(predicted))
+        complete_days = [day for day in sorted(by_day) if len(by_day[day]) == len(forecast_by_day[day]) == 288]
+        if len(complete_days) < 27:
+            raise ValueError(f"seasonal day coverage gate failed for {region}/{fold.name}: {len(complete_days)}")
+        low, high = float(np.quantile(y_train, 0.25)), float(np.quantile(y_train, 0.75))
+        cost_metrics: dict[str, Any] = {}
+        for cost in degradation_costs:
+            key = str(int(cost))
+            daily_gross: list[float] = []
+            daily_net: list[float] = []
+            daily_rule_net: list[float] = []
+            daily_oracle_net: list[float] = []
+            daily_cycles: list[float] = []
+            daily_discharged: list[float] = []
+            for day in complete_days:
+                actual = by_day[day]
+                forecast = forecast_by_day[day]
+                schedule = optimize_dispatch(
+                    forecast,
+                    spec,
+                    variable_degradation_cost_aud_per_mwh_discharged=cost,
+                )
+                oracle = optimize_dispatch(
+                    actual,
+                    spec,
+                    variable_degradation_cost_aud_per_mwh_discharged=cost,
+                )
+                rule = threshold_dispatch(forecast, spec, low, high)
+                discharged = _discharged_mwh(schedule)
+                gross = _realized(schedule, actual)
+                daily_gross.append(gross)
+                daily_net.append(gross - cost * discharged)
+                daily_rule_net.append(_realized(rule, actual) - cost * _discharged_mwh(rule))
+                daily_oracle_net.append(
+                    _realized(oracle, actual) - cost * _discharged_mwh(oracle)
+                )
+                daily_cycles.append(schedule.equivalent_full_cycles)
+                daily_discharged.append(discharged)
+            for name, values in (
+                ("gross", daily_gross),
+                ("net", daily_net),
+                ("rule_net", daily_rule_net),
+                ("oracle_net", daily_oracle_net),
+                ("cycles", daily_cycles),
+                ("discharged", daily_discharged),
+            ):
+                aggregated[key][name].extend(values)
+            total_net = sum(daily_net)
+            total_oracle = sum(daily_oracle_net)
+            total_rule = sum(daily_rule_net)
+            cost_metrics[key] = {
+                "variable_degradation_cost_aud_per_mwh_discharged": cost,
+                "test_days": len(daily_net),
+                "gross_spot_margin_aud": sum(daily_gross),
+                "net_operating_margin_proxy_aud": total_net,
+                "net_operating_proxy_aud_per_mw_year": total_net * 365 / len(daily_net),
+                "equivalent_full_cycles": sum(daily_cycles),
+                "positive_day_share": float(np.mean(np.asarray(daily_net) > 0)),
+                "daily_net_margin_mean_95_interval": bootstrap_mean(daily_net),
+                "daily_net_margin_cvar05": lower_tail_mean(daily_net),
+                "rule_net_margin_aud": total_rule,
+                "relative_rule_lift": (total_net - total_rule) / abs(total_rule) if total_rule else None,
+                "oracle_net_margin_aud": total_oracle,
+                "oracle_capture_rate": total_net / total_oracle if total_oracle else None,
+                "oracle_regret_aud": total_oracle - total_net,
+            }
+        fold_metrics[fold.name] = {
+            "train_end_exclusive": fold.calibration_start.isoformat(),
+            "calibration_window": [fold.calibration_start.isoformat(), fold.test_start.isoformat()],
+            "test_window": [fold.test_start.isoformat(), fold.test_end.isoformat()],
+            "split_rows": {
+                "train": len(train_indices),
+                "calibration": len(calibration_indices),
+                "test": len(test_indices),
+            },
+            "complete_test_days": len(complete_days),
+            "point": {
+                "persistence": point_metrics(y_test, x_test[:, 0]),
+                "lightgbm": point_metrics(y_test, predictions),
+            },
+            "conformal_90": interval_metrics(
+                y_test,
+                predictions - conformal_radius,
+                predictions + conformal_radius,
+            ),
+            "degradation_sensitivity": cost_metrics,
+        }
+
+    overall: dict[str, Any] = {}
+    for cost in degradation_costs:
+        key = str(int(cost))
+        aggregate_values = aggregated[key]
+        day_count = len(aggregate_values["net"])
+        total_net = sum(aggregate_values["net"])
+        total_oracle = sum(aggregate_values["oracle_net"])
+        total_rule = sum(aggregate_values["rule_net"])
+        overall[key] = {
+            "variable_degradation_cost_aud_per_mwh_discharged": cost,
+            "test_days": day_count,
+            "gross_spot_margin_aud": sum(aggregate_values["gross"]),
+            "discharged_mwh": sum(aggregate_values["discharged"]),
+            "variable_degradation_cost_proxy_aud": cost * sum(aggregate_values["discharged"]),
+            "net_operating_margin_proxy_aud": total_net,
+            "net_operating_proxy_aud_per_mw_year": total_net * 365 / day_count,
+            "equivalent_full_cycles": sum(aggregate_values["cycles"]),
+            "positive_day_share": float(np.mean(np.asarray(aggregate_values["net"]) > 0)),
+            "daily_net_margin_mean_95_interval": bootstrap_mean(aggregate_values["net"]),
+            "daily_net_margin_p05": float(np.quantile(aggregate_values["net"], 0.05)),
+            "daily_net_margin_cvar05": lower_tail_mean(aggregate_values["net"]),
+            "rule_net_margin_aud": total_rule,
+            "relative_rule_lift": (total_net - total_rule) / abs(total_rule) if total_rule else None,
+            "oracle_net_margin_aud": total_oracle,
+            "oracle_capture_rate": total_net / total_oracle if total_oracle else None,
+            "oracle_regret_aud": total_oracle - total_net,
+        }
+    return {
+        "region": region,
+        "folds": fold_metrics,
+        "overall_degradation_sensitivity": overall,
+        "economic_boundary": "112-day four-season historical spot-market operating proxy; user-supplied variable cycling cost; excludes CAPEX, fixed O&M, network fees, FCAS and investment returns",
+        "calculation_seconds": time.perf_counter() - started,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
@@ -335,6 +512,11 @@ def main() -> None:
         "--degradation-costs",
         default=",".join(str(int(value)) for value in DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED),
         help="comma-, colon- or semicolon-separated non-negative AUD/MWh-discharged values",
+    )
+    parser.add_argument(
+        "--seasonal-bess",
+        action="store_true",
+        help="run four 28-day out-of-time seasonal BESS folds instead of the terminal split",
     )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
@@ -352,11 +534,14 @@ def main() -> None:
         degradation_costs = parse_degradation_costs(args.degradation_costs)
     except ValueError as error:
         raise SystemExit(str(error)) from error
-    results = {
-        region: evaluate_region(region, grouped[region], degradation_costs)
-        for region in selected_regions
-    }
-    metrics = {"scope": "real AEMO NEMWeb rolling test", "coverage": coverage, "regions": results}
+    evaluator = evaluate_seasonal_region if args.seasonal_bess else evaluate_region
+    results = {region: evaluator(region, grouped[region], degradation_costs) for region in selected_regions}
+    scope = (
+        "real AEMO NEMWeb four-season out-of-time BESS backtest"
+        if args.seasonal_bess
+        else "real AEMO NEMWeb rolling test"
+    )
+    metrics = {"scope": scope, "coverage": coverage, "regions": results}
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     git_sha = subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
     manifest = {
@@ -369,6 +554,7 @@ def main() -> None:
         "provider_cost_usd": 0.0,
         "selected_regions": selected_regions,
         "degradation_costs_aud_per_mwh_discharged": degradation_costs,
+        "seasonal_bess": args.seasonal_bess,
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
