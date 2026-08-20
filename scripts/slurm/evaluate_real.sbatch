@@ -10,6 +10,9 @@
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
 set -euo pipefail
 cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
+OUTPUT_DIR="${OUTPUT_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
+ENERGY_REGIONS="${ENERGY_REGIONS:-NSW1,QLD1,SA1,TAS1,VIC1}"
+DEGRADATION_COSTS="${DEGRADATION_COSTS:-0,25,50,100}"
 VENV="/tmp/energy-eval-${SLURM_JOB_ID:?}"
 trap 'rm -rf -- "${VENV}"' EXIT
 module purge
@@ -19,4 +22,6 @@ python -m venv "${VENV}"
 "${VENV}/bin/python" -m pip install -e '.[ml]'
 /usr/bin/time -v "${VENV}/bin/python" scripts/evaluate_real_market.py \
   --input /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz \
-  --output /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval
+  --output "${OUTPUT_DIR}" \
+  --regions "${ENERGY_REGIONS}" \
+  --degradation-costs "${DEGRADATION_COSTS}"

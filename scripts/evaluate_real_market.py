@@ -129,7 +129,11 @@ def daily_mean_interval(times: list[datetime], values: np.ndarray) -> list[float
     return bootstrap_mean([float(np.mean(day_values)) for day_values in grouped.values()])
 
 
-def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
+def evaluate_region(
+    region: str,
+    rows: list[dict[str, Any]],
+    degradation_costs: tuple[float, ...] = DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED,
+) -> dict[str, Any]:
     from lightgbm import LGBMRegressor
 
     region_started = time.perf_counter()
@@ -212,7 +216,7 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
             }
         )
     degradation_sensitivity: dict[str, dict[str, Any]] = {}
-    for cost in DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED:
+    for cost in degradation_costs:
         daily_gross: list[float] = []
         daily_net: list[float] = []
         daily_cycles: list[float] = []
@@ -321,6 +325,16 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--regions",
+        default="NSW1,QLD1,SA1,TAS1,VIC1",
+        help="comma-separated subset used for pilot or full evaluation",
+    )
+    parser.add_argument(
+        "--degradation-costs",
+        default=",".join(str(int(value)) for value in DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED),
+        help="comma-separated non-negative AUD/MWh-discharged sensitivity values",
+    )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
@@ -329,7 +343,17 @@ def main() -> None:
     coverage = {region: len(rows) / expected for region, rows in grouped.items()}
     if set(grouped) != {"NSW1", "QLD1", "SA1", "TAS1", "VIC1"} or min(coverage.values()) < 0.98:
         raise SystemExit(f"coverage gate failed: {coverage}")
-    results = {region: evaluate_region(region, rows) for region, rows in sorted(grouped.items())}
+    selected_regions = tuple(item.strip() for item in args.regions.split(",") if item.strip())
+    unknown_regions = sorted(set(selected_regions) - set(grouped))
+    if not selected_regions or unknown_regions:
+        raise SystemExit(f"invalid selected regions: {unknown_regions or selected_regions}")
+    degradation_costs = tuple(float(item) for item in args.degradation_costs.split(","))
+    if not degradation_costs or any(value < 0 for value in degradation_costs):
+        raise SystemExit("degradation costs must be a non-empty list of non-negative numbers")
+    results = {
+        region: evaluate_region(region, grouped[region], degradation_costs)
+        for region in selected_regions
+    }
     metrics = {"scope": "real AEMO NEMWeb rolling test", "coverage": coverage, "regions": results}
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     git_sha = subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
@@ -341,6 +365,8 @@ def main() -> None:
         "platform": platform.platform(),
         "elapsed_seconds": round(time.perf_counter() - started, 3),
         "provider_cost_usd": 0.0,
+        "selected_regions": selected_regions,
+        "degradation_costs_aud_per_mwh_discharged": degradation_costs,
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
