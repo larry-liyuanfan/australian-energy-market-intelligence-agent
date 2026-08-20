@@ -4,6 +4,7 @@ import csv
 import io
 import zipfile
 from datetime import date
+from pathlib import Path
 
 from scripts.ingest_dispatch_mmsdm import months, parse_monthly, source_url
 
@@ -110,3 +111,11 @@ def test_monthly_parser_filters_dates_regions_and_intervention() -> None:
     )
     assert list(result) == [("2024/08/18 00:05:00", "SA1")]
     assert next(iter(result.values()))["rrp"] == "100"
+
+
+def test_monthly_manifest_keeps_validator_compatibility_fields() -> None:
+    source = (Path(__file__).parents[1] / "scripts" / "ingest_dispatch_mmsdm.py").read_text(
+        encoding="utf-8"
+    )
+    for field in ("completed_days", "complete_1440_row_days", "failed_days", "intervention_rows"):
+        assert f'"{field}"' in source
