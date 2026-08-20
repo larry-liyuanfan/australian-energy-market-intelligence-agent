@@ -88,7 +88,8 @@
   "quality": {
     "clean_room_job": "29433844",
     "clean_room_git_sha": "d6c763581920413bef0a8081fc81ca67efdb708c",
-    "pytest": "12 passed on Linux production image; Windows also reported 12 passed but emitted a Python 3.13/AnyIO shutdown access-violation diagnostic",
+    "pytest": "13 passed locally and in GitHub Actions; 12 passed on the deployed Linux image before the health-degradation regression test was added",
+    "github_actions_run": "32346928284 passed",
     "ruff": "passed",
     "mypy": "src and scripts passed",
     "pip_audit_known_vulnerabilities": 0,
