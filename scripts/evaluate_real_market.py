@@ -37,6 +37,7 @@ DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
 RISK_SCENARIO_COUNT = 10
 RISK_ALPHA = 0.8
 RISK_AVERSION_CANDIDATES = (0.25, 0.5, 1.0)
+RISK_EVALUATION_COST = 50.0
 
 
 def load(path: Path) -> dict[str, list[dict[str, Any]]]:
@@ -443,6 +444,8 @@ def evaluate_seasonal_region(
         )
         risk_policy_by_cost: dict[str, dict[str, float | str]] = {}
         for cost in degradation_costs:
+            if cost != RISK_EVALUATION_COST:
+                continue
             point_validation: list[float] = []
             candidate_validation: dict[str, list[float]] = {
                 str(value): [] for value in RISK_AVERSION_CANDIDATES
@@ -496,6 +499,7 @@ def evaluate_seasonal_region(
         cost_metrics: dict[str, Any] = {}
         for cost in degradation_costs:
             key = str(int(cost))
+            run_risk_evaluation = cost == RISK_EVALUATION_COST
             daily_gross: list[float] = []
             daily_net: list[float] = []
             daily_rule_net: list[float] = []
@@ -526,28 +530,10 @@ def evaluate_seasonal_region(
                     variable_degradation_cost_aud_per_mwh_discharged=cost,
                 )
                 rule = threshold_dispatch(forecast, spec, low, high)
-                risk_selection = risk_policy_by_cost[key]
-                risk_mip_gap: float | None
-                if risk_selection["selected_policy"] == "point":
-                    risk_dispatch = schedule
-                    risk_mip_gap = 0.0
-                else:
-                    risk_schedule = optimize_dispatch_cvar(
-                        risk_scenarios_by_day[day],
-                        spec,
-                        alpha=RISK_ALPHA,
-                        risk_aversion=float(risk_selection["selected_risk_aversion"]),
-                        variable_degradation_cost_aud_per_mwh_discharged=cost,
-                    )
-                    risk_dispatch = risk_schedule.dispatch
-                    risk_mip_gap = risk_schedule.solver_mip_gap
                 discharged = _discharged_mwh(schedule)
-                risk_discharged = _discharged_mwh(risk_dispatch)
                 gross = _realized(schedule, actual)
-                risk_gross = _realized(risk_dispatch, actual)
                 daily_gross.append(gross)
                 daily_net.append(gross - cost * discharged)
-                daily_risk_net.append(risk_gross - cost * risk_discharged)
                 daily_rule_net.append(_realized(rule, actual) - cost * _discharged_mwh(rule))
                 daily_oracle_net.append(
                     _realized(oracle, actual) - cost * _discharged_mwh(oracle)
@@ -557,29 +543,48 @@ def evaluate_seasonal_region(
                     - cost * _discharged_mwh(persistence_schedule)
                 )
                 daily_cycles.append(schedule.equivalent_full_cycles)
-                daily_risk_cycles.append(risk_dispatch.equivalent_full_cycles)
                 daily_discharged.append(discharged)
-                if risk_mip_gap is not None:
-                    risk_mip_gaps.append(risk_mip_gap)
-            for name, values in (
+                if run_risk_evaluation:
+                    risk_selection = risk_policy_by_cost[key]
+                    risk_mip_gap: float | None
+                    if risk_selection["selected_policy"] == "point":
+                        risk_dispatch = schedule
+                        risk_mip_gap = 0.0
+                    else:
+                        risk_schedule = optimize_dispatch_cvar(
+                            risk_scenarios_by_day[day],
+                            spec,
+                            alpha=RISK_ALPHA,
+                            risk_aversion=float(risk_selection["selected_risk_aversion"]),
+                            variable_degradation_cost_aud_per_mwh_discharged=cost,
+                        )
+                        risk_dispatch = risk_schedule.dispatch
+                        risk_mip_gap = risk_schedule.solver_mip_gap
+                    risk_discharged = _discharged_mwh(risk_dispatch)
+                    risk_gross = _realized(risk_dispatch, actual)
+                    daily_risk_net.append(risk_gross - cost * risk_discharged)
+                    daily_risk_cycles.append(risk_dispatch.equivalent_full_cycles)
+                    if risk_mip_gap is not None:
+                        risk_mip_gaps.append(risk_mip_gap)
+            aggregate_series = [
                 ("gross", daily_gross),
                 ("net", daily_net),
                 ("rule_net", daily_rule_net),
                 ("oracle_net", daily_oracle_net),
                 ("persistence_net", daily_persistence_net),
-                ("risk_net", daily_risk_net),
                 ("cycles", daily_cycles),
-                ("risk_cycles", daily_risk_cycles),
                 ("discharged", daily_discharged),
-            ):
+            ]
+            if run_risk_evaluation:
+                aggregate_series.extend(
+                    [("risk_net", daily_risk_net), ("risk_cycles", daily_risk_cycles)]
+                )
+            for name, values in aggregate_series:
                 aggregated[key][name].extend(values)
             total_net = sum(daily_net)
             total_oracle = sum(daily_oracle_net)
             total_rule = sum(daily_rule_net)
             total_persistence = sum(daily_persistence_net)
-            total_risk = sum(daily_risk_net)
-            point_cvar = lower_tail_mean(daily_net)
-            risk_cvar = lower_tail_mean(daily_risk_net)
             lightgbm_mae = point_metrics(y_test, predictions)["mae"]
             persistence_mae = point_metrics(y_test, persistence_predictions)["mae"]
             mae_winner = "lightgbm" if lightgbm_mae < persistence_mae else "persistence"
@@ -599,16 +604,6 @@ def evaluate_seasonal_region(
                 "oracle_net_margin_aud": total_oracle,
                 "oracle_capture_rate": total_net / total_oracle if total_oracle else None,
                 "oracle_regret_aud": total_oracle - total_net,
-                "risk_aware_net_margin_aud": total_risk,
-                "risk_aware_delta_vs_point_aud": total_risk - total_net,
-                "risk_aware_equivalent_full_cycles": sum(daily_risk_cycles),
-                "risk_aware_positive_day_share": float(
-                    np.mean(np.asarray(daily_risk_net) > 0)
-                ),
-                "risk_aware_daily_net_margin_cvar05": risk_cvar,
-                "risk_aware_cvar05_lift_vs_point_aud": risk_cvar - point_cvar,
-                "risk_aware_max_solver_mip_gap": max(risk_mip_gaps, default=0.0),
-                "risk_policy_selection": risk_policy_by_cost[key],
                 "decision_focused": {
                     "persistence_net_margin_aud": total_persistence,
                     "persistence_oracle_regret_aud": total_oracle - total_persistence,
@@ -618,6 +613,24 @@ def evaluate_seasonal_region(
                     "mae_net_margin_rank_agreement": mae_winner == decision_winner,
                 },
             }
+            if run_risk_evaluation:
+                total_risk = sum(daily_risk_net)
+                point_cvar = lower_tail_mean(daily_net)
+                risk_cvar = lower_tail_mean(daily_risk_net)
+                cost_metrics[key].update(
+                    {
+                        "risk_aware_net_margin_aud": total_risk,
+                        "risk_aware_delta_vs_point_aud": total_risk - total_net,
+                        "risk_aware_equivalent_full_cycles": sum(daily_risk_cycles),
+                        "risk_aware_positive_day_share": float(
+                            np.mean(np.asarray(daily_risk_net) > 0)
+                        ),
+                        "risk_aware_daily_net_margin_cvar05": risk_cvar,
+                        "risk_aware_cvar05_lift_vs_point_aud": risk_cvar - point_cvar,
+                        "risk_aware_max_solver_mip_gap": max(risk_mip_gaps, default=0.0),
+                        "risk_policy_selection": risk_policy_by_cost[key],
+                    }
+                )
         fold_metrics[fold.name] = {
             "train_end_exclusive": fold.calibration_start.isoformat(),
             "calibration_window": [fold.calibration_start.isoformat(), fold.test_start.isoformat()],
@@ -655,6 +668,7 @@ def evaluate_seasonal_region(
                 "scenario_count": RISK_SCENARIO_COUNT,
                 "alpha": RISK_ALPHA,
                 "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
+                "evaluation_cost_aud_per_mwh_discharged": RISK_EVALUATION_COST,
                 "selection": "first half of calibration supplies residual scenarios; second half selects tail policy with a mean guardrail; point dispatch is the fallback",
                 "construction": "point forecast plus deterministic complete-day residual paths sampled only from the preceding calibration window",
             },
@@ -670,9 +684,6 @@ def evaluate_seasonal_region(
         total_oracle = sum(aggregate_values["oracle_net"])
         total_rule = sum(aggregate_values["rule_net"])
         total_persistence = sum(aggregate_values["persistence_net"])
-        total_risk = sum(aggregate_values["risk_net"])
-        point_cvar = lower_tail_mean(aggregate_values["net"])
-        risk_cvar = lower_tail_mean(aggregate_values["risk_net"])
         overall[key] = {
             "variable_degradation_cost_aud_per_mwh_discharged": cost,
             "test_days": day_count,
@@ -691,21 +702,31 @@ def evaluate_seasonal_region(
             "oracle_net_margin_aud": total_oracle,
             "oracle_capture_rate": total_net / total_oracle if total_oracle else None,
             "oracle_regret_aud": total_oracle - total_net,
-            "risk_aware_net_margin_aud": total_risk,
-            "risk_aware_net_operating_proxy_aud_per_mw_year": total_risk * 365 / day_count,
-            "risk_aware_delta_vs_point_aud": total_risk - total_net,
-            "risk_aware_equivalent_full_cycles": sum(aggregate_values["risk_cycles"]),
-            "risk_aware_positive_day_share": float(
-                np.mean(np.asarray(aggregate_values["risk_net"]) > 0)
-            ),
-            "risk_aware_daily_net_margin_cvar05": risk_cvar,
-            "risk_aware_cvar05_lift_vs_point_aud": risk_cvar - point_cvar,
             "decision_focused": {
                 "persistence_net_margin_aud": total_persistence,
                 "persistence_oracle_regret_aud": total_oracle - total_persistence,
                 "lightgbm_net_margin_lift_vs_persistence_aud": total_net - total_persistence,
             },
         }
+        if aggregate_values["risk_net"]:
+            total_risk = sum(aggregate_values["risk_net"])
+            point_cvar = lower_tail_mean(aggregate_values["net"])
+            risk_cvar = lower_tail_mean(aggregate_values["risk_net"])
+            overall[key].update(
+                {
+                    "risk_aware_net_margin_aud": total_risk,
+                    "risk_aware_net_operating_proxy_aud_per_mw_year": total_risk
+                    * 365
+                    / day_count,
+                    "risk_aware_delta_vs_point_aud": total_risk - total_net,
+                    "risk_aware_equivalent_full_cycles": sum(aggregate_values["risk_cycles"]),
+                    "risk_aware_positive_day_share": float(
+                        np.mean(np.asarray(aggregate_values["risk_net"]) > 0)
+                    ),
+                    "risk_aware_daily_net_margin_cvar05": risk_cvar,
+                    "risk_aware_cvar05_lift_vs_point_aud": risk_cvar - point_cvar,
+                }
+            )
     decision_summary: dict[str, Any] = {}
     for cost in degradation_costs:
         key = str(int(cost))
@@ -733,6 +754,7 @@ def evaluate_seasonal_region(
             "scenario_count": RISK_SCENARIO_COUNT,
             "alpha": RISK_ALPHA,
             "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
+            "evaluation_cost_aud_per_mwh_discharged": RISK_EVALUATION_COST,
             "information_boundary": "calibration residual paths and forecasts only; realised prices are used solely for settlement",
         },
         "economic_boundary": "112-day four-season historical spot-market operating proxy; user-supplied variable cycling cost; excludes CAPEX, fixed O&M, network fees, FCAS and investment returns",
@@ -806,6 +828,7 @@ def main() -> None:
                 "scenario_count": RISK_SCENARIO_COUNT,
                 "alpha": RISK_ALPHA,
                 "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
+                "evaluation_cost_aud_per_mwh_discharged": RISK_EVALUATION_COST,
                 "scenario_source": "preceding calibration residual day paths",
             }
             if args.seasonal_bess
