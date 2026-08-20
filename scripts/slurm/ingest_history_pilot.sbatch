@@ -25,7 +25,7 @@ module load GCCcore/11.3.0
 module load Python/3.11.3
 python -m venv "${VENV}"
 rm -rf -- "${OUT}"
-/usr/bin/time -v "${VENV}/bin/python" scripts/ingest_dispatch_year.py \
+/usr/bin/time -v "${VENV}/bin/python" scripts/ingest_dispatch_mmsdm.py \
   --start 2024-08-18 --end 2024-08-24 --output "${OUT}"
 "${VENV}/bin/python" scripts/validate_dispatch_coverage.py \
   --data "${OUT}/dispatch_features.csv.gz" --manifest "${OUT}/run_manifest.json"
