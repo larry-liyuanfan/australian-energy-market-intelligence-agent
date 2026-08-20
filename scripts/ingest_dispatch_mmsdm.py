@@ -9,7 +9,7 @@ import json
 import time
 import zipfile
 from collections import Counter
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -90,10 +90,19 @@ def parse_monthly(
                 if record[0] != "D" or not header:
                     continue
                 interval = record[header["SETTLEMENTDATE"]]
-                interval_day = date.fromisoformat(interval[:10].replace("/", "-"))
+                settlement = datetime.fromisoformat(interval.replace("/", "-")).replace(tzinfo=UTC)
+                range_start = datetime(start.year, start.month, start.day, tzinfo=UTC)
+                range_end_day = end + timedelta(days=1)
+                range_end = datetime(
+                    range_end_day.year,
+                    range_end_day.month,
+                    range_end_day.day,
+                    tzinfo=UTC,
+                )
+                interval_day = (settlement - timedelta(minutes=5)).date()
                 region = record[header["REGIONID"]]
                 intervention = record[header["INTERVENTION"]]
-                if not start <= interval_day <= end or region not in REGIONS or intervention != "0":
+                if not range_start < settlement <= range_end or region not in REGIONS or intervention != "0":
                     continue
                 row = output.setdefault(
                     (interval, region),

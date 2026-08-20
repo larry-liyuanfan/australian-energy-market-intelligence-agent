@@ -7,7 +7,7 @@ import hashlib
 import io
 import json
 import zipfile
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -56,9 +56,19 @@ def parse_monthly(payload: bytes, table: str, day: str) -> dict[tuple[str, str],
                 if record[0] != "D" or not header:
                     continue
                 interval = record[header["SETTLEMENTDATE"]]
+                dispatch_day = date.fromisoformat(day)
+                settlement = datetime.fromisoformat(interval.replace("/", "-")).replace(tzinfo=UTC)
+                range_start = datetime(
+                    dispatch_day.year,
+                    dispatch_day.month,
+                    dispatch_day.day,
+                    tzinfo=UTC,
+                )
+                next_day = dispatch_day + timedelta(days=1)
+                range_end = datetime(next_day.year, next_day.month, next_day.day, tzinfo=UTC)
                 region = record[header["REGIONID"]]
                 intervention = record[header["INTERVENTION"]]
-                if not interval.startswith(day.replace("-", "/")) or region not in REGIONS or intervention != "0":
+                if not range_start < settlement <= range_end or region not in REGIONS or intervention != "0":
                     continue
                 row = output.setdefault(
                     (interval, region),
@@ -87,6 +97,8 @@ def main() -> None:
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--day", default="2026-03-10")
+    parser.add_argument("--repair-manifest", type=Path)
+    parser.add_argument("--final-manifest", type=Path)
     args = parser.parse_args()
     tables: dict[str, dict[tuple[str, str], dict[str, str]]] = {}
     provenance = []
@@ -129,7 +141,7 @@ def main() -> None:
         "sources": provenance,
         "boundary": "Missing official daily intervals repaired only from official AEMO monthly MMSDM archive; no interpolation or synthetic fill.",
     }
-    repair_path = args.output.parent / "repair_manifest.json"
+    repair_path = args.repair_manifest or args.output.parent / "repair_manifest.json"
     repair_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     base_manifest = json.loads((args.input.parent / "run_manifest.json").read_text(encoding="utf-8"))
     final_manifest = {
@@ -146,7 +158,8 @@ def main() -> None:
         "repair_day": args.day,
         "repair_source": "official AEMO monthly MMSDM archive",
     }
-    (args.output.parent / "final_manifest.json").write_text(json.dumps(final_manifest, indent=2), encoding="utf-8")
+    final_path = args.final_manifest or args.output.parent / "final_manifest.json"
+    final_path.write_text(json.dumps(final_manifest, indent=2), encoding="utf-8")
     print(json.dumps(manifest, indent=2))
 
 

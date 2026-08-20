@@ -111,6 +111,44 @@ def test_monthly_parser_filters_dates_regions_and_intervention() -> None:
     )
     assert list(result) == [("2024/08/18 00:05:00", "SA1")]
     assert next(iter(result.values()))["rrp"] == "100"
+    assert next(iter(result.values()))["source_day"] == "2024-08-18"
+
+
+def test_monthly_parser_assigns_midnight_to_previous_dispatch_day() -> None:
+    payload = _archive(
+        "PRICE",
+        [
+            [
+                "D",
+                "DISPATCH",
+                "PRICE",
+                "1",
+                "2024/08/25 00:00:00",
+                "SA1",
+                "0",
+                "100",
+                "",
+                "",
+                "",
+            ],
+            [
+                "D",
+                "DISPATCH",
+                "PRICE",
+                "1",
+                "2024/08/18 00:00:00",
+                "SA1",
+                "0",
+                "999",
+                "",
+                "",
+                "",
+            ],
+        ],
+    )
+    result = parse_monthly(payload, "PRICE", date(2024, 8, 18), date(2024, 8, 24))
+    assert list(result) == [("2024/08/25 00:00:00", "SA1")]
+    assert next(iter(result.values()))["source_day"] == "2024-08-24"
 
 
 def test_monthly_manifest_keeps_validator_compatibility_fields() -> None:
