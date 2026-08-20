@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from energy_agent import api as api_module
 from energy_agent.agent import EnergyAgent
 from energy_agent.api import app
 from energy_agent.battery import optimize_dispatch
@@ -26,6 +27,11 @@ class TransientSlowRegistry(ToolRegistry):
             self.slow_once = False
             time.sleep(0.08)
         return super().execute(name, arguments)
+
+
+class UnavailableDependency:
+    def ping(self) -> bool:
+        raise ConnectionError("test-only failure")
 
 
 def test_eight_strict_typed_tools() -> None:
@@ -88,6 +94,13 @@ def test_api_contract_and_trace() -> None:
         assert "energy_agent_query_duration_seconds_count" in metrics.text
         assert 'energy_agent_tool_calls_total{tool="search_official_evidence"' in metrics.text
         assert "energy_agent_citations_total" in metrics.text
+
+
+def test_health_is_degraded_when_configured_dependency_is_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api_module, "redis_url", "redis://configured")
+    monkeypatch.setattr(api_module, "redis_client", UnavailableDependency())
+    assert api_module.health()["status"] == "degraded"
+    assert api_module.health()["redis"] == "unavailable"
 
 
 def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
