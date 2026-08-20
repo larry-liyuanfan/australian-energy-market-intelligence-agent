@@ -27,3 +27,25 @@ Before downloading that year, the acceptance rules are frozen as follows:
 The economic metric remains a historical spot-market operating proxy.  It
 excludes CAPEX, network charges, FCAS, taxes, financing and a complete physical
 degradation model, and is not investment return.
+
+## Verified result
+
+The exact-SHA chain completed on Spartan on 21 August 2026. The earlier and
+current periods each contain 525,600 official rows; the joined two-year table
+contains 1,051,200 rows with zero duplicate region/timestamp keys and zero
+five-minute gaps. Evaluation SHA `e79b2b7` produced eight 28-day folds per
+region (40 total); summary SHA `248cd62` evaluated the frozen rules above.
+
+- LightGBM-driven dispatch beat the threshold rule in 39/40 folds (97.5%).
+- All five regions had positive annualised net-operating proxies at the fixed
+  50 AUD/MWh discharged-energy cost.
+- Mean annualised proxy was AUD 84,792/MW-year versus AUD 23,279/MW-year for
+  the threshold rule; the paired-fold mean improvement was AUD 4,718.80 with a
+  95% bootstrap interval of AUD 3,079.62–6,912.10.
+- Point MAE won only 15/40 folds, preserving the decision-focused distinction
+  between forecast error and downstream dispatch value.
+- Regional daily CVaR05 remained negative (-155.05 to -8.36 AUD), so the gate
+  supports historical transport robustness, not a low-risk or investment claim.
+
+The compact artifact records Slurm IDs, code/data hashes and the superseded-v1
+boundary: `artifacts/public/historical_transport_gate_20260821.json`.

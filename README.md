@@ -25,10 +25,10 @@ API: `POST /api/agent/query`, `GET /api/agent/traces/{trace_id}`, `GET /api/tool
 
 ## Data and evidence provenance
 
-- Market data: official [AEMO NEMWeb DispatchIS archive](https://nemweb.com.au/Reports/Archive/DispatchIS_Reports/), 18 August 2025–17 August 2026, 365 days × 288 intervals × five regions = **525,600 standard rows**.
+- Market data: official [AEMO NEMWeb](https://nemweb.com.au/) DispatchIS plus monthly MMSDM archives, 18 August 2024–17 August 2026, 730 days × 288 intervals × five regions = **1,051,200 standard rows**.
 - Fields: RRP, total demand, available generation, net interchange and intervention. The validated window contains no intervention rows.
-- The daily archive for 10 March 2026 was incomplete (267 rather than 288 intervals per region). The pipeline failed closed, then replaced that day only from AEMO's official monthly MMSDM `DISPATCHPRICE` and `DISPATCHREGIONSUM` archives—no interpolation or synthetic fill.
-- Final processed-data SHA-256: `7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd`.
+- The daily archive for 10 March 2026 was incomplete. A v1 repair exposed a settlement-time bug: five duplicated midnight keys and one 10-minute gap per region. The v2 pipeline assigns each interval-ending timestamp to its preceding five-minute dispatch day, fails closed on global duplicate/gap checks, and replaces the affected official day from monthly `DISPATCHPRICE` and `DISPATCHREGIONSUM` only—no interpolation or synthetic fill.
+- Corrected current-year SHA-256: `9025d32d...209567`; earlier-year SHA-256: `d82826a2...656da`; contiguous two-year SHA-256: `e06384b6...60795`. Duplicate keys and five-minute gaps are both **zero**.
 - Explanatory corpus: four AEMO Quarterly Energy Dynamics reports (Q3 2025–Q2 2026) and the AER January–March 2026 significant-price report; **735 chunks** with URL, publication/retrieval times, source hash, size, page count and usage boundary.
 - Large artifacts and report text stay outside GitHub. Only compact, non-sensitive manifests and metrics are published under `artifacts/public/`; AEMO/AER source rights and terms remain with their publishers.
 
@@ -39,7 +39,7 @@ research in [the paper-to-hiring map](docs/PAPER_TO_HIRING.md). Paper names are
 not treated as accomplishments: the map distinguishes method-inspired code,
 verified evaluation and work that remains outside the evidence gate.
 
-The verified terminal-split results use chronological 70% train / 15% calibration / 15% test splits. The repository also supports four independent 28-day seasonal test folds, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules.
+The corrected headline evaluation uses eight independent 28-day region-season folds over the two contiguous years, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules. Older one-year v1 artifacts remain regression diagnostics only and are not the current evidence source.
 
 ### Retrieval
 
@@ -57,21 +57,23 @@ On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
 
-The primary evaluation now uses four independent seasonal folds per region: **112 out-of-time days per region, 560 region-days overall**. Re-optimising at 0/25/50/100 AUD per discharged MWh produced five-region mean annualised net-operating proxies of **AUD 76,551 / 53,181 / 41,048 / 24,188 per MW-year**. At 100 AUD/MWh the regional range was **AUD 8,061–51,900/MW-year** and mean positive-day share was only **46%**; at 50 AUD/MWh all five regional daily P05 values were negative. The earlier 54-day terminal split remains as a regression artifact rather than the headline result. Both evaluations report no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. Compact evidence records the Slurm arrays/merges, code/data hashes and merged-output hashes.
+The corrected two-year transport gate covers **224 out-of-time days per region, 1,120 region-days overall** at the predeclared 50 AUD/MWh discharged-energy cost. LightGBM won point MAE in only **15/40** folds but its forecast-driven MILP beat the threshold-rule dispatch in **39/40**. All five regions had positive annualised net-operating proxies; the five-region mean was **AUD 84,792/MW-year** versus **AUD 23,279/MW-year** for the rule baseline (3.64x). The mean per-fold improvement was AUD 4,718.80 with a paired-bootstrap 95% interval of **AUD 3,079.62–6,912.10**. Mean equivalent full cycles were 234.94, mean oracle capture was 57.08%, and mean positive-day share was 90.71%. The predeclared 60%-fold/4-region gate passed. See the [compact exact-SHA artifact](artifacts/public/historical_transport_gate_20260821.json).
 
 These are **historical spot-market operating-margin proxy metrics only**. The cycling charge is a user-supplied sensitivity parameter, not an asset-specific degradation model; results still exclude CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
 
-Decision-focused evaluation exposed why MAE is not the release metric: LightGBM won MAE in only **9/20** folds but produced the higher realised BESS net proxy in **17/20**, with MAE/net-margin rank agreement in only **8/20**. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. The five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year, so the CVaR path is published as a failed ablation, not an improvement. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
+Decision-focused evaluation exposed why MAE is not the release metric: on the corrected two-year gate, MAE won only 37.5% of folds while realised dispatch value won 97.5%. Lower tails remain material—the regional daily CVaR05 range is **-155.05 to -8.36 AUD**—so the positive mean is not presented without downside evidence.
+
+The following CVaR, optimiser-weighting and ensemble experiments were run on the superseded one-year v1 time axis. They remain reproducible methodological/negative ablations, but their numeric outcomes are not combined with the corrected v2 headline and do not enter resume claims. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
 
 An additional SA1 pilot used training-only perfect-foresight optimiser actions to up-weight charge/discharge intervals in the LightGBM L1 loss. The raw weighted candidate increased the 112-day net proxy by **AUD 180.20** (annualised **AUD 53,319.81 vs 52,732.55/MW-year**) but worsened daily CVaR05 from **-9.36 to -12.45 AUD**. A pre-test mean-plus-tail calibration gate therefore selected the baseline in all four seasonal folds, giving zero selected-policy lift. The raw weighted model was not expanded directly. This is an optimiser-informed loss-proxy negative gate, not SPO+ or a claimed improvement; see the [compact pilot artifact](artifacts/public/decision_weighted_sa1_gate_20260821.json).
 
 A follow-up fixed-grid ensemble used only each fold's preceding calibration window to choose weight 0/0.25/0.5/0.75/1.0, with a tail floor declared before the five-region run. SA1 alone improved from **AUD 52,732.55 to 53,626.36/MW-year**, but the exact-SHA 560-region-day gate rejected promotion: the five-region mean fell from **AUD 41,048.15 to 39,595.59/MW-year (-3.54%)**, only **2/5** regions improved versus a required 3/5, and the paired region-season mean-delta 95% bootstrap interval was **-366.73 to 31.39 AUD**. All regional tail floors passed, but `promotion_pass=false`; the SA1 result is not promoted as economic lift. See the [cross-region stop artifact](artifacts/public/dispatch_ensemble_gate_20260821.json).
 
-An exact-SHA five-region reproduction then evaluated the full predeclared
+The v1 exact-SHA five-region reproduction also evaluated the full predeclared
 `0/25/50/100 AUD/MWh` cost grid. Its normalised `50 AUD/MWh` projection is
 byte-for-byte identical to the published decision run
 (`sha256=233364c4...51b7`); the complete all-cost metrics hash is
-`7dd896ea...7d3`. This is a reproducibility result, not another model gain.
+`7dd896ea...7d3`. It is retained as a superseded reproducibility result, not another model gain or current economic evidence.
 
 ### Agent evaluation
 
