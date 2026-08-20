@@ -58,15 +58,34 @@ app = FastAPI(title="Australian Energy Market Intelligence Agent", version="0.1.
 
 @app.get("/healthz")
 def health() -> dict[str, object]:
+    redis_status = "disabled_or_unavailable"
+    if redis_client is not None:
+        try:
+            redis_status = "connected" if redis_client.ping() else "unavailable"
+        except Exception:
+            redis_status = "unavailable"
+    elasticsearch_status = "disabled_or_unavailable"
+    if elasticsearch_client is not None:
+        try:
+            if not elasticsearch_client.ping():
+                elasticsearch_status = "unavailable"
+            elif isinstance(evidence_index, ElasticsearchHybridEvidenceIndex):
+                indexed = int(elasticsearch_client.count(index=evidence_index.alias)["count"])
+                elasticsearch_status = "connected_indexed" if indexed == len(evidence_index.documents) else "index_mismatch"
+            else:
+                elasticsearch_status = "connected"
+        except Exception:
+            elasticsearch_status = "unavailable"
+    dependency_degraded = (redis_url and redis_status != "connected") or (
+        elasticsearch_url and elasticsearch_status != "connected_indexed"
+    )
     return {
-        "status": "ok",
+        "status": "degraded" if dependency_degraded else "ok",
         "data_version": store.data_version,
         "rows": len(store.rows),
         "evidence_chunks": len(evidence_index.documents) if evidence_index else 0,
-        "redis": "connected" if redis_client else "disabled_or_unavailable",
-        "elasticsearch": "connected_indexed" if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else (
-            "connected" if elasticsearch_client else "disabled_or_unavailable"
-        ),
+        "redis": redis_status,
+        "elasticsearch": elasticsearch_status,
         "evidence_backend": evidence_index.backend if evidence_index else "market_evidence_fallback",
         "evidence_index": evidence_index.index_name if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else None,
         "evidence_indexed_documents": (

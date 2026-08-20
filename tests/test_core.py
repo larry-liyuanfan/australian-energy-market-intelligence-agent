@@ -66,6 +66,9 @@ def test_registry_rejects_unknown_dsl() -> None:
 
 def test_api_contract_and_trace() -> None:
     with TestClient(app) as client:
+        health = client.get("/healthz")
+        assert health.status_code == 200
+        assert health.json()["status"] == "ok"
         tools = client.get("/api/tools")
         assert tools.status_code == 200
         assert len(tools.json()["tools"]) == 8
