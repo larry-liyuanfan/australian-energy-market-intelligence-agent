@@ -29,7 +29,11 @@ if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
 else
   REGION="${REGION:-SA1}"
 fi
-OUTPUT_DIR="${OUTPUT_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/dispatch-ensemble-${REGION}-${ENERGY_GIT_COMMIT:0:7}}"
+if [[ -n "${OUTPUT_ROOT:-}" ]]; then
+  OUTPUT_DIR="${OUTPUT_ROOT}/${REGION}"
+else
+  OUTPUT_DIR="${OUTPUT_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/dispatch-ensemble-${REGION}-${ENERGY_GIT_COMMIT:0:7}}"
+fi
 VENV="${SLURM_TMPDIR:-/tmp}/energy-ensemble-venv-${SLURM_JOB_ID:?}"
 trap 'rm -rf -- "${VENV}" "${CODE_ROOT}"' EXIT
 module purge

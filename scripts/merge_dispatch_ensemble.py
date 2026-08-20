@@ -12,15 +12,22 @@ from energy_agent.ensemble_gate import summarize_dispatch_ensemble
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input-root", type=Path, required=True)
+    parser.add_argument("--input-root", type=Path)
+    parser.add_argument("--input-template")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--git-sha", required=True)
     args = parser.parse_args()
+    if (args.input_root is None) == (args.input_template is None):
+        parser.error("set exactly one of --input-root or --input-template")
     regions = ("NSW1", "QLD1", "SA1", "TAS1", "VIC1")
     region_payloads: dict[str, dict[str, Any]] = {}
     manifests: dict[str, dict[str, Any]] = {}
     for region in regions:
-        source = args.input_root / region
+        source = (
+            Path(args.input_template.format(region=region))
+            if args.input_template is not None
+            else args.input_root / region
+        )
         metrics = json.loads((source / "metrics.json").read_text(encoding="utf-8"))
         manifest = json.loads((source / "run_manifest.json").read_text(encoding="utf-8"))
         if manifest["git_sha"] != args.git_sha or manifest["selected_regions"] != [region]:

@@ -45,6 +45,13 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     assert '[[ "$(git -C "${CODE_ROOT}" rev-parse HEAD)" == "${ENERGY_GIT_COMMIT}" ]]' in ensemble_script
     assert 'REGION="${REGION:-SA1}"' in ensemble_script
     assert "git -C \"${SOURCE_REPO}\" fetch" not in ensemble_script
+    assert 'OUTPUT_DIR="${OUTPUT_ROOT}/${REGION}"' in ensemble_script
+
+    merge_ensemble_script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "merge_dispatch_ensemble.sbatch"
+    ).read_text(encoding="utf-8")
+    assert '--input-template "${INPUT_TEMPLATE}"' in merge_ensemble_script
+    assert '${INPUT_ROOT:?set array result root when INPUT_TEMPLATE is absent}' in merge_ensemble_script
 
 
 def test_cross_region_ensemble_gate_requires_majority_and_tail_safety() -> None:
