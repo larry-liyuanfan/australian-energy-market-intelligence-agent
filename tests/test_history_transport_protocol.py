@@ -25,3 +25,12 @@ def test_history_jobs_use_short_sapphire_pilot_before_full_year() -> None:
     assert "#SBATCH --partition=sapphire" in full and "#SBATCH --time=00:20:00" in full
     assert "--start 2024-08-18 --end 2025-08-17" in full
     assert "ENERGY_GIT_COMMIT" in pilot and "ENERGY_GIT_COMMIT" in full
+
+
+def test_time_axis_repair_preserves_v1_artifact_and_runs_new_gate() -> None:
+    script = (ROOT / "scripts" / "slurm" / "repair_time_axis_v2.sbatch").read_text(
+        encoding="utf-8"
+    )
+    assert "dispatch_features_repaired_v2.csv.gz" in script
+    assert "coverage_validation_v2.json" in script
+    assert "dispatch_features_repaired.csv.gz" not in script
