@@ -7,9 +7,11 @@ import pytest
 from energy_agent.evaluation import (
     adaptive_conformal_bounds,
     citation_structure_metrics,
+    optimizer_action_weights,
     parse_degradation_costs,
     residual_price_scenarios,
     seasonal_fold_windows,
+    select_decision_weighted_model,
     select_tail_policy,
 )
 
@@ -112,3 +114,26 @@ def test_tail_policy_selects_improvement_or_falls_back_to_point() -> None:
         {"0.5": [-5.0, -4.0, 20.0, 20.0, 20.0]},
     )
     assert fallback["selected_policy"] == "point"
+
+
+def test_optimizer_action_weights_are_bounded_and_action_sensitive() -> None:
+    weights = optimizer_action_weights(
+        [0.0, 0.5, 0.0],
+        [0.0, 0.0, 1.0],
+        power_mw=1.0,
+        emphasis=4.0,
+    )
+    assert weights.tolist() == pytest.approx([1.0, 3.0, 5.0])
+
+
+def test_decision_weighted_selector_uses_mean_and_tail_guardrail() -> None:
+    selected = select_decision_weighted_model(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        [2.0, 3.0, 10.0, 10.0, 10.0],
+    )
+    assert selected["selected_model"] == "decision_weighted"
+    rejected = select_decision_weighted_model(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        [-10.0, -9.0, 20.0, 20.0, 20.0],
+    )
+    assert rejected["selected_model"] == "baseline"
