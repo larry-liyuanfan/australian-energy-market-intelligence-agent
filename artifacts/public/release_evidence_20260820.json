@@ -92,7 +92,7 @@
     "clean_room_job": "29433844",
     "clean_room_git_sha": "d6c763581920413bef0a8081fc81ca67efdb708c",
     "pytest": "14 passed locally and in GitHub Actions",
-    "github_actions_run": "32364341211 passed",
+    "github_actions_run": "32365023174 passed, including Prometheus config/rule/unit tests",
     "ruff": "passed",
     "mypy": "src and scripts passed",
     "pip_audit_known_vulnerabilities": 0,

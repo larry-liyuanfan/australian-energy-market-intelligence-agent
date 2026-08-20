@@ -26,8 +26,10 @@
     "target_up": 1,
     "rules_loaded": 5,
     "rules_health_ok": 5,
+    "rule_unit_tests": "2/2 passed: sustained target-down fires; sustained target-up does not fire",
     "firing_alerts": 0,
-    "external_notifications": false
+    "external_notifications": false,
+    "test_boundary": "Synthetic Prometheus fixture; not a real outage or delivery test."
   },
   "boundaries": [
     "Loopback evidence is not a public-internet SLA.",

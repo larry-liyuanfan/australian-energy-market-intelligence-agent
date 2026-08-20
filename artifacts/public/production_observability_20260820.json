@@ -39,11 +39,13 @@
     "prometheus_version": "3.5.0",
     "promtool_config_valid": true,
     "promtool_rules_valid": true,
+    "promtool_rule_unit_tests": "2/2 passed: sustained target-down fires; sustained target-up does not fire",
     "rules_loaded": 5,
     "rules_health_ok": 5,
     "target_up": 1,
     "firing_alerts": 0,
-    "external_notifications": false
+    "external_notifications": false,
+    "test_boundary": "Synthetic alert-rule fixture only; not evidence of a real outage or notification delivery."
   },
   "quality": {
     "pytest": "14 passed locally and in GitHub Actions",
