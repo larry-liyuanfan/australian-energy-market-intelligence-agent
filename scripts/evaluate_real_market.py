@@ -17,8 +17,10 @@ from typing import Any
 
 import numpy as np
 
-from energy_agent.battery import DispatchResult, optimize_dispatch
+from energy_agent.battery import DispatchResult, optimize_dispatch, threshold_dispatch
 from energy_agent.schemas import BatterySpec
+
+DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
 
 
 def load(path: Path) -> dict[str, list[dict[str, Any]]]:
@@ -99,34 +101,16 @@ def _realized(schedule: DispatchResult, prices: list[float]) -> float:
     )
 
 
-def threshold_dispatch(prices: list[float], spec: BatterySpec, low: float, high: float) -> DispatchResult:
-    eta = math.sqrt(spec.round_trip_efficiency)
-    dt = 5 / 60
-    soc = spec.initial_soc_fraction * spec.energy_mwh
-    minimum = spec.min_soc_fraction * spec.energy_mwh
-    maximum = spec.max_soc_fraction * spec.energy_mwh
-    charge: list[float] = []
-    discharge: list[float] = []
-    states = [soc]
-    for index, price in enumerate(prices):
-        intervals_left = len(prices) - index
-        target = spec.terminal_soc_fraction * spec.energy_mwh
-        mandatory_charge = max(0.0, (target - soc) / (eta * dt * intervals_left))
-        mandatory_discharge = max(0.0, (soc - target) * eta / (dt * intervals_left))
-        c = min(spec.power_mw, (maximum - soc) / (eta * dt)) if price <= low else 0.0
-        d = min(spec.power_mw, (soc - minimum) * eta / dt) if price >= high else 0.0
-        if intervals_left <= 12:
-            if soc < target:
-                c, d = max(c, mandatory_charge), 0.0
-            elif soc > target:
-                c, d = 0.0, max(d, mandatory_discharge)
-        soc += eta * c * dt - d * dt / eta
-        charge.append(c)
-        discharge.append(d)
-        states.append(soc)
-    margin = sum((d - c) * p * dt for c, d, p in zip(charge, discharge, prices, strict=True))
-    throughput = sum((c + d) * dt for c, d in zip(charge, discharge, strict=True))
-    return DispatchResult(charge, discharge, states, margin, throughput / (2 * spec.energy_mwh), 0.0, 0.0)
+def _discharged_mwh(schedule: DispatchResult) -> float:
+    return float(sum(schedule.discharge_mw) * (5 / 60))
+
+
+def lower_tail_mean(values: list[float], probability: float = 0.05) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    count = max(1, math.ceil(len(ordered) * probability))
+    return float(np.mean(ordered[:count]))
 
 
 def bootstrap_mean(values: list[float], seed: int = 20260820, samples: int = 1000) -> list[float]:
@@ -227,6 +211,47 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
                 "forecast_cycles": forecast_schedule.equivalent_full_cycles,
             }
         )
+    degradation_sensitivity: dict[str, dict[str, Any]] = {}
+    for cost in DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED:
+        daily_gross: list[float] = []
+        daily_net: list[float] = []
+        daily_cycles: list[float] = []
+        discharged_mwh = 0.0
+        for day, actual in sorted(by_day.items()):
+            forecast = forecast_by_day[day]
+            if len(actual) != 288 or len(forecast) != 288:
+                continue
+            schedule = optimize_dispatch(
+                forecast,
+                spec,
+                variable_degradation_cost_aud_per_mwh_discharged=cost,
+            )
+            gross = _realized(schedule, actual)
+            discharged = _discharged_mwh(schedule)
+            daily_gross.append(gross)
+            daily_net.append(gross - cost * discharged)
+            daily_cycles.append(schedule.equivalent_full_cycles)
+            discharged_mwh += discharged
+        gross_total = sum(daily_gross)
+        net_total = sum(daily_net)
+        sensitivity_annualizer = 365 / len(daily_net) if daily_net else 0.0
+        degradation_sensitivity[str(int(cost))] = {
+            "variable_degradation_cost_aud_per_mwh_discharged": cost,
+            "gross_spot_margin_aud": gross_total,
+            "discharged_mwh": discharged_mwh,
+            "variable_degradation_cost_proxy_aud": cost * discharged_mwh,
+            "net_operating_margin_proxy_aud": net_total,
+            "net_operating_proxy_aud_per_mw_year": net_total
+            * sensitivity_annualizer
+            / spec.power_mw,
+            "equivalent_full_cycles": sum(daily_cycles),
+            "positive_day_share": float(np.mean(np.asarray(daily_net) > 0))
+            if daily_net
+            else 0.0,
+            "daily_net_margin_mean_95_interval": bootstrap_mean(daily_net),
+            "daily_net_margin_p05": float(np.quantile(daily_net, 0.05)) if daily_net else 0.0,
+            "daily_net_margin_cvar05": lower_tail_mean(daily_net),
+        }
     forecast_margins = [float(row["forecast_margin"]) for row in daily]
     rule_margins = [float(row["rule_margin"]) for row in daily]
     oracle_margins = [float(row["oracle_margin"]) for row in daily]
@@ -285,7 +310,8 @@ def evaluate_region(region: str, rows: list[dict[str, Any]]) -> dict[str, Any]:
             "capture_rate": forecast_total / oracle_total if oracle_total else None,
             "oracle_regret_aud": oracle_total - forecast_total,
             "daily_forecast_margin_mean_95_interval": bootstrap_mean(forecast_margins),
-            "economic_boundary": "historical spot-market gross-margin proxy; excludes CAPEX, degradation, network fees, FCAS and investment returns",
+            "degradation_sensitivity": degradation_sensitivity,
+            "economic_boundary": "historical spot-market gross and variable-degradation sensitivity proxies; the cycling cost is user-supplied rather than asset-specific; excludes CAPEX, fixed O&M, network fees, FCAS and investment returns",
         },
         "calculation_seconds": time.perf_counter() - region_started,
     }

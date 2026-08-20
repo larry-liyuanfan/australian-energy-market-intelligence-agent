@@ -37,6 +37,10 @@ class MarketStore:
     def select(self, region: Region, start: datetime, end: datetime) -> list[MarketRow]:
         return [row for row in self.rows if row.region == region and start <= row.interval <= end]
 
+    def before(self, region: Region, at: datetime, limit: int | None = None) -> list[MarketRow]:
+        rows = [row for row in self.rows if row.region == region and row.interval < at]
+        return rows[-limit:] if limit is not None else rows
+
     def closest(self, region: Region, at: datetime) -> MarketRow | None:
         rows = [row for row in self.rows if row.region == region]
         return min(rows, key=lambda row: abs((row.interval - at).total_seconds())) if rows else None

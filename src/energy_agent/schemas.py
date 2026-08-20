@@ -88,6 +88,7 @@ class BatterySpec(StrictModel):
 class OptimizeBatteryDispatchInput(MarketFilter):
     battery: BatterySpec = Field(default_factory=BatterySpec)
     objective: Literal["forecast", "perfect_foresight", "threshold_rule"] = "forecast"
+    variable_degradation_cost_aud_per_mwh_discharged: float = Field(default=0.0, ge=0, le=10_000)
 
 
 class ExplainDataCoverageInput(StrictModel):

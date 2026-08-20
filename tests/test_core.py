@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -9,9 +10,9 @@ from energy_agent.agent import EnergyAgent
 from energy_agent.api import app
 from energy_agent.battery import optimize_dispatch
 from energy_agent.forecast import seasonal_conformal
-from energy_agent.market import fixture_store, robust_events
+from energy_agent.market import MarketRow, MarketStore, fixture_store, robust_events
 from energy_agent.providers import ModelStudioPlanner
-from energy_agent.schemas import TOOL_MODELS, AgentQueryRequest, BatterySpec, ToolResult
+from energy_agent.schemas import TOOL_MODELS, AgentQueryRequest, BatterySpec, Region, ToolResult
 from energy_agent.tools import ToolRegistry
 
 
@@ -51,6 +52,33 @@ def test_battery_golden_arbitrage_and_constraints() -> None:
     assert all(not (c > 1e-7 and d > 1e-7) for c, d in zip(result.charge_mw, result.discharge_mw, strict=True))
 
 
+def test_battery_variable_degradation_proxy_changes_dispatch_economics() -> None:
+    spec = BatterySpec()
+    prices = [-20.0] * 12 + [120.0] * 12
+    baseline = optimize_dispatch(prices, spec)
+    penalized = optimize_dispatch(
+        prices,
+        spec,
+        variable_degradation_cost_aud_per_mwh_discharged=100.0,
+    )
+    assert penalized.equivalent_full_cycles <= baseline.equivalent_full_cycles + 1e-9
+    assert penalized.variable_degradation_cost_proxy_aud == pytest.approx(
+        100.0 * penalized.discharged_mwh
+    )
+    assert penalized.net_operating_margin_proxy_aud == pytest.approx(
+        penalized.gross_margin_aud - penalized.variable_degradation_cost_proxy_aud
+    )
+
+
+def test_battery_rejects_negative_variable_degradation_cost() -> None:
+    with pytest.raises(ValueError, match="non-negative"):
+        optimize_dispatch(
+            [10.0, 20.0],
+            BatterySpec(),
+            variable_degradation_cost_aud_per_mwh_discharged=-1.0,
+        )
+
+
 def test_forecast_intervals_are_ordered() -> None:
     forecast = seasonal_conformal([float(i % 50) for i in range(400)], 12)
     assert len(forecast.point) == 12
@@ -68,6 +96,58 @@ def test_registry_rejects_unknown_dsl() -> None:
     registry = ToolRegistry(fixture_store())
     with pytest.raises(ValueError):
         registry.validate("raw_sql", {"sql": "select *"})
+
+
+def test_forecast_dispatch_is_invariant_to_future_actual_prices() -> None:
+    start = datetime(2025, 1, 1, tzinfo=UTC)
+    history = [
+        MarketRow(start + timedelta(minutes=5 * index), Region.SA1, float(index % 20), 1_000.0)
+        for index in range(288)
+    ]
+    future_start = start + timedelta(days=1)
+    low_future = [
+        MarketRow(future_start + timedelta(minutes=5 * index), Region.SA1, 10.0, 1_000.0)
+        for index in range(12)
+    ]
+    high_future = [
+        MarketRow(future_start + timedelta(minutes=5 * index), Region.SA1, 10_000.0, 1_000.0)
+        for index in range(12)
+    ]
+    arguments = {
+        "region": "SA1",
+        "window": {
+            "start": future_start.isoformat(),
+            "end": (future_start + timedelta(minutes=55)).isoformat(),
+        },
+        "objective": "forecast",
+    }
+    low_result = ToolRegistry(MarketStore(history + low_future)).execute(
+        "optimize_battery_dispatch", arguments
+    )
+    high_result = ToolRegistry(MarketStore(history + high_future)).execute(
+        "optimize_battery_dispatch", arguments
+    )
+    assert low_result.data["charge_mw"] == high_result.data["charge_mw"]
+    assert low_result.data["discharge_mw"] == high_result.data["discharge_mw"]
+    assert low_result.data["objective"] == "forecast"
+    assert "not realized settlement" in low_result.warnings[0]
+
+
+def test_perfect_foresight_dispatch_requires_complete_window() -> None:
+    start = datetime(2025, 1, 1, tzinfo=UTC)
+    store = MarketStore([MarketRow(start, Region.SA1, 100.0, 1_000.0)])
+    with pytest.raises(ValueError, match="incomplete"):
+        ToolRegistry(store).execute(
+            "optimize_battery_dispatch",
+            {
+                "region": "SA1",
+                "window": {
+                    "start": start.isoformat(),
+                    "end": (start + timedelta(minutes=5)).isoformat(),
+                },
+                "objective": "perfect_foresight",
+            },
+        )
 
 
 def test_api_contract_and_trace() -> None:

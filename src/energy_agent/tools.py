@@ -4,7 +4,7 @@ import statistics
 from datetime import timedelta
 from typing import Any
 
-from .battery import optimize_dispatch
+from .battery import optimize_dispatch, threshold_dispatch
 from .evidence import EvidenceIndex
 from .forecast import seasonal_conformal
 from .market import MarketStore, robust_events
@@ -99,10 +99,58 @@ class ToolRegistry:
                 warnings=["Risk interval is a historical conformal estimate, not a guarantee."],
             )
         if name == "optimize_battery_dispatch":
-            rows = self.store.select(args.region, args.window.start, args.window.end)
-            dispatch = optimize_dispatch([row.rrp for row in rows], args.battery)
+            interval_count = int((args.window.end - args.window.start).total_seconds() // 300) + 1
+            if interval_count > 288:
+                raise ValueError("dispatch window must not exceed 288 five-minute intervals")
+            warnings: list[str] = []
+            if args.objective == "perfect_foresight":
+                rows = self.store.select(args.region, args.window.start, args.window.end)
+                if len(rows) != interval_count:
+                    raise ValueError("perfect-foresight window has incomplete market coverage")
+                signal = [row.rrp for row in rows]
+                dispatch = optimize_dispatch(
+                    signal,
+                    args.battery,
+                    variable_degradation_cost_aud_per_mwh_discharged=(
+                        args.variable_degradation_cost_aud_per_mwh_discharged
+                    ),
+                )
+                warnings.append("Perfect foresight is an historical oracle, not a deployable policy.")
+            else:
+                history = self.store.before(args.region, args.window.start, limit=30 * 288)
+                forecast = seasonal_conformal([row.rrp for row in history], interval_count)
+                signal = forecast.point
+                if args.objective == "forecast":
+                    dispatch = optimize_dispatch(
+                        signal,
+                        args.battery,
+                        variable_degradation_cost_aud_per_mwh_discharged=(
+                            args.variable_degradation_cost_aud_per_mwh_discharged
+                        ),
+                    )
+                else:
+                    history_prices = [row.rrp for row in history]
+                    dispatch = threshold_dispatch(
+                        signal,
+                        args.battery,
+                        statistics.quantiles(history_prices, n=4)[0],
+                        statistics.quantiles(history_prices, n=4)[2],
+                        variable_degradation_cost_aud_per_mwh_discharged=(
+                            args.variable_degradation_cost_aud_per_mwh_discharged
+                        ),
+                    )
+                warnings.append(
+                    "Schedule uses only observations before the requested window; reported margin is on the forecast signal, not realized settlement."
+                )
             data = dispatch.__dict__ | {
-                "economic_boundary": "historical spot-market gross-margin proxy; excludes CAPEX, degradation, network fees, FCAS and investment returns"
+                "objective": args.objective,
+                "signal_intervals": len(signal),
+                "economic_boundary": "historical spot-market operating proxy; variable degradation is a user-supplied sensitivity, not an asset-specific estimate; excludes CAPEX, fixed O&M, network fees, FCAS and investment returns"
             }
-            return ToolResult(tool_name=name, data=data, evidence=self.store.evidence)
+            return ToolResult(
+                tool_name=name,
+                data=data,
+                evidence=self.store.evidence,
+                warnings=warnings,
+            )
         raise AssertionError(name)
