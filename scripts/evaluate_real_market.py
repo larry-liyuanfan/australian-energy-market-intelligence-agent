@@ -26,6 +26,7 @@ from energy_agent.battery import (
 from energy_agent.evaluation import (
     adaptive_conformal_bounds,
     parse_degradation_costs,
+    residual_price_scenarios,
     seasonal_fold_windows,
 )
 from energy_agent.schemas import BatterySpec
@@ -140,29 +141,6 @@ def daily_mean_interval(times: list[datetime], values: np.ndarray) -> list[float
     for timestamp, value in zip(times, values, strict=True):
         grouped[timestamp.date().isoformat()].append(float(value))
     return bootstrap_mean([float(np.mean(day_values)) for day_values in grouped.values()])
-
-
-def residual_price_scenarios(
-    forecast: list[float],
-    calibration_residuals: np.ndarray,
-    *,
-    scenario_count: int,
-    seed_material: str,
-) -> list[list[float]]:
-    """Sample complete calibration-day residual paths without test labels."""
-
-    if len(forecast) != 288:
-        raise ValueError("risk scenarios require one complete five-minute day")
-    residuals = np.asarray(calibration_residuals, dtype=float)
-    complete_days = len(residuals) // 288
-    if complete_days < 2 or scenario_count < 2:
-        raise ValueError("risk scenarios require at least two calibration days and scenarios")
-    blocks = residuals[-complete_days * 288 :].reshape(complete_days, 288)
-    seed = int.from_bytes(hashlib.sha256(seed_material.encode("utf-8")).digest()[:8], "big")
-    rng = np.random.default_rng(seed)
-    selected = rng.choice(complete_days, size=scenario_count - 1, replace=True)
-    point = np.asarray(forecast, dtype=float)
-    return [point.tolist(), *[(point + blocks[index]).tolist() for index in selected]]
 
 
 def evaluate_region(

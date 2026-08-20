@@ -7,9 +7,9 @@ from energy_agent.evaluation import (
     adaptive_conformal_bounds,
     citation_structure_metrics,
     parse_degradation_costs,
+    residual_price_scenarios,
     seasonal_fold_windows,
 )
-from scripts.evaluate_real_market import residual_price_scenarios
 
 
 def test_residual_scenarios_are_deterministic_and_use_complete_days() -> None:

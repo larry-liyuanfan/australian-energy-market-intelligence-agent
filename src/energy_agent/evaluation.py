@@ -101,6 +101,29 @@ def citation_structure_metrics(answer: str, valid_evidence_ids: set[str]) -> dic
     }
 
 
+def residual_price_scenarios(
+    forecast: list[float],
+    calibration_residuals: np.ndarray,
+    *,
+    scenario_count: int,
+    seed_material: str,
+) -> list[list[float]]:
+    """Sample complete calibration-day residual paths without test labels."""
+
+    if len(forecast) != 288:
+        raise ValueError("risk scenarios require one complete five-minute day")
+    residuals = np.asarray(calibration_residuals, dtype=float)
+    complete_days = len(residuals) // 288
+    if complete_days < 2 or scenario_count < 2:
+        raise ValueError("risk scenarios require at least two calibration days and scenarios")
+    blocks = residuals[-complete_days * 288 :].reshape(complete_days, 288)
+    seed = int.from_bytes(hashlib.sha256(seed_material.encode("utf-8")).digest()[:8], "big")
+    rng = np.random.default_rng(seed)
+    selected = rng.choice(complete_days, size=scenario_count - 1, replace=True)
+    point = np.asarray(forecast, dtype=float)
+    return [point.tolist(), *[(point + blocks[index]).tolist() for index in selected]]
+
+
 def seasonal_fold_windows(start: datetime, end: datetime) -> tuple[SeasonalFold, ...]:
     """Return complete 28-day spring/summer/autumn/winter test windows.
 
