@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -21,6 +22,15 @@ from energy_agent.battery import DispatchResult, optimize_dispatch, threshold_di
 from energy_agent.schemas import BatterySpec
 
 DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
+
+
+def parse_degradation_costs(value: str) -> tuple[float, ...]:
+    """Parse comma-separated CLI values or Slurm-safe colon/semicolon values."""
+
+    costs = tuple(float(item) for item in re.split(r"[,;:]", value) if item.strip())
+    if not costs or any(item < 0 for item in costs):
+        raise ValueError("degradation costs must be a non-empty list of non-negative numbers")
+    return costs
 
 
 def load(path: Path) -> dict[str, list[dict[str, Any]]]:
@@ -333,7 +343,7 @@ def main() -> None:
     parser.add_argument(
         "--degradation-costs",
         default=",".join(str(int(value)) for value in DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED),
-        help="comma-separated non-negative AUD/MWh-discharged sensitivity values",
+        help="comma-, colon- or semicolon-separated non-negative AUD/MWh-discharged values",
     )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
@@ -347,9 +357,10 @@ def main() -> None:
     unknown_regions = sorted(set(selected_regions) - set(grouped))
     if not selected_regions or unknown_regions:
         raise SystemExit(f"invalid selected regions: {unknown_regions or selected_regions}")
-    degradation_costs = tuple(float(item) for item in args.degradation_costs.split(","))
-    if not degradation_costs or any(value < 0 for value in degradation_costs):
-        raise SystemExit("degradation costs must be a non-empty list of non-negative numbers")
+    try:
+        degradation_costs = parse_degradation_costs(args.degradation_costs)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
     results = {
         region: evaluate_region(region, grouped[region], degradation_costs)
         for region in selected_regions

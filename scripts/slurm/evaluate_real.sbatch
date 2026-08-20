@@ -12,7 +12,8 @@ set -euo pipefail
 cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
 OUTPUT_DIR="${OUTPUT_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
 ENERGY_REGIONS="${ENERGY_REGIONS:-NSW1,QLD1,SA1,TAS1,VIC1}"
-DEGRADATION_COSTS="${DEGRADATION_COSTS:-0,25,50,100}"
+# Colons survive `sbatch --export`; commas are parsed by Slurm as variable separators.
+DEGRADATION_COSTS="${DEGRADATION_COSTS:-0:25:50:100}"
 VENV="/tmp/energy-eval-${SLURM_JOB_ID:?}"
 trap 'rm -rf -- "${VENV}"' EXIT
 module purge
