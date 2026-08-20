@@ -90,7 +90,10 @@ def main() -> None:
     metrics_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     manifest = {
         "created_at": datetime.now(UTC).isoformat(),
-        "git_sha": os.environ.get("ENERGY_GIT_COMMIT", "unversioned-local-run"),
+        "summary_git_sha": os.environ.get("SUMMARY_GIT_COMMIT", "unversioned-local-run"),
+        "evaluation_git_sha": os.environ.get(
+            "EVALUATION_GIT_COMMIT", "unversioned-evaluation"
+        ),
         "source_metrics_sha256": hashlib.sha256(args.metrics.read_bytes()).hexdigest(),
         "metrics_sha256": hashlib.sha256(metrics_path.read_bytes()).hexdigest(),
     }
