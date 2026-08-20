@@ -12,6 +12,7 @@ set -euo pipefail
 SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent}"
 ENERGY_GIT_COMMIT="${ENERGY_GIT_COMMIT:-$(git -C "${SOURCE_REPO}" rev-parse HEAD)}"
 git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
+export ENERGY_GIT_COMMIT
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-merge-code-${SLURM_JOB_ID:?}"
 git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"
 git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"

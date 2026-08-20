@@ -30,6 +30,7 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     ).read_text(encoding="utf-8")
     assert 'git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"' in merge_script
     assert 'git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"' in merge_script
+    assert "export ENERGY_GIT_COMMIT" in merge_script
     assert 'cd "${CODE_ROOT}"' in merge_script
 
 

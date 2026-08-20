@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from energy_agent.evaluation import merge_evaluation_runs
+from energy_agent.merge import merge_evaluation_runs
 
 
 def _write_shard(root: Path, region: str, *, git_sha: str = "a" * 40) -> Path:
