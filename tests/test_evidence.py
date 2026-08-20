@@ -1,4 +1,51 @@
-from energy_agent.evidence import HybridEvidenceIndex, OfficialChunk
+from typing import Any
+
+from energy_agent.evidence import ElasticsearchHybridEvidenceIndex, HybridEvidenceIndex, OfficialChunk
+
+
+class FakeIndices:
+    def __init__(self) -> None:
+        self.created: set[str] = set()
+        self.aliases: dict[str, dict[str, object]] = {}
+
+    def exists(self, index: str) -> bool:
+        return index in self.created
+
+    def create(self, index: str, settings: object, mappings: object) -> None:
+        del settings, mappings
+        self.created.add(index)
+
+    def get_alias(self, name: str, **_: object) -> dict[str, dict[str, object]]:
+        return self.aliases.get(name, {})
+
+    def exists_alias(self, name: str) -> bool:
+        return name in self.aliases
+
+    def update_aliases(self, actions: list[dict[str, dict[str, str]]]) -> None:
+        for action in actions:
+            if add := action.get("add"):
+                self.aliases.setdefault(add["alias"], {})[add["index"]] = {}
+            if remove := action.get("remove"):
+                self.aliases.setdefault(remove["alias"], {}).pop(remove["index"], None)
+
+
+class FakeElasticsearch:
+    def __init__(self) -> None:
+        self.indices = FakeIndices()
+        self.documents: dict[str, dict[str, Any]] = {}
+
+    def bulk(self, operations: list[dict[str, Any]], refresh: bool) -> dict[str, bool]:
+        assert refresh
+        for position in range(0, len(operations), 2):
+            self.documents[str(operations[position]["index"]["_id"])] = operations[position + 1]
+        return {"errors": False}
+
+    def search(self, **_: object) -> dict[str, object]:
+        relevant = self.documents["b"]
+        return {"hits": {"hits": [{"_score": 12.0, "_source": {"chunk_id": relevant["chunk_id"]}}]}}
+
+    def count(self, **_: object) -> dict[str, int]:
+        return {"count": len(self.documents)}
 
 
 def test_hybrid_evidence_ranks_relevant_official_chunk() -> None:
@@ -23,3 +70,20 @@ def test_hybrid_evidence_ranks_relevant_official_chunk() -> None:
     ]
     index = HybridEvidenceIndex(documents, dense_dimensions=2)
     assert index.search("South Australia transmission imports", top_k=1)[0]["source_id"] == "event"
+
+
+def test_elasticsearch_bm25_is_indexed_and_fused_without_user_dsl() -> None:
+    common = {"published_at": "2026-01-01", "retrieved_at": "2026-08-20", "sha256": "0" * 64}
+    documents = [
+        OfficialChunk("a", "qed", "Battery", "Evening peak", "https://aemo.com.au/a", **common),
+        OfficialChunk("b", "event", "Constraint", "Imports restricted", "https://aer.gov.au/b", **common),
+    ]
+    client = FakeElasticsearch()
+    index = ElasticsearchHybridEvidenceIndex(HybridEvidenceIndex(documents, dense_dimensions=2), client)
+    index.ensure_index()
+    index.ensure_index()
+    result = index.search("transmission constraint", top_k=1)
+    assert len(client.documents) == 2
+    assert index.indexed_documents == 2
+    assert index.index_name in client.indices.aliases[index.alias]
+    assert result[0]["chunk_id"] == "b"

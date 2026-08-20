@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from energy_agent.evidence import HybridEvidenceIndex, load_official_chunks
+from energy_agent.evidence import ElasticsearchHybridEvidenceIndex, HybridEvidenceIndex, load_official_chunks
 
 TASKS = [
     ("Q2 2026 South Australia cold still conditions transmission constraints", "aemo-qed-q2-2026"),
@@ -41,9 +41,17 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--elasticsearch-url", help="Optional fixed-query production BM25 backend")
+    parser.add_argument("--git-sha", help="Explicit deployed revision when the runner is outside a Git checkout")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
-    index = HybridEvidenceIndex(load_official_chunks(args.evidence))
+    local_index = HybridEvidenceIndex(load_official_chunks(args.evidence))
+    index: HybridEvidenceIndex | ElasticsearchHybridEvidenceIndex = local_index
+    if args.elasticsearch_url:
+        from elasticsearch import Elasticsearch
+
+        index = ElasticsearchHybridEvidenceIndex(local_index, Elasticsearch(args.elasticsearch_url))
+        index.ensure_index()
     rows: list[dict[str, Any]] = []
     metrics: dict[str, Any] = {
         "scope": "20-query curated official-source routing benchmark; source-level relevance, not passage factuality"
@@ -87,14 +95,14 @@ def main() -> None:
     results_path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     manifest = {
-        "git_sha": subprocess.run(
-            ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
-        ).stdout.strip(),
+        "git_sha": args.git_sha
+        or subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip(),
         "python": sys.version,
         "platform": platform.platform(),
         "evidence_sha256": hashlib.sha256(args.evidence.read_bytes()).hexdigest(),
         "predictions_sha256": hashlib.sha256(results_path.read_bytes()).hexdigest(),
         "tasks": len(TASKS),
+        "retrieval_backend": index.backend,
         "label_boundary": "Queries and expected official reports are curated source-routing labels; no passage-level human judgments.",
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

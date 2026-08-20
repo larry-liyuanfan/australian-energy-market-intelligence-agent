@@ -79,6 +79,12 @@ def test_api_contract_and_trace() -> None:
         trace = client.get(f"/api/agent/traces/{payload['trace_id']}")
         assert trace.status_code == 200
         assert trace.json()["verified_results"]
+        metrics = client.get("/metrics")
+        assert metrics.status_code == 200
+        assert 'energy_agent_queries_total{status="completed"}' in metrics.text
+        assert "energy_agent_query_duration_seconds_count" in metrics.text
+        assert 'energy_agent_tool_calls_total{tool="search_official_evidence"' in metrics.text
+        assert "energy_agent_citations_total" in metrics.text
 
 
 def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:

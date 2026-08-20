@@ -1,27 +1,31 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 
 from .agent import EnergyAgent
-from .evidence import HybridEvidenceIndex, load_official_chunks
+from .evidence import ElasticsearchHybridEvidenceIndex, EvidenceIndex, HybridEvidenceIndex, load_official_chunks
 from .market import fixture_store, load_dispatch_store
+from .metrics import ServiceMetrics
 from .providers import ModelStudioPlanner
 from .schemas import AgentQueryRequest, AgentQueryResponse
 from .tools import ToolRegistry
+
+logger = logging.getLogger(__name__)
 
 data_path = os.getenv("ENERGY_DATA_PATH")
 manifest_path = os.getenv("ENERGY_DATA_MANIFEST")
 evidence_path = os.getenv("ENERGY_EVIDENCE_PATH")
 store = load_dispatch_store(Path(data_path), Path(manifest_path)) if data_path and manifest_path else fixture_store()
-evidence_index = HybridEvidenceIndex(load_official_chunks(Path(evidence_path))) if evidence_path else None
-registry = ToolRegistry(store, evidence_index)
+local_evidence_index = HybridEvidenceIndex(load_official_chunks(Path(evidence_path))) if evidence_path else None
+evidence_index: EvidenceIndex | None = local_evidence_index
 planner_provider = ModelStudioPlanner.from_environment()
-agent = EnergyAgent(registry, planner_provider=planner_provider)
 redis_client = None
 elasticsearch_client = None
 if redis_url := os.getenv("ENERGY_REDIS_URL"):
@@ -30,7 +34,8 @@ if redis_url := os.getenv("ENERGY_REDIS_URL"):
 
         redis_client = Redis.from_url(redis_url, decode_responses=True)
         redis_client.ping()
-    except Exception:
+    except Exception as exc:
+        logger.warning("Redis unavailable; continuing without durable trace cache: %s", type(exc).__name__)
         redis_client = None
 if elasticsearch_url := os.getenv("ENERGY_ELASTICSEARCH_URL"):
     try:
@@ -38,8 +43,16 @@ if elasticsearch_url := os.getenv("ENERGY_ELASTICSEARCH_URL"):
 
         elasticsearch_client = Elasticsearch(elasticsearch_url)
         elasticsearch_client.info()
-    except Exception:
+        if local_evidence_index is not None:
+            indexed = ElasticsearchHybridEvidenceIndex(local_evidence_index, elasticsearch_client)
+            indexed.ensure_index()
+            evidence_index = indexed
+    except Exception as exc:
+        logger.warning("Elasticsearch evidence backend unavailable; using local hybrid: %s", type(exc).__name__)
         elasticsearch_client = None
+registry = ToolRegistry(store, evidence_index)
+agent = EnergyAgent(registry, planner_provider=planner_provider)
+service_metrics = ServiceMetrics()
 app = FastAPI(title="Australian Energy Market Intelligence Agent", version="0.1.0")
 
 
@@ -51,14 +64,23 @@ def health() -> dict[str, object]:
         "rows": len(store.rows),
         "evidence_chunks": len(evidence_index.documents) if evidence_index else 0,
         "redis": "connected" if redis_client else "disabled_or_unavailable",
-        "elasticsearch": "connected" if elasticsearch_client else "disabled_or_unavailable",
+        "elasticsearch": "connected_indexed" if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else (
+            "connected" if elasticsearch_client else "disabled_or_unavailable"
+        ),
+        "evidence_backend": evidence_index.backend if evidence_index else "market_evidence_fallback",
+        "evidence_index": evidence_index.index_name if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else None,
+        "evidence_indexed_documents": (
+            evidence_index.indexed_documents if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else 0
+        ),
         "model_provider": planner_provider.name if planner_provider else "deterministic",
     }
 
 
 @app.post("/api/agent/query", response_model=AgentQueryResponse)
 def query(request: AgentQueryRequest) -> AgentQueryResponse:
+    started = time.perf_counter()
     response = agent.run(request)
+    service_metrics.observe(response, time.perf_counter() - started)
     if redis_client:
         redis_client.setex(
             f"energy:trace:{response.trace_id}",
@@ -88,4 +110,9 @@ def tools() -> dict[str, object]:
 
 @app.get("/metrics", response_class=PlainTextResponse)
 def metrics() -> str:
-    return "energy_agent_up 1\n"
+    return service_metrics.render(
+        planner_provider.name if planner_provider else "deterministic",
+        evidence_index.backend if evidence_index else "market_evidence_fallback",
+        len(store.rows),
+        len(evidence_index.documents) if evidence_index else 0,
+    )

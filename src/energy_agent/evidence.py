@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 import numpy as np
 
@@ -26,6 +27,18 @@ class OfficialChunk:
     evidence_type: str = "explanatory"
 
 
+class EvidenceIndex(Protocol):
+    documents: list[OfficialChunk]
+    backend: str
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
+    ) -> list[dict[str, Any]]: ...
+
+
 def tokens(text: str) -> list[str]:
     return TOKEN.findall(text.lower())
 
@@ -37,6 +50,7 @@ class HybridEvidenceIndex:
         if not documents:
             raise ValueError("documents must not be empty")
         self.documents = documents
+        self.backend = "local_hybrid"
         self.tokenized = [tokens(f"{doc.title} {doc.text}") for doc in documents]
         self.term_counts = [Counter(row) for row in self.tokenized]
         self.lengths = np.asarray([len(row) for row in self.tokenized], dtype=float)
@@ -94,8 +108,13 @@ class HybridEvidenceIndex:
         query: str,
         top_k: int = 5,
         mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
+        lexical_scores: dict[str, float] | None = None,
     ) -> list[dict[str, Any]]:
-        bm25 = self._bm25(query)
+        bm25 = (
+            np.asarray([lexical_scores.get(doc.chunk_id, 0.0) for doc in self.documents], dtype=float)
+            if lexical_scores is not None
+            else self._bm25(query)
+        )
         dense = self._dense(query)
         bm25_ranks, dense_ranks = self._ranks(bm25), self._ranks(dense)
         query_terms = set(tokens(query))
@@ -126,6 +145,93 @@ class HybridEvidenceIndex:
                 }
             )
         return output
+
+
+class ElasticsearchHybridEvidenceIndex:
+    """Fixed-query Elasticsearch BM25 fused with the local dense/RRF/rerank path."""
+
+    alias = "energy-official-evidence"
+    backend = "elasticsearch_bm25+local_dense_rrf_rerank"
+
+    def __init__(self, local: HybridEvidenceIndex, client: Any) -> None:
+        self.local = local
+        self.documents = local.documents
+        self.client = client
+        digest = hashlib.sha256(
+            "\n".join(f"{doc.chunk_id}:{doc.sha256}" for doc in self.documents).encode()
+        ).hexdigest()[:12]
+        self.index_name = f"energy-official-evidence-{digest}"
+        self.indexed_documents = 0
+
+    def ensure_index(self) -> None:
+        if not self.client.indices.exists(index=self.index_name):
+            self.client.indices.create(
+                index=self.index_name,
+                settings={"number_of_shards": 1, "number_of_replicas": 0},
+                mappings={
+                    "dynamic": "strict",
+                    "properties": {
+                        "chunk_id": {"type": "keyword"},
+                        "source_id": {"type": "keyword"},
+                        "title": {"type": "text"},
+                        "text": {"type": "text"},
+                        "url": {"type": "keyword", "index": False},
+                        "published_at": {"type": "keyword", "index": False},
+                        "retrieved_at": {"type": "keyword", "index": False},
+                        "sha256": {"type": "keyword"},
+                        "evidence_type": {"type": "keyword"},
+                    },
+                },
+            )
+            operations: list[dict[str, object]] = []
+            for doc in self.documents:
+                operations.extend(
+                    [
+                        {"index": {"_index": self.index_name, "_id": doc.chunk_id}},
+                        doc.__dict__,
+                    ]
+                )
+            response = self.client.bulk(operations=operations, refresh=True)
+            if response.get("errors"):
+                raise RuntimeError("Elasticsearch bulk indexing reported errors")
+        aliases = self.client.indices.get_alias(name=self.alias) if self.client.indices.exists_alias(name=self.alias) else {}
+        actions: list[dict[str, dict[str, str]]] = []
+        for old_index in aliases:
+            if old_index != self.index_name:
+                actions.append({"remove": {"index": old_index, "alias": self.alias}})
+        if self.index_name not in aliases:
+            actions.append({"add": {"index": self.index_name, "alias": self.alias}})
+        if actions:
+            self.client.indices.update_aliases(actions=actions)
+        self.indexed_documents = int(self.client.count(index=self.alias)["count"])
+        if self.indexed_documents != len(self.documents):
+            raise RuntimeError(
+                f"Elasticsearch index count mismatch: {self.indexed_documents} != {len(self.documents)}"
+            )
+
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
+    ) -> list[dict[str, Any]]:
+        response = self.client.search(
+            index=self.alias,
+            size=min(100, max(20, top_k * 10)),
+            query={
+                "multi_match": {
+                    "query": query,
+                    "fields": ["title^2", "text"],
+                    "type": "best_fields",
+                }
+            },
+            source=["chunk_id"],
+        )
+        scores = {
+            str(hit["_source"]["chunk_id"]): float(hit.get("_score") or 0.0)
+            for hit in response["hits"]["hits"]
+        }
+        return self.local.search(query, top_k, mode, lexical_scores=scores)
 
 
 def load_official_chunks(path: Path) -> list[OfficialChunk]:

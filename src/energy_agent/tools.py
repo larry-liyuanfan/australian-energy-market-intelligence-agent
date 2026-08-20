@@ -5,14 +5,14 @@ from datetime import timedelta
 from typing import Any
 
 from .battery import optimize_dispatch
-from .evidence import HybridEvidenceIndex
+from .evidence import EvidenceIndex
 from .forecast import seasonal_conformal
 from .market import MarketStore, robust_events
 from .schemas import TOOL_MODELS, Evidence, StrictModel, ToolResult
 
 
 class ToolRegistry:
-    def __init__(self, store: MarketStore, evidence_index: HybridEvidenceIndex | None = None) -> None:
+    def __init__(self, store: MarketStore, evidence_index: EvidenceIndex | None = None) -> None:
         self.store = store
         self.evidence_index = evidence_index
 
@@ -77,7 +77,7 @@ class ToolRegistry:
                 ]
                 return ToolResult(
                     tool_name=name,
-                    data={"retrieval": "BM25+dense+RRF+rerank", "hits": len(evidence)},
+                    data={"retrieval": self.evidence_index.backend, "hits": len(evidence)},
                     evidence=evidence,
                 )
             query = args.query.lower()

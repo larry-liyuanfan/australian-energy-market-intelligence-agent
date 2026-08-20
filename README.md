@@ -61,7 +61,9 @@ The fixed suite has 80 real-window tasks plus 20 separately reported transient e
 
 ## Deployment
 
-The isolated Alibaba Cloud SG Compose stack runs FastAPI, Elasticsearch 8.19, Redis 7.4 and Prometheus 3.5 with loopback-only host bindings and explicit CPU/RAM limits. A verified real-data query returned six citations, persisted its full six-state trace in Redis and kept the synthesized answer to 354 characters. The service loaded 525,600 market rows and 735 evidence chunks; Elasticsearch and Redis health checks passed. This is loopback deployment evidence, not throughput or Internet-SLA evidence.
+The isolated Alibaba Cloud SG Compose stack runs FastAPI, Elasticsearch 8.19, Redis 7.4 and Prometheus 3.5 with loopback-only host bindings and explicit CPU/RAM limits. Elasticsearch now holds a versioned, strict-mapping index behind the `energy-official-evidence` alias (**735/735 chunks**); the service executes a fixed `multi_match` BM25 query and fuses those candidates with local dense retrieval, RRF and deterministic reranking. Users can never submit Elasticsearch DSL. Indexing/count failures fail over to the local hybrid path and are exposed in `/healthz` instead of being reported as indexed success.
+
+`/metrics` exports request status, latency buckets, typed-tool status/recovery, citation totals, provider/backend identity and loaded row/chunk gauges. A staging gate over **100 real-data loopback requests** (five regions × coverage/event/forecast/BESS, concurrency 4) achieved 100/100 HTTP, task, citation and raw-tool success; P50/P95/max latency was **449/1,843/2,292 ms**. This is a bounded single-host loopback service check, not a public-network SLA or an independent answer-quality benchmark.
 
 The optional Model Studio planner follows Alibaba Cloud's [OpenAI-compatible endpoint contract](https://help.aliyun.com/zh/model-studio/compatibility-of-openai-with-dashscope). It reads `MODEL_STUDIO_BASE_URL`, `MODEL_STUDIO_MODEL` and `DASHSCOPE_API_KEY` only from the environment, requires HTTPS, and validates every returned tool name/argument against the registered Pydantic schemas. Credentials were absent during verification, so live-model behavior and cost remain unverified.
 
@@ -90,6 +92,9 @@ python scripts/build_official_evidence.py --output artifacts/evidence
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
+# Optional deployed-backend routing regression and bounded loopback service gate:
+python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-es --elasticsearch-url http://127.0.0.1:9200
+python scripts/evaluate_service.py --base-url http://127.0.0.1:8091 --output artifacts/service-eval.json --fail-on-gate
 ```
 
 To start the restricted service, place the three generated files in `deploy-data/` as `dispatch_features_repaired.csv.gz`, `final_manifest.json` and `evidence_documents.jsonl`, then run:
@@ -107,7 +112,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - LightGBM is not consistently superior to persistence; the negative result remains visible.
 - TAS1 rolling conformal coverage is 88.64%, below the nominal 90% target.
 - Retrieval labels are source-level, anomaly labels are unavailable, and diagnostic associations are not causal attribution.
-- Elasticsearch was healthy but observed near its 1 GiB container limit; production sizing requires more headroom.
+- Elasticsearch is an actual fixed-query retrieval backend, but was observed near its 1 GiB container limit; production sizing still requires more headroom.
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
 
 ## Attribution
