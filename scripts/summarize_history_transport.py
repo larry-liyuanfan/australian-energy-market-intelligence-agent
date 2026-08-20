@@ -30,6 +30,12 @@ def summarize(metrics: dict[str, Any]) -> dict[str, Any]:
     wins = 0
     folds = 0
     positive_regions = 0
+    annualised_values: list[float] = []
+    annualised_rule_values: list[float] = []
+    cycle_values: list[float] = []
+    capture_values: list[float] = []
+    positive_day_values: list[float] = []
+    mae_wins = 0
     for region, payload in sorted(regions.items()):
         region_wins = 0
         for fold_name, fold in sorted(payload["folds"].items()):
@@ -43,12 +49,25 @@ def summarize(metrics: dict[str, Any]) -> dict[str, Any]:
         wins += region_wins
         overall = payload["overall_degradation_sensitivity"][COST_KEY]
         annualised = float(overall["net_operating_proxy_aud_per_mw_year"])
+        test_days = int(overall["test_days"])
+        rule_annualised = float(overall["rule_net_margin_aud"]) / test_days * 365
+        decision = payload["decision_focused_summary"][COST_KEY]
+        mae_wins += int(decision["lightgbm_mae_wins"])
+        annualised_values.append(annualised)
+        annualised_rule_values.append(rule_annualised)
+        cycle_values.append(float(overall["equivalent_full_cycles"]))
+        capture_values.append(float(overall["oracle_capture_rate"]))
+        positive_day_values.append(float(overall["positive_day_share"]))
         positive_regions += int(annualised > 0)
         output_regions[region] = {
             "folds": len(payload["folds"]),
             "lightgbm_dispatch_wins": region_wins,
+            "lightgbm_mae_wins": int(decision["lightgbm_mae_wins"]),
             "net_operating_proxy_aud_per_mw_year": annualised,
+            "rule_net_operating_proxy_aud_per_mw_year": rule_annualised,
+            "relative_rule_lift": float(overall["relative_rule_lift"]),
             "equivalent_full_cycles": float(overall["equivalent_full_cycles"]),
+            "positive_day_share": float(overall["positive_day_share"]),
             "daily_net_margin_cvar05_aud": float(overall["daily_net_margin_cvar05"]),
             "oracle_capture_rate": float(overall["oracle_capture_rate"]),
             "oracle_regret_aud": float(overall["oracle_regret_aud"]),
@@ -62,6 +81,20 @@ def summarize(metrics: dict[str, Any]) -> dict[str, Any]:
         "lightgbm_dispatch_wins": wins,
         "lightgbm_dispatch_win_share": win_share,
         "positive_annualised_regions": positive_regions,
+        "aggregate": {
+            "mean_net_operating_proxy_aud_per_mw_year": float(np.mean(annualised_values)),
+            "mean_rule_net_operating_proxy_aud_per_mw_year": float(
+                np.mean(annualised_rule_values)
+            ),
+            "relative_lift_vs_rule": float(
+                np.mean(annualised_values) / np.mean(annualised_rule_values) - 1
+            ),
+            "mean_equivalent_full_cycles": float(np.mean(cycle_values)),
+            "mean_oracle_capture_rate": float(np.mean(capture_values)),
+            "mean_positive_day_share": float(np.mean(positive_day_values)),
+            "lightgbm_mae_wins": mae_wins,
+            "mae_win_share": mae_wins / folds if folds else 0.0,
+        },
         "fold_delta_mean_aud": float(np.mean(fold_deltas)),
         "fold_delta_mean_95pct_paired_bootstrap": bootstrap_mean_interval(fold_deltas),
         "regions": output_regions,
