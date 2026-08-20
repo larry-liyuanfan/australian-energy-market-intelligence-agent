@@ -7,7 +7,6 @@ import hashlib
 import json
 import math
 import platform
-import re
 import subprocess
 import sys
 import time
@@ -19,18 +18,10 @@ from typing import Any
 import numpy as np
 
 from energy_agent.battery import DispatchResult, optimize_dispatch, threshold_dispatch
+from energy_agent.evaluation import parse_degradation_costs
 from energy_agent.schemas import BatterySpec
 
 DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
-
-
-def parse_degradation_costs(value: str) -> tuple[float, ...]:
-    """Parse comma-separated CLI values or Slurm-safe colon/semicolon values."""
-
-    costs = tuple(float(item) for item in re.split(r"[,;:]", value) if item.strip())
-    if not costs or any(item < 0 for item in costs):
-        raise ValueError("degradation costs must be a non-empty list of non-negative numbers")
-    return costs
 
 
 def load(path: Path) -> dict[str, list[dict[str, Any]]]:

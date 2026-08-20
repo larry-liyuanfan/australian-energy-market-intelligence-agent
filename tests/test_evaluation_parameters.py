@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts.evaluate_real_market import parse_degradation_costs
+from energy_agent.evaluation import parse_degradation_costs
 
 
 @pytest.mark.parametrize("separator", [",", ":", ";"])

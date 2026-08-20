@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.merge_real_market_array import merge_runs
+from energy_agent.evaluation import merge_evaluation_runs
 
 
 def _write_shard(root: Path, region: str, *, git_sha: str = "a" * 40) -> Path:
@@ -39,7 +39,7 @@ def _write_shard(root: Path, region: str, *, git_sha: str = "a" * 40) -> Path:
 def test_merge_requires_and_combines_all_region_shards(tmp_path: Path) -> None:
     regions = ("NSW1", "QLD1", "SA1", "TAS1", "VIC1")
     shards = [_write_shard(tmp_path, region) for region in regions]
-    metrics, manifest = merge_runs(shards, regions)
+    metrics, manifest = merge_evaluation_runs(shards, regions)
     assert set(metrics["regions"]) == set(regions)
     assert manifest["component_elapsed_seconds_sum"] == 12.5
     assert manifest["component_elapsed_seconds_max"] == 2.5
@@ -50,4 +50,4 @@ def test_merge_fails_closed_on_inconsistent_git_sha(tmp_path: Path) -> None:
     regions = ("NSW1", "QLD1")
     shards = [_write_shard(tmp_path, "NSW1"), _write_shard(tmp_path, "QLD1", git_sha="c" * 40)]
     with pytest.raises(ValueError, match="inconsistent git_sha"):
-        merge_runs(shards, regions)
+        merge_evaluation_runs(shards, regions)
