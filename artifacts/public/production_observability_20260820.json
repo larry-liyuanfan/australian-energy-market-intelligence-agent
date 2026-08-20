@@ -1,6 +1,6 @@
 {
-  "verified_at": "2026-08-20T18:00:00+10:00",
-  "git_sha": "a95b95185fe324bbb44f7f621ee67bd122902197",
+  "verified_at": "2026-08-20T21:37:00+10:00",
+  "git_sha": "e94ad57ac872dba3ce2c8a4f153f997c027aaedd",
   "scope": "Compact public summary; full traces and row-level predictions remain outside GitHub.",
   "retrieval": {
     "evaluation_git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
@@ -14,15 +14,17 @@
     "predictions_sha256": "e1fbc38f0c64d53305e935baac59ee291df4fb8ca0776f303fbe26da5907cd68"
   },
   "service_gate": {
-    "evaluation_git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
-    "requests": 100,
+    "evaluation_git_sha": "e94ad57ac872dba3ce2c8a4f153f997c027aaedd",
+    "requests": 140,
     "concurrency": 4,
     "http_success_rate": 1.0,
     "task_success_rate": 1.0,
     "citation_complete_rate": 1.0,
     "raw_tool_success_rate": 1.0,
-    "latency_ms": {"p50": 394.6492, "p95": 2380.3055, "max": 3592.7627},
-    "artifact_sha256": "ec5d4cfc57fd43fbe8b2dde5d472fa222c7771ce0d402545d715863fea911bcb",
+    "latency_ms": {"p50": 445.7355, "p95": 1910.7382, "max": 2444.4096},
+    "trace_cache": {"entries": 128, "capacity": 128, "evictions": 12},
+    "redis_trace_retrieval_after_eviction": true,
+    "artifact_sha256": "c00605ce449363239ef5a7d75836f2cffdf1937bb8d056fac8bf6c386c4ff189",
     "boundary": "Single-host Docker loopback; not a public-internet SLA or independent answer-quality benchmark."
   },
   "metrics_verified": [
@@ -30,10 +32,21 @@
     "typed-tool status and recovery counters",
     "citation counter",
     "provider and evidence-backend identity",
-    "market-row and evidence-chunk gauges"
+    "market-row and evidence-chunk gauges",
+    "trace-cache entries, capacity and eviction counters"
   ],
+  "alerting": {
+    "prometheus_version": "3.5.0",
+    "promtool_config_valid": true,
+    "promtool_rules_valid": true,
+    "rules_loaded": 5,
+    "rules_health_ok": 5,
+    "target_up": 1,
+    "firing_alerts": 0,
+    "external_notifications": false
+  },
   "quality": {
-    "pytest_linux_production_image": "12 passed",
+    "pytest": "14 passed locally and in GitHub Actions",
     "ruff": "passed",
     "mypy": "passed"
   }

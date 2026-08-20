@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-08-20T21:37:00+10:00",
+  "git_sha": "e94ad57ac872dba3ce2c8a4f153f997c027aaedd",
+  "scope": "Production single-host loopback trace-retention and local-alerting verification.",
+  "trace_retention": {
+    "in_process_policy": "LRU",
+    "capacity": 128,
+    "redis_ttl_seconds": 86400,
+    "requests": 140,
+    "entries_after_gate": 128,
+    "evictions": 12,
+    "early_trace_id": "5e62f9ea-902f-4914-b4c8-5660152c2663",
+    "early_trace_redis_exists": true,
+    "early_trace_api_retrievable": true,
+    "artifact_sha256": "c00605ce449363239ef5a7d75836f2cffdf1937bb8d056fac8bf6c386c4ff189"
+  },
+  "service_gate": {
+    "http_success_rate": 1.0,
+    "task_success_rate": 1.0,
+    "citation_complete_rate": 1.0,
+    "raw_tool_success_rate": 1.0,
+    "latency_ms": {"p50": 445.7355, "p95": 1910.7382, "max": 2444.4096}
+  },
+  "prometheus": {
+    "version": "3.5.0",
+    "target_up": 1,
+    "rules_loaded": 5,
+    "rules_health_ok": 5,
+    "firing_alerts": 0,
+    "external_notifications": false
+  },
+  "boundaries": [
+    "Loopback evidence is not a public-internet SLA.",
+    "A successful trace lookup after cache turnover proves availability through the API and Redis existence; it does not expose private trace content publicly.",
+    "Prometheus evaluates rules locally; no Alertmanager or external notification channel is configured."
+  ]
+}

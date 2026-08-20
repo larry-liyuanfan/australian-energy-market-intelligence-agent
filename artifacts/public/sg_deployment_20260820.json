@@ -1,28 +1,28 @@
 {
-  "verified_at": "2026-08-20T18:00:00+10:00",
-  "git_sha": "a95b95185fe324bbb44f7f621ee67bd122902197",
+  "verified_at": "2026-08-20T21:37:00+10:00",
+  "git_sha": "e94ad57ac872dba3ce2c8a4f153f997c027aaedd",
   "deployment": "Alibaba Cloud SG isolated Docker Compose stack",
   "services": {
     "fastapi": {
       "binding": "127.0.0.1:8091",
       "cpu_limit": 1.0,
       "memory_limit": "1.25GiB",
-      "observed_memory": "385.8MiB"
+      "observed_memory": "626.3MiB"
     },
     "elasticsearch": {
       "cpu_limit": 0.75,
       "memory_limit": "1.25GiB",
-      "observed_memory": "949.5MiB"
+      "observed_memory": "964.2MiB"
     },
     "redis": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "8.641MiB"
+      "observed_memory": "11.34MiB"
     },
     "prometheus": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "31.46MiB"
+      "observed_memory": "39.75MiB"
     }
   },
   "health": {
@@ -35,30 +35,40 @@
     "evidence_backend": "elasticsearch_bm25+local_dense_rrf_rerank",
     "evidence_index": "energy-official-evidence-dc27b17a65b5",
     "evidence_indexed_documents": 735,
-    "model_provider": "deterministic"
+    "model_provider": "deterministic",
+    "trace_cache": {"entries": 128, "capacity": 128, "evictions": 12}
   },
   "query_verification": {
-    "question": "Explain VIC1 coverage and price risk 2026-02-10",
-    "trace_id": "dac409b5-efd5-4793-8a04-2de3d8b94b66",
+    "question": "Explain NSW1 data coverage",
+    "trace_id": "5e62f9ea-902f-4914-b4c8-5660152c2663",
     "status": "completed",
-    "answer_characters": 441,
-    "logical_tool_calls": 3,
+    "answer_characters": 331,
+    "logical_tool_calls": 2,
     "citations": 6,
     "trace_states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
-    "verified_results_in_trace": 3,
+    "verified_results_in_trace": 2,
     "redis_trace_exists": true
   },
   "production_service_gate": {
-    "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
-    "requests": 100,
+    "git_sha": "e94ad57ac872dba3ce2c8a4f153f997c027aaedd",
+    "requests": 140,
     "concurrency": 4,
     "http_success_rate": 1.0,
     "task_success_rate": 1.0,
     "citation_complete_rate": 1.0,
     "raw_tool_success_rate": 1.0,
-    "latency_ms": {"p50": 394.6492, "p95": 2380.3055, "max": 3592.7627},
-    "artifact_sha256": "ec5d4cfc57fd43fbe8b2dde5d472fa222c7771ce0d402545d715863fea911bcb",
+    "latency_ms": {"p50": 445.7355, "p95": 1910.7382, "max": 2444.4096},
+    "trace_cache": {"entries": 128, "capacity": 128, "evictions": 12},
+    "artifact_sha256": "c00605ce449363239ef5a7d75836f2cffdf1937bb8d056fac8bf6c386c4ff189",
     "boundary": "Single-host Docker loopback; not a public-internet SLA or independent answer-quality benchmark."
+  },
+  "prometheus_alerting": {
+    "prometheus_version": "3.5.0",
+    "rules": 5,
+    "rule_health_ok": 5,
+    "target_up": 1,
+    "firing_alerts": 0,
+    "notification_boundary": "Rules are evaluated locally; Alertmanager and external messaging are not configured."
   },
   "deployed_retrieval_regression": {
     "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
