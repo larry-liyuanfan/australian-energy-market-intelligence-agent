@@ -21,7 +21,10 @@ jobs:
       - name: Install project and quality tools
         run: python -m pip install --upgrade pip && python -m pip install -e ".[test,ml,search,redis]"
       - name: Unit and contract tests
-        run: pytest
+        # `python -m` keeps the checked-out repository root on sys.path so the
+        # audited one-off pipeline modules under scripts/ are importable on
+        # Python 3.13 runners as they are in local and Spartan executions.
+        run: python -m pytest
       - name: Lint
         run: ruff check src tests scripts
       - name: Type check
