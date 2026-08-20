@@ -28,13 +28,14 @@ from energy_agent.evaluation import (
     parse_degradation_costs,
     residual_price_scenarios,
     seasonal_fold_windows,
+    select_tail_policy,
 )
 from energy_agent.schemas import BatterySpec
 
 DEGRADATION_COSTS_AUD_PER_MWH_DISCHARGED = (0.0, 25.0, 50.0, 100.0)
 RISK_SCENARIO_COUNT = 10
 RISK_ALPHA = 0.8
-RISK_AVERSION = 0.5
+RISK_AVERSION_CANDIDATES = (0.25, 0.5, 1.0)
 
 
 def load(path: Path) -> dict[str, list[dict[str, Any]]]:
@@ -411,6 +412,77 @@ def evaluate_seasonal_region(
         if len(complete_days) < 27:
             raise ValueError(f"seasonal day coverage gate failed for {region}/{fold.name}: {len(complete_days)}")
         low, high = float(np.quantile(y_train, 0.25)), float(np.quantile(y_train, 0.75))
+        calibration_by_day: dict[str, list[float]] = defaultdict(list)
+        calibration_forecast_by_day: dict[str, list[float]] = defaultdict(list)
+        calibration_times = [times[index] for index in calibration_indices]
+        for timestamp, actual, predicted in zip(
+            calibration_times, y_cal, calibration_predictions, strict=True
+        ):
+            calibration_by_day[timestamp.date().isoformat()].append(float(actual))
+            calibration_forecast_by_day[timestamp.date().isoformat()].append(float(predicted))
+        calibration_days = [
+            day
+            for day in sorted(calibration_by_day)
+            if len(calibration_by_day[day]) == len(calibration_forecast_by_day[day]) == 288
+        ]
+        if len(calibration_days) < 27:
+            raise ValueError(
+                f"risk-policy calibration day gate failed for {region}/{fold.name}: {len(calibration_days)}"
+            )
+        scenario_bank_days = calibration_days[: len(calibration_days) // 2]
+        validation_days = calibration_days[len(calibration_days) // 2 :]
+        scenario_bank_residuals = np.asarray(
+            [
+                actual - predicted
+                for day in scenario_bank_days
+                for actual, predicted in zip(
+                    calibration_by_day[day], calibration_forecast_by_day[day], strict=True
+                )
+            ]
+        )
+        risk_policy_by_cost: dict[str, dict[str, float | str]] = {}
+        for cost in degradation_costs:
+            point_validation: list[float] = []
+            candidate_validation: dict[str, list[float]] = {
+                str(value): [] for value in RISK_AVERSION_CANDIDATES
+            }
+            for day in validation_days:
+                actual = calibration_by_day[day]
+                forecast = calibration_forecast_by_day[day]
+                point_schedule = optimize_dispatch(
+                    forecast,
+                    spec,
+                    variable_degradation_cost_aud_per_mwh_discharged=cost,
+                )
+                point_validation.append(
+                    _realized(point_schedule, actual) - cost * _discharged_mwh(point_schedule)
+                )
+                validation_scenarios = residual_price_scenarios(
+                    forecast,
+                    scenario_bank_residuals,
+                    scenario_count=RISK_SCENARIO_COUNT,
+                    seed_material=f"{region}|{fold.name}|{day}|inner-risk-scenarios-v1",
+                )
+                for risk_aversion in RISK_AVERSION_CANDIDATES:
+                    candidate_schedule = optimize_dispatch_cvar(
+                        validation_scenarios,
+                        spec,
+                        alpha=RISK_ALPHA,
+                        risk_aversion=risk_aversion,
+                        variable_degradation_cost_aud_per_mwh_discharged=cost,
+                    )
+                    candidate_validation[str(risk_aversion)].append(
+                        _realized(candidate_schedule.dispatch, actual)
+                        - cost * _discharged_mwh(candidate_schedule.dispatch)
+                    )
+            selection = select_tail_policy(point_validation, candidate_validation)
+            selection["selected_risk_aversion"] = (
+                float(selection["selected_policy"])
+                if selection["selected_policy"] != "point"
+                else 0.0
+            )
+            selection["validation_days"] = float(len(validation_days))
+            risk_policy_by_cost[str(int(cost))] = selection
         risk_scenarios_by_day = {
             day: residual_price_scenarios(
                 forecast_by_day[day],
@@ -453,17 +525,25 @@ def evaluate_seasonal_region(
                     variable_degradation_cost_aud_per_mwh_discharged=cost,
                 )
                 rule = threshold_dispatch(forecast, spec, low, high)
-                risk_schedule = optimize_dispatch_cvar(
-                    risk_scenarios_by_day[day],
-                    spec,
-                    alpha=RISK_ALPHA,
-                    risk_aversion=RISK_AVERSION,
-                    variable_degradation_cost_aud_per_mwh_discharged=cost,
-                )
+                risk_selection = risk_policy_by_cost[key]
+                risk_mip_gap: float | None
+                if risk_selection["selected_policy"] == "point":
+                    risk_dispatch = schedule
+                    risk_mip_gap = 0.0
+                else:
+                    risk_schedule = optimize_dispatch_cvar(
+                        risk_scenarios_by_day[day],
+                        spec,
+                        alpha=RISK_ALPHA,
+                        risk_aversion=float(risk_selection["selected_risk_aversion"]),
+                        variable_degradation_cost_aud_per_mwh_discharged=cost,
+                    )
+                    risk_dispatch = risk_schedule.dispatch
+                    risk_mip_gap = risk_schedule.solver_mip_gap
                 discharged = _discharged_mwh(schedule)
-                risk_discharged = _discharged_mwh(risk_schedule.dispatch)
+                risk_discharged = _discharged_mwh(risk_dispatch)
                 gross = _realized(schedule, actual)
-                risk_gross = _realized(risk_schedule.dispatch, actual)
+                risk_gross = _realized(risk_dispatch, actual)
                 daily_gross.append(gross)
                 daily_net.append(gross - cost * discharged)
                 daily_risk_net.append(risk_gross - cost * risk_discharged)
@@ -476,10 +556,10 @@ def evaluate_seasonal_region(
                     - cost * _discharged_mwh(persistence_schedule)
                 )
                 daily_cycles.append(schedule.equivalent_full_cycles)
-                daily_risk_cycles.append(risk_schedule.dispatch.equivalent_full_cycles)
+                daily_risk_cycles.append(risk_dispatch.equivalent_full_cycles)
                 daily_discharged.append(discharged)
-                if risk_schedule.solver_mip_gap is not None:
-                    risk_mip_gaps.append(risk_schedule.solver_mip_gap)
+                if risk_mip_gap is not None:
+                    risk_mip_gaps.append(risk_mip_gap)
             for name, values in (
                 ("gross", daily_gross),
                 ("net", daily_net),
@@ -527,6 +607,7 @@ def evaluate_seasonal_region(
                 "risk_aware_daily_net_margin_cvar05": risk_cvar,
                 "risk_aware_cvar05_lift_vs_point_aud": risk_cvar - point_cvar,
                 "risk_aware_max_solver_mip_gap": max(risk_mip_gaps, default=0.0),
+                "risk_policy_selection": risk_policy_by_cost[key],
                 "decision_focused": {
                     "persistence_net_margin_aud": total_persistence,
                     "persistence_oracle_regret_aud": total_oracle - total_persistence,
@@ -572,7 +653,8 @@ def evaluate_seasonal_region(
             "risk_scenario_design": {
                 "scenario_count": RISK_SCENARIO_COUNT,
                 "alpha": RISK_ALPHA,
-                "risk_aversion": RISK_AVERSION,
+                "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
+                "selection": "first half of calibration supplies residual scenarios; second half selects tail policy with a mean guardrail; point dispatch is the fallback",
                 "construction": "point forecast plus deterministic complete-day residual paths sampled only from the preceding calibration window",
             },
             "degradation_sensitivity": cost_metrics,
@@ -649,7 +731,7 @@ def evaluate_seasonal_region(
         "risk_scenario_design": {
             "scenario_count": RISK_SCENARIO_COUNT,
             "alpha": RISK_ALPHA,
-            "risk_aversion": RISK_AVERSION,
+            "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
             "information_boundary": "calibration residual paths and forecasts only; realised prices are used solely for settlement",
         },
         "economic_boundary": "112-day four-season historical spot-market operating proxy; user-supplied variable cycling cost; excludes CAPEX, fixed O&M, network fees, FCAS and investment returns",
@@ -717,7 +799,7 @@ def main() -> None:
             {
                 "scenario_count": RISK_SCENARIO_COUNT,
                 "alpha": RISK_ALPHA,
-                "risk_aversion": RISK_AVERSION,
+                "risk_aversion_candidates": RISK_AVERSION_CANDIDATES,
                 "scenario_source": "preceding calibration residual day paths",
             }
             if args.seasonal_bess

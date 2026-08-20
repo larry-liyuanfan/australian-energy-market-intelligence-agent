@@ -124,6 +124,51 @@ def residual_price_scenarios(
     return [point.tolist(), *[(point + blocks[index]).tolist() for index in selected]]
 
 
+def select_tail_policy(
+    point_values: list[float],
+    candidate_values: dict[str, list[float]],
+    *,
+    tail_probability: float = 0.2,
+    mean_tolerance_fraction: float = 0.1,
+) -> dict[str, float | str]:
+    """Select a tail policy on pre-test validation values or fall back to point dispatch."""
+
+    if not point_values or not 0 < tail_probability <= 1 or mean_tolerance_fraction < 0:
+        raise ValueError("invalid tail-policy selection inputs")
+    if any(len(values) != len(point_values) for values in candidate_values.values()):
+        raise ValueError("candidate validation values must align with the point baseline")
+
+    def tail_mean(values: list[float]) -> float:
+        count = max(1, math.ceil(len(values) * tail_probability))
+        return float(np.mean(sorted(values)[:count]))
+
+    point_mean = float(np.mean(point_values))
+    point_tail = tail_mean(point_values)
+    mean_floor = point_mean - mean_tolerance_fraction * max(abs(point_mean), 1.0)
+    eligible: list[tuple[float, float, str]] = []
+    for name, values in candidate_values.items():
+        candidate_mean = float(np.mean(values))
+        candidate_tail = tail_mean(values)
+        if candidate_mean >= mean_floor and candidate_tail > point_tail:
+            eligible.append((candidate_tail, candidate_mean, name))
+    if not eligible:
+        return {
+            "selected_policy": "point",
+            "validation_mean_aud": point_mean,
+            "validation_tail_mean_aud": point_tail,
+            "point_validation_mean_aud": point_mean,
+            "point_validation_tail_mean_aud": point_tail,
+        }
+    candidate_tail, candidate_mean, selected = max(eligible)
+    return {
+        "selected_policy": selected,
+        "validation_mean_aud": candidate_mean,
+        "validation_tail_mean_aud": candidate_tail,
+        "point_validation_mean_aud": point_mean,
+        "point_validation_tail_mean_aud": point_tail,
+    }
+
+
 def seasonal_fold_windows(start: datetime, end: datetime) -> tuple[SeasonalFold, ...]:
     """Return complete 28-day spring/summer/autumn/winter test windows.
 

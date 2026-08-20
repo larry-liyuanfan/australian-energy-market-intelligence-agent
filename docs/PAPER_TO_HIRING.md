@@ -60,8 +60,11 @@ reliability, and honest business boundaries.
   margin plus a configurable lower-tail CVaR term while retaining the physical
   SoC and mutually exclusive charge/discharge constraints.
 - Implemented evaluation path: ten price scenarios are formed from complete-day
-  residual paths in the preceding 28-day calibration window and settled on
-  unseen actual prices against risk-neutral and oracle baselines.
+  residual paths. The first half of the preceding calibration window supplies
+  the scenario bank; the second half chooses among three risk aversions using a
+  tail objective plus a mean-margin guardrail, with point dispatch as fallback.
+  The selected policy is then settled on unseen prices against risk-neutral and
+  oracle baselines.
 - Current evidence: deterministic golden cases verify feasibility, exact solver
   completion, and the expected tail-protection/mean-margin trade-off. The
   real-market result remains outside career materials until its full seasonal

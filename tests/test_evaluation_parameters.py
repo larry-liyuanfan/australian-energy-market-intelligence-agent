@@ -9,6 +9,7 @@ from energy_agent.evaluation import (
     parse_degradation_costs,
     residual_price_scenarios,
     seasonal_fold_windows,
+    select_tail_policy,
 )
 
 
@@ -77,3 +78,16 @@ def test_citation_structure_metrics_separate_presence_from_validity() -> None:
     )
     assert metrics["claim_citation_completeness"] == pytest.approx(2 / 3)
     assert metrics["citation_id_validity"] == pytest.approx(0.5)
+
+
+def test_tail_policy_selects_improvement_or_falls_back_to_point() -> None:
+    selected = select_tail_policy(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {"0.5": [2.0, 3.0, 9.0, 9.0, 9.0]},
+    )
+    assert selected["selected_policy"] == "0.5"
+    fallback = select_tail_policy(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {"0.5": [-5.0, -4.0, 20.0, 20.0, 20.0]},
+    )
+    assert fallback["selected_policy"] == "point"
