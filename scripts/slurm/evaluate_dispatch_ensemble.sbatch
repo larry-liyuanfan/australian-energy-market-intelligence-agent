@@ -11,7 +11,6 @@ set -euo pipefail
 
 : "${ENERGY_GIT_COMMIT:?set exact pushed commit}"
 SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent}"
-git -C "${SOURCE_REPO}" fetch origin feat/production-retrieval-observability
 git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-code-${SLURM_JOB_ID:?}"
 git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"
