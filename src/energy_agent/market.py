@@ -35,7 +35,9 @@ class MarketStore:
         self.data_version = data_version
 
     def select(self, region: Region, start: datetime, end: datetime) -> list[MarketRow]:
-        return [row for row in self.rows if row.region == region and start <= row.interval <= end]
+        """Select a half-open market interval ``[start, end)``."""
+
+        return [row for row in self.rows if row.region == region and start <= row.interval < end]
 
     def before(self, region: Region, at: datetime, limit: int | None = None) -> list[MarketRow]:
         rows = [row for row in self.rows if row.region == region and row.interval < at]

@@ -99,7 +99,7 @@ class ToolRegistry:
                 warnings=["Risk interval is a historical conformal estimate, not a guarantee."],
             )
         if name == "optimize_battery_dispatch":
-            interval_count = int((args.window.end - args.window.start).total_seconds() // 300) + 1
+            interval_count = int((args.window.end - args.window.start).total_seconds() // 300)
             if interval_count > 288:
                 raise ValueError("dispatch window must not exceed 288 five-minute intervals")
             warnings: list[str] = []

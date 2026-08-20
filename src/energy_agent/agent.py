@@ -224,8 +224,12 @@ class EnergyAgent:
                 )
         citations = [ev for result in results for ev in result.evidence]
         citations = list({ev.evidence_id: ev for ev in citations}.values())
+        successful_tools = {result.tool_name for result in results}
+        required_tools = {name for name, _arguments in calls}
         status: Literal["completed", "insufficient_evidence"] = (
-            "completed" if results and citations else "insufficient_evidence"
+            "completed"
+            if results and citations and required_tools.issubset(successful_tools)
+            else "insufficient_evidence"
         )
         answer = (
             "Verified tool outputs (citations identify provenance records; they are not a semantic-entailment score):\n"

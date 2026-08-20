@@ -36,6 +36,13 @@ class UnavailableDependency:
         raise ConnectionError("test-only failure")
 
 
+class PermanentBatteryFailureRegistry(ToolRegistry):
+    def execute(self, name: str, arguments: dict[str, object]) -> ToolResult:
+        if name == "optimize_battery_dispatch":
+            raise RuntimeError("test-only permanent failure")
+        return super().execute(name, arguments)
+
+
 def test_eight_strict_typed_tools() -> None:
     assert len(TOOL_MODELS) == 8
     with pytest.raises(ValidationError):
@@ -164,21 +171,56 @@ def test_forecast_dispatch_is_invariant_to_future_actual_prices() -> None:
     assert "not realized settlement" in low_result.warnings[0]
 
 
-def test_perfect_foresight_dispatch_requires_complete_window() -> None:
+def test_perfect_foresight_dispatch_uses_half_open_window_and_requires_completeness() -> None:
     start = datetime(2025, 1, 1, tzinfo=UTC)
-    store = MarketStore([MarketRow(start, Region.SA1, 100.0, 1_000.0)])
+    complete = MarketStore(
+        [
+            MarketRow(start, Region.SA1, 100.0, 1_000.0),
+            MarketRow(start + timedelta(minutes=5), Region.SA1, 200.0, 1_000.0),
+        ]
+    )
+    result = ToolRegistry(complete).execute(
+        "optimize_battery_dispatch",
+        {
+            "region": "SA1",
+            "window": {
+                "start": start.isoformat(),
+                "end": (start + timedelta(minutes=10)).isoformat(),
+            },
+            "objective": "perfect_foresight",
+        },
+    )
+    assert result.data["signal_intervals"] == 2
+
+    incomplete = MarketStore([MarketRow(start, Region.SA1, 100.0, 1_000.0)])
     with pytest.raises(ValueError, match="incomplete"):
-        ToolRegistry(store).execute(
+        ToolRegistry(incomplete).execute(
             "optimize_battery_dispatch",
             {
                 "region": "SA1",
                 "window": {
                     "start": start.isoformat(),
-                    "end": (start + timedelta(minutes=5)).isoformat(),
+                    "end": (start + timedelta(minutes=10)).isoformat(),
                 },
                 "objective": "perfect_foresight",
             },
         )
+
+
+def test_full_day_dispatch_window_has_288_intervals() -> None:
+    start = datetime(2025, 1, 2, 0, 10, tzinfo=UTC)
+    result = ToolRegistry(fixture_store()).execute(
+        "optimize_battery_dispatch",
+        {
+            "region": "SA1",
+            "window": {
+                "start": start.isoformat(),
+                "end": (start + timedelta(days=1)).isoformat(),
+            },
+            "objective": "forecast",
+        },
+    )
+    assert result.data["signal_intervals"] == 288
 
 
 def test_api_contract_and_trace() -> None:
@@ -190,7 +232,7 @@ def test_api_contract_and_trace() -> None:
         assert tools.status_code == 200
         assert len(tools.json()["tools"]) == 8
         response = client.post(
-            "/api/agent/query", json={"question": "Explain SA1 battery risk and price spike 2025-01-01"}
+            "/api/agent/query", json={"question": "Explain SA1 data coverage and price spike 2025-01-01"}
         )
         assert response.status_code == 200
         payload = response.json()
@@ -220,6 +262,14 @@ def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
     )
     assert response.status == "completed"
     assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
+
+
+def test_agent_does_not_report_completed_when_a_required_tool_permanently_fails() -> None:
+    response = EnergyAgent(PermanentBatteryFailureRegistry(fixture_store())).run(
+        AgentQueryRequest(question="Explain SA1 battery risk 2025-01-02")
+    )
+    assert response.status == "insufficient_evidence"
+    assert any(call.name == "optimize_battery_dispatch" and call.status == "error" for call in response.tool_calls)
 
 
 def test_agent_answer_has_claim_level_valid_citations() -> None:
