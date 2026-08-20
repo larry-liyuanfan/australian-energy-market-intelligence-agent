@@ -1,0 +1,71 @@
+{
+  "evidence_status": "verified-real-paper-driven-with-negative-risk-result",
+  "scope": "AEMO NEMWeb; five NEM regions; four 28-day out-of-time seasonal folds per region; 560 region-days; 50 AUD/MWh-discharged decision gate",
+  "jobs": {
+    "exact_sha_sa1_pilot": "29459008",
+    "five_region_array": "29459076",
+    "initial_merge_dependency_failure": "29459077",
+    "dependency_light_merge_repair": "29459217"
+  },
+  "evaluation_git_sha": "ece55f469d9bca875ee2d4fb8b71eeb342b28ac7",
+  "merge_git_sha": "01778726d2eb768c59482c640ae2be7ec3d638b2",
+  "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+  "merged_metrics_sha256": "52cfee6b86bb8799076e5bc7525feb95e6851e5a06191bf683b5e76e6460ca4e",
+  "merged_manifest_sha256": "3e4e23a569a0532b29d083ad6533ff8af1f0d6469f5b0cc1bbf6a37e7be8ac50",
+  "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "folds": 20,
+  "total_region_days": 560,
+  "adaptive_conformal_inference": {
+    "fixed_90_coverage_range": [0.797371, 0.962054],
+    "adaptive_90_coverage_range": [0.898065, 0.903150],
+    "fixed_mean_absolute_gap_from_nominal": 0.027405,
+    "adaptive_mean_absolute_gap_from_nominal": 0.000831,
+    "adaptive_narrower_folds": 12,
+    "folds": 20,
+    "worst_width_case": {
+      "region": "TAS1",
+      "fold": "winter-2026",
+      "fixed_mean_width": 21.253659,
+      "adaptive_mean_width": 214.072072,
+      "width_ratio": 10.072245
+    },
+    "boundary": "ACI-inspired online controller, not a reproduction of the paper or a guarantee; coverage stabilisation can require operationally unacceptable width."
+  },
+  "decision_focused_evaluation": {
+    "lightgbm_mae_wins": 9,
+    "lightgbm_net_margin_wins": 17,
+    "mae_net_margin_rank_agreements": 8,
+    "folds": 20,
+    "boundary": "SPO-inspired evaluation only; neither forecast was trained with SPO+ loss."
+  },
+  "calibrated_cvar_policy": {
+    "selected_policy_counts": {"point": 17, "risk_aversion_0.25": 1, "risk_aversion_0.5": 1, "risk_aversion_1.0": 1},
+    "point_mean_net_operating_proxy_aud_per_mw_year": 41048.15,
+    "selected_policy_mean_net_operating_proxy_aud_per_mw_year": 41011.24,
+    "selected_policy_delta_aud_per_mw_year": -36.92,
+    "regions_with_nonworse_realised_cvar05": 2,
+    "regions_with_nonworse_realised_mean": 2,
+    "regions": 5,
+    "max_solver_mip_gap": 0.00003909,
+    "result": "failed improvement gate; all three region-fold CVaR selections that passed calibration were worse on unseen realised tail margin, while SA1 and VIC1 were unchanged because every fold fell back to point dispatch",
+    "boundary": "Scenario CVaR is retained as a tested feasibility path and negative ablation, not a claimed risk or revenue improvement."
+  },
+  "resources": {
+    "array_task_elapsed_seconds_range": [90, 95],
+    "array_task_max_rss_kib_range": [728948, 817684],
+    "requested_per_task": "2 CPU, 2 GiB, 5 minutes; at most two concurrent tasks",
+    "merge_elapsed_seconds": 6,
+    "merge_max_rss_kib": 9788
+  },
+  "rejected_runs": [
+    {
+      "jobs": ["29458160", "29458161"],
+      "reason": "legacy shared-checkout provenance race and missing SA1 manifest; no merged result published"
+    },
+    {
+      "job": "29459077",
+      "reason": "merge imported the ML evaluation module in a dependency-light runtime; afterok compute shards remained valid and only the merge was repaired"
+    }
+  ],
+  "economic_boundary": "Historical spot-market operating-margin proxy only. Cycling cost is user supplied, not an asset-specific degradation model. Excludes CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and investment returns."
+}

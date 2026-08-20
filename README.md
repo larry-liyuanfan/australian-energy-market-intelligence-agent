@@ -50,6 +50,7 @@ On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 
 - Baselines: persistence and 24-hour seasonal; candidate: LightGBM L1 plus quantile models.
 - LightGBM did **not** consistently beat persistence on MAE. In the stronger four-season evaluation it won only **9 of 20 region-season folds**, so no universal prediction-lift claim is made.
 - Seasonal 90% conformal coverage ranged from **79.74% to 96.21%** across 20 folds; the 79.74% TAS1 winter result is retained as evidence of distribution shift rather than hidden by an aggregate. The earlier terminal-split rolling coverage range was 88.64%–91.52%.
+- An ACI-inspired online controller narrowed the five-region coverage range to **89.81%–90.31%** and reduced mean absolute nominal-coverage gap from 2.74 to 0.08 percentage points. It narrowed intervals in only 12/20 folds, however, and TAS1 winter width increased **10.07x**; coverage stability is therefore not presented as uniformly better operational uncertainty.
 - Anomaly reporting compares a fixed `RRP >= AUD 5,000/MWh` baseline with robust-z thresholds 4/5/6, Jaccard stability and day-level bootstrap event-rate intervals. There is no labelled anomaly ground truth, so counts are not presented as precision/recall.
 
 ### BESS backtest
@@ -59,6 +60,8 @@ The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, a
 The primary evaluation now uses four independent seasonal folds per region: **112 out-of-time days per region, 560 region-days overall**. Re-optimising at 0/25/50/100 AUD per discharged MWh produced five-region mean annualised net-operating proxies of **AUD 76,551 / 53,181 / 41,048 / 24,188 per MW-year**. At 100 AUD/MWh the regional range was **AUD 8,061–51,900/MW-year** and mean positive-day share was only **46%**; at 50 AUD/MWh all five regional daily P05 values were negative. The earlier 54-day terminal split remains as a regression artifact rather than the headline result. Both evaluations report no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. Compact evidence records the Slurm arrays/merges, code/data hashes and merged-output hashes.
 
 These are **historical spot-market operating-margin proxy metrics only**. The cycling charge is a user-supplied sensitivity parameter, not an asset-specific degradation model; results still exclude CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
+
+Decision-focused evaluation exposed why MAE is not the release metric: LightGBM won MAE in only **9/20** folds but produced the higher realised BESS net proxy in **17/20**, with MAE/net-margin rank agreement in only **8/20**. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. The five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year, so the CVaR path is published as a failed ablation, not an improvement. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
 
 ### Agent evaluation
 
@@ -124,6 +127,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
 - Retrieved report text is treated as untrusted data: a deterministic indirect-prompt-injection fixture verifies that embedded instructions cannot alter the typed plan or enter the answer narrative. This is one regression case, not an AgentDojo benchmark or a general robustness claim.
 - Slurm evaluation code and manifest SHAs are pinned to the same detached, job-local Git worktree. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
+- Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
 
 ## Attribution
 

@@ -66,10 +66,13 @@ reliability, and honest business boundaries.
   The selected policy is evaluated only at the predeclared 50 AUD/MWh cycling
   cost and settled on unseen prices against risk-neutral and oracle baselines;
   the wider cost grid remains a risk-neutral sensitivity analysis.
-- Current evidence: deterministic golden cases verify feasibility, exact solver
-  completion, and the expected tail-protection/mean-margin trade-off. The
-  real-market result remains outside career materials until its full seasonal
-  Slurm artifact passes the data/SHA/resource gates.
+- Verified real-market result: across 20 region-season folds, the nested gate
+  retained point dispatch 17 times and selected a CVaR candidate three times.
+  All three selected candidates worsened unseen realised tail margin; the
+  five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year.
+  The risk-improvement gate therefore failed and no positive CVaR claim enters
+  career materials. Feasibility, calibration-overfit diagnosis and safe
+  fallback remain valid engineering evidence.
 
 ### ALCE and RAGChecker
 
