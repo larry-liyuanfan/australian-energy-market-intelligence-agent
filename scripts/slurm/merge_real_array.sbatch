@@ -9,7 +9,14 @@
 #SBATCH --time=00:05:00
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
 set -euo pipefail
-cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
+SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent}"
+ENERGY_GIT_COMMIT="${ENERGY_GIT_COMMIT:-$(git -C "${SOURCE_REPO}" rev-parse HEAD)}"
+git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
+CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-merge-code-${SLURM_JOB_ID:?}"
+mkdir -p "${CODE_ROOT}"
+git -C "${SOURCE_REPO}" archive "${ENERGY_GIT_COMMIT}" | tar -x -C "${CODE_ROOT}"
+trap 'rm -rf -- "${CODE_ROOT}"' EXIT
+cd "${CODE_ROOT}"
 INPUT_ROOT="${INPUT_ROOT:?set INPUT_ROOT to the array output root}"
 OUTPUT_DIR="${OUTPUT_DIR:?set OUTPUT_DIR to the merged artifact directory}"
 module purge

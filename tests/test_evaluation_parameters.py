@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -11,6 +12,24 @@ from energy_agent.evaluation import (
     seasonal_fold_windows,
     select_tail_policy,
 )
+
+
+def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
+    script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "evaluate_real.sbatch"
+    ).read_text(encoding="utf-8")
+
+    assert 'git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"' in script
+    assert 'git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"' in script
+    assert 'git -C "${SOURCE_REPO}" archive' not in script
+    assert "export ENERGY_GIT_COMMIT" in script
+    assert "%A_%a.out" in script
+
+    merge_script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "merge_real_array.sbatch"
+    ).read_text(encoding="utf-8")
+    assert 'git -C "${SOURCE_REPO}" archive "${ENERGY_GIT_COMMIT}"' in merge_script
+    assert 'cd "${CODE_ROOT}"' in merge_script
 
 
 def test_residual_scenarios_are_deterministic_and_use_complete_days() -> None:

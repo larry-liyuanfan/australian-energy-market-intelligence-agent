@@ -122,6 +122,8 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Retrieval labels are source-level, anomaly labels are unavailable, and diagnostic associations are not causal attribution.
 - Elasticsearch is an actual fixed-query retrieval backend, but was observed near its 1 GiB container limit; production sizing still requires more headroom.
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
+- Retrieved report text is treated as untrusted data: a deterministic indirect-prompt-injection fixture verifies that embedded instructions cannot alter the typed plan or enter the answer narrative. This is one regression case, not an AgentDojo benchmark or a general robustness claim.
+- Slurm evaluation code and manifest SHAs are pinned to the same archived commit. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
 
 ## Attribution
 

@@ -15,8 +15,11 @@ SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy
 ENERGY_GIT_COMMIT="${ENERGY_GIT_COMMIT:-$(git -C "${SOURCE_REPO}" rev-parse HEAD)}"
 git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-code-${SLURM_JOB_ID:?}"
-mkdir -p "${CODE_ROOT}"
-git -C "${SOURCE_REPO}" archive "${ENERGY_GIT_COMMIT}" | tar -x -C "${CODE_ROOT}"
+# Keep a real Git worktree in node-local storage. Historical evaluator commits
+# call `git rev-parse HEAD` while writing provenance, so a source-only archive
+# can finish the expensive calculation and then fail at the manifest step.
+git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"
+git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
 export ENERGY_GIT_COMMIT
 OUTPUT_ROOT="${OUTPUT_ROOT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
