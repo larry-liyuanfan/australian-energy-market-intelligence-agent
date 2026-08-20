@@ -116,8 +116,8 @@ For Slurm arrays, every task also receives a distinct `%A_%a` log. Metrics and
 manifests remain region-sharded, so concurrent stdout cannot obscure which
 resource record produced a result.
 
-The evaluation job materialises one requested commit in job-local storage and
-exports that same SHA into its run manifest. This is a tested invariant, added
+The evaluation job checks out one requested commit into a detached job-local
+Git worktree and exports that same SHA into its run manifest. This is a tested invariant, added
 after a queued legacy run completed its metrics but observed a newer shared
 checkout at manifest time. That legacy chain is retained as a provenance-gate
 failure rather than repaired into a publishable result.
