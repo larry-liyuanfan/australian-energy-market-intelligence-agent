@@ -1,28 +1,28 @@
 {
-  "verified_at": "2026-08-20T02:03:51+10:00",
-  "git_sha": "c2b2fef312e7985592040276fad0db12f50cfecf",
+  "verified_at": "2026-08-20T17:52:00+10:00",
+  "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
   "deployment": "Alibaba Cloud SG isolated Docker Compose stack",
   "services": {
     "fastapi": {
       "binding": "127.0.0.1:8091",
       "cpu_limit": 1.0,
       "memory_limit": "1.25GiB",
-      "observed_memory": "413.5MiB"
+      "observed_memory": "761.2MiB"
     },
     "elasticsearch": {
       "cpu_limit": 0.75,
       "memory_limit": "1GiB",
-      "observed_memory": "960.2MiB"
+      "observed_memory": "968.3MiB"
     },
     "redis": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "4.363MiB"
+      "observed_memory": "8.668MiB"
     },
     "prometheus": {
       "cpu_limit": 0.25,
       "memory_limit": "128MiB",
-      "observed_memory": "49.02MiB"
+      "observed_memory": "31.97MiB"
     }
   },
   "health": {
@@ -31,22 +31,43 @@
     "rows": 525600,
     "evidence_chunks": 735,
     "redis": "connected",
-    "elasticsearch": "connected",
+    "elasticsearch": "connected_indexed",
+    "evidence_backend": "elasticsearch_bm25+local_dense_rrf_rerank",
+    "evidence_index": "energy-official-evidence-dc27b17a65b5",
+    "evidence_indexed_documents": 735,
     "model_provider": "deterministic"
   },
   "query_verification": {
-    "question": "Explain SA1 battery price setting on 2026-06-22",
-    "trace_id": "f45014b6-7014-4006-bf35-fd386033d9fc",
+    "question": "Explain SA1 battery price spike risk 2026-02-10",
+    "trace_id": "e3e1a226-d90b-4926-b2e3-9ee8223979b1",
     "status": "completed",
-    "answer_characters": 354,
-    "logical_tool_calls": 2,
+    "answer_characters": 791,
+    "logical_tool_calls": 4,
     "citations": 6,
     "trace_states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
-    "verified_results_in_trace": 2,
+    "verified_results_in_trace": 4,
     "redis_trace_exists": true
   },
+  "production_service_gate": {
+    "requests": 100,
+    "concurrency": 4,
+    "http_success_rate": 1.0,
+    "task_success_rate": 1.0,
+    "citation_complete_rate": 1.0,
+    "raw_tool_success_rate": 1.0,
+    "latency_ms": {"p50": 394.6492, "p95": 2380.3055, "max": 3592.7627},
+    "artifact_sha256": "ec5d4cfc57fd43fbe8b2dde5d472fa222c7771ce0d402545d715863fea911bcb",
+    "boundary": "Single-host Docker loopback; not a public-internet SLA or independent answer-quality benchmark."
+  },
+  "deployed_retrieval_regression": {
+    "tasks": 20,
+    "label_boundary": "Curated official-source routing; not passage-level factuality.",
+    "elasticsearch_bm25": {"mrr": 0.8583333333, "recall_at_5": 1.0},
+    "fused_hybrid_rerank": {"mrr": 0.9666666667, "recall_at_5": 1.0, "mrr_bootstrap_95_interval": [0.9, 1.0]},
+    "predictions_sha256": "e1fbc38f0c64d53305e935baac59ee291df4fb8ca0776f303fbe26da5907cd68"
+  },
   "boundaries": [
-    "Loopback deployment evidence, not a public-internet SLA or throughput benchmark.",
+    "Loopback deployment evidence, not a public-internet SLA or independent answer-quality benchmark.",
     "No large language model is self-hosted on the SG instance.",
     "Model Studio credentials were absent; deterministic typed planning is the verified provider path.",
     "Only processed public AEMO/AER artifacts were copied; no private keys, career files or restricted corpora were deployed."

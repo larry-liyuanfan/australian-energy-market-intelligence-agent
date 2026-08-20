@@ -77,13 +77,18 @@
   },
   "deployment": {
     "evidence_file": "artifacts/public/sg_deployment_20260820.json",
+    "git_sha": "06f8f920d62162dbdc99d00d6e1a7c8e513bdbfc",
+    "elasticsearch_indexed_chunks": 735,
+    "deployed_retrieval_hybrid_mrr": 0.9666666667,
+    "production_loopback_requests": 100,
+    "production_loopback_p95_ms": 2380.3055,
     "model_studio_live": false,
     "model_studio_boundary": "Constrained provider adapter verified offline; credentials and live provider behavior/cost unavailable."
   },
   "quality": {
     "clean_room_job": "29433844",
     "clean_room_git_sha": "d6c763581920413bef0a8081fc81ca67efdb708c",
-    "pytest": "10 passed",
+    "pytest": "12 passed on Linux production image; Windows also reported 12 passed but emitted a Python 3.13/AnyIO shutdown access-violation diagnostic",
     "ruff": "passed",
     "mypy": "src and scripts passed",
     "pip_audit_known_vulnerabilities": 0,
