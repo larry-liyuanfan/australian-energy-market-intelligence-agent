@@ -1,0 +1,30 @@
+{
+  "evidence_status": "verified-real-terminal-split",
+  "scope": "AEMO NEMWeb five-region rolling terminal test; forecast-only dispatch decisions and actual-price settlement",
+  "jobs": {
+    "region_array": "29454598",
+    "quality_gated_merge": "29455412"
+  },
+  "git_sha": "752e6215958fdb405dde65bd983c9ffced24aba3",
+  "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+  "merged_metrics_sha256": "e9b82608cada85f779bcec76d49d8377c40c3e9bcadd59ef6abc9a0eb5fbc4e6",
+  "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "complete_test_days_per_region": 54,
+  "degradation_costs_aud_per_mwh_discharged": [0.0, 25.0, 50.0, 100.0],
+  "mean_net_operating_proxy_aud_per_mw_year": {
+    "0": 61561.24,
+    "25": 38800.71,
+    "50": 27541.95,
+    "100": 9987.95
+  },
+  "regional_net_operating_proxy_aud_per_mw_year": {
+    "NSW1": {"0": 48651.47, "25": 28552.70, "50": 15992.66, "100": 4202.81},
+    "QLD1": {"0": 55965.82, "25": 35163.46, "50": 21361.92, "100": 4670.35},
+    "SA1": {"0": 86767.60, "25": 63465.88, "50": 49205.39, "100": 29553.04},
+    "TAS1": {"0": 56838.89, "25": 31222.39, "50": 29011.36, "100": 4655.96},
+    "VIC1": {"0": 59582.42, "25": 35599.14, "50": 22138.43, "100": 6857.61}
+  },
+  "forecast_boundary": "LightGBM did not consistently beat persistence on MAE; only TAS1 showed a clear improvement in this split.",
+  "economic_boundary": "Historical spot-market operating-margin proxy only. Cycling cost is user supplied, not an asset-specific degradation model. Excludes CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and investment returns.",
+  "merge_gate": "five unique regions; identical git SHA, input SHA256, degradation costs, scope and coverage"
+}

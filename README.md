@@ -34,7 +34,7 @@ API: `POST /api/agent/query`, `GET /api/agent/traces/{trace_id}`, `GET /api/tool
 
 ## Experiments
 
-All forecast and dispatch results use chronological 70% train / 15% calibration / 15% test splits. No future labels enter features, calibration windows or operational schedules.
+The verified terminal-split results use chronological 70% train / 15% calibration / 15% test splits. The repository also supports four independent 28-day seasonal test folds, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules.
 
 ### Retrieval
 
@@ -51,9 +51,9 @@ On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
 
-Across 53 complete test days per region, the forecast MILP produced annualised gross-margin proxies of **AUD 48,651–86,768/MW-year**, with oracle capture rates **48.58%–76.42%**. Results include no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time.
+Across **54 complete terminal-split test days per region**, the forecast MILP produced annualised gross-margin proxies of **AUD 48,651–86,768/MW-year**, with oracle capture rates **48.58%–76.42%**. A five-region sensitivity run then re-optimised the schedule at 0/25/50/100 AUD per discharged MWh: the mean annualised net-operating proxy fell from **AUD 61,561** with no cycling charge to **AUD 38,801 / 27,542 / 9,988 per MW-year**. At 100 AUD/MWh the regional range was **AUD 4,203–29,553/MW-year**, and several regions had negative daily P05/CVaR, so the economic conclusion is explicitly cost- and region-sensitive. Results include no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. The compact evidence artifact records Slurm jobs `29454598` and `29455412`, source/model Git SHA and data/output hashes.
 
-These are **historical spot-market gross-margin proxy metrics only**. They exclude CAPEX, degradation, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
+These are **historical spot-market operating-margin proxy metrics only**. The cycling charge is a user-supplied sensitivity parameter, not an asset-specific degradation model; results still exclude CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
 
 ### Agent evaluation
 
@@ -93,6 +93,7 @@ python scripts/repair_dispatch_gap.py --input artifacts/run/dispatch_features.cs
 python scripts/build_official_evidence.py --output artifacts/evidence
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
+python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/seasonal-eval --seasonal-bess --degradation-costs 0,25,50,100
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
 # Optional deployed-backend routing regression and bounded loopback service gate:
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-es --elasticsearch-url http://127.0.0.1:9200
