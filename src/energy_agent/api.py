@@ -52,7 +52,11 @@ if elasticsearch_url := os.getenv("ENERGY_ELASTICSEARCH_URL"):
         logger.warning("Elasticsearch evidence backend unavailable; using local hybrid: %s", type(exc).__name__)
         elasticsearch_client = None
 registry = ToolRegistry(store, evidence_index)
-agent = EnergyAgent(registry, planner_provider=planner_provider)
+agent = EnergyAgent(
+    registry,
+    planner_provider=planner_provider,
+    trace_capacity=int(os.getenv("ENERGY_TRACE_CACHE_SIZE", "128")),
+)
 service_metrics = ServiceMetrics()
 app = FastAPI(title="Australian Energy Market Intelligence Agent", version="0.1.0")
 
@@ -93,6 +97,7 @@ def health() -> dict[str, object]:
             evidence_index.indexed_documents if isinstance(evidence_index, ElasticsearchHybridEvidenceIndex) else 0
         ),
         "model_provider": planner_provider.name if planner_provider else "deterministic",
+        "trace_cache": dict(zip(("entries", "capacity", "evictions"), agent.trace_stats(), strict=True)),
     }
 
 
@@ -102,25 +107,29 @@ def query(request: AgentQueryRequest) -> AgentQueryResponse:
     response = agent.run(request)
     service_metrics.observe(response, time.perf_counter() - started)
     if redis_client:
+        trace_payload = agent.get_trace(response.trace_id)
+        if trace_payload is None:
+            raise RuntimeError("newly created trace was unexpectedly evicted")
         redis_client.setex(
             f"energy:trace:{response.trace_id}",
             86400,
-            json.dumps(agent.traces[response.trace_id]),
+            json.dumps(trace_payload),
         )
     return response
 
 
 @app.get("/api/agent/traces/{trace_id}")
 def trace(trace_id: str) -> dict[str, object]:
-    if trace_id not in agent.traces and redis_client:
+    local_trace = agent.get_trace(trace_id)
+    if local_trace is None and redis_client:
         cached = redis_client.get(f"energy:trace:{trace_id}")
         if cached:
             decoded = json.loads(cached)
             if isinstance(decoded, dict):
                 return decoded
-    if trace_id not in agent.traces:
+    if local_trace is None:
         raise HTTPException(404, "trace not found")
-    return agent.traces[trace_id]
+    return local_trace
 
 
 @app.get("/api/tools")
@@ -130,9 +139,13 @@ def tools() -> dict[str, object]:
 
 @app.get("/metrics", response_class=PlainTextResponse)
 def metrics() -> str:
+    trace_entries, trace_capacity, trace_evictions = agent.trace_stats()
     return service_metrics.render(
         planner_provider.name if planner_provider else "deterministic",
         evidence_index.backend if evidence_index else "market_evidence_fallback",
         len(store.rows),
         len(evidence_index.documents) if evidence_index else 0,
+        trace_entries,
+        trace_capacity,
+        trace_evictions,
     )

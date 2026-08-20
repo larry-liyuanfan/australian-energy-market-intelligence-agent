@@ -10,6 +10,7 @@ services:
       ENERGY_EVIDENCE_PATH: /data/evidence_documents.jsonl
       ENERGY_REDIS_URL: redis://redis:6379/0
       ENERGY_ELASTICSEARCH_URL: http://elasticsearch:9200
+      ENERGY_TRACE_CACHE_SIZE: "128"
     volumes:
       - ./deploy-data:/data:ro
     ports:
@@ -61,6 +62,7 @@ services:
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=3d"]
     volumes:
       - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/alerts.yml:/etc/prometheus/alerts.yml:ro
       - energy-prometheus:/prometheus
     ports:
       - "127.0.0.1:9093:9090"

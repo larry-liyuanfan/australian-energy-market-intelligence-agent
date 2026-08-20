@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import re
+import threading
 import time
 import uuid
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from datetime import UTC, datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Literal
@@ -22,11 +24,36 @@ class EnergyAgent:
         registry: ToolRegistry,
         timeout_seconds: float = 5,
         planner_provider: ModelStudioPlanner | None = None,
+        trace_capacity: int = 128,
     ) -> None:
+        if trace_capacity < 1:
+            raise ValueError("trace_capacity must be positive")
         self.registry = registry
         self.timeout_seconds = timeout_seconds
         self.planner_provider = planner_provider
-        self.traces: dict[str, dict[str, object]] = {}
+        self.trace_capacity = trace_capacity
+        self._trace_lock = threading.Lock()
+        self.traces: OrderedDict[str, dict[str, object]] = OrderedDict()
+        self.trace_evictions = 0
+
+    def get_trace(self, trace_id: str) -> dict[str, object] | None:
+        with self._trace_lock:
+            trace = self.traces.get(trace_id)
+            if trace is not None:
+                self.traces.move_to_end(trace_id)
+            return trace
+
+    def trace_stats(self) -> tuple[int, int, int]:
+        with self._trace_lock:
+            return len(self.traces), self.trace_capacity, self.trace_evictions
+
+    def _store_trace(self, trace_id: str, trace: dict[str, object]) -> None:
+        with self._trace_lock:
+            self.traces[trace_id] = trace
+            self.traces.move_to_end(trace_id)
+            while len(self.traces) > self.trace_capacity:
+                self.traces.popitem(last=False)
+                self.trace_evictions += 1
 
     def _plan(self, request: AgentQueryRequest) -> list[tuple[str, dict[str, object]]]:
         if self.planner_provider is not None:
@@ -202,10 +229,10 @@ class EnergyAgent:
             tool_calls=records,
             data_version=self.registry.store.data_version,
         )
-        self.traces[trace_id] = {
+        self._store_trace(trace_id, {
             "trace_id": trace_id,
             "states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
             "verified_results": [result.model_dump(mode="json") for result in results],
             "response": response.model_dump(mode="json"),
-        }
+        })
         return response

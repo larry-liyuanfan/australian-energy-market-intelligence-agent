@@ -111,6 +111,16 @@ def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
     assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
 
 
+def test_agent_trace_cache_is_bounded_and_reports_evictions() -> None:
+    bounded = EnergyAgent(ToolRegistry(fixture_store()), trace_capacity=2)
+    responses = [
+        bounded.run(AgentQueryRequest(question=f"Explain SA1 data coverage request {index}")) for index in range(3)
+    ]
+    assert bounded.get_trace(responses[0].trace_id) is None
+    assert bounded.get_trace(responses[-1].trace_id) is not None
+    assert bounded.trace_stats() == (2, 2, 1)
+
+
 def test_model_studio_adapter_accepts_only_registered_typed_calls() -> None:
     response = {
         "choices": [

@@ -30,7 +30,16 @@ class ServiceMetrics:
             for call in response.tool_calls:
                 self.tools[(call.name, call.status, str(call.recovered).lower())] += 1
 
-    def render(self, provider: str, evidence_backend: str, rows: int, chunks: int) -> str:
+    def render(
+        self,
+        provider: str,
+        evidence_backend: str,
+        rows: int,
+        chunks: int,
+        trace_entries: int,
+        trace_capacity: int,
+        trace_evictions: int,
+    ) -> str:
         with self._lock:
             lines = [
                 "# HELP energy_agent_up Process is serving requests.",
@@ -65,6 +74,9 @@ class ServiceMetrics:
                     f'energy_agent_evidence_backend_info{{backend="{evidence_backend}"}} 1',
                     f"energy_agent_market_rows {rows}",
                     f"energy_agent_evidence_chunks {chunks}",
+                    f"energy_agent_trace_cache_entries {trace_entries}",
+                    f"energy_agent_trace_cache_capacity {trace_capacity}",
+                    f"energy_agent_trace_evictions_total {trace_evictions}",
                 ]
             )
             return "\n".join(lines) + "\n"
