@@ -15,7 +15,8 @@ def main() -> None:
     parser.add_argument("--input-root", type=Path)
     parser.add_argument("--input-template")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--git-sha", required=True)
+    parser.add_argument("--evaluation-git-sha", required=True)
+    parser.add_argument("--merge-git-sha", required=True)
     args = parser.parse_args()
     if (args.input_root is None) == (args.input_template is None):
         parser.error("set exactly one of --input-root or --input-template")
@@ -30,7 +31,10 @@ def main() -> None:
         )
         metrics = json.loads((source / "metrics.json").read_text(encoding="utf-8"))
         manifest = json.loads((source / "run_manifest.json").read_text(encoding="utf-8"))
-        if manifest["git_sha"] != args.git_sha or manifest["selected_regions"] != [region]:
+        if (
+            manifest["git_sha"] != args.evaluation_git_sha
+            or manifest["selected_regions"] != [region]
+        ):
             raise SystemExit(f"provenance gate failed for {region}")
         expected_hash = hashlib.sha256((source / "metrics.json").read_bytes()).hexdigest()
         if manifest["metrics_sha256"] != expected_hash:
@@ -53,7 +57,8 @@ def main() -> None:
     metrics_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     merged_manifest = {
         "created_at": datetime.now(UTC).isoformat(),
-        "git_sha": args.git_sha,
+        "evaluation_git_sha": args.evaluation_git_sha,
+        "merge_git_sha": args.merge_git_sha,
         "input_sha256": next(iter(input_hashes)),
         "regions": list(regions),
         "source_manifests": manifests,

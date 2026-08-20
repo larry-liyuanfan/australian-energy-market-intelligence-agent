@@ -10,6 +10,7 @@
 set -euo pipefail
 
 : "${ENERGY_GIT_COMMIT:?set exact pushed commit}"
+: "${EVALUATION_GIT_COMMIT:?set exact evaluation commit in source manifests}"
 : "${OUTPUT_DIR:?set merged output directory}"
 SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent}"
 git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
@@ -25,7 +26,11 @@ module load GCCcore/11.3.0
 module load Python/3.11.3
 python -m venv "${VENV}"
 "${VENV}/bin/python" -m pip install -e .
-MERGE_ARGS=(--output "${OUTPUT_DIR}" --git-sha "${ENERGY_GIT_COMMIT}")
+MERGE_ARGS=(
+  --output "${OUTPUT_DIR}"
+  --evaluation-git-sha "${EVALUATION_GIT_COMMIT}"
+  --merge-git-sha "${ENERGY_GIT_COMMIT}"
+)
 if [[ -n "${INPUT_TEMPLATE:-}" ]]; then
   MERGE_ARGS+=(--input-template "${INPUT_TEMPLATE}")
 else

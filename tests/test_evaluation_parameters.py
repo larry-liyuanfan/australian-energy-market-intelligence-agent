@@ -52,6 +52,8 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     ).read_text(encoding="utf-8")
     assert '--input-template "${INPUT_TEMPLATE}"' in merge_ensemble_script
     assert '${INPUT_ROOT:?set array result root when INPUT_TEMPLATE is absent}' in merge_ensemble_script
+    assert '${EVALUATION_GIT_COMMIT:?set exact evaluation commit in source manifests}' in merge_ensemble_script
+    assert '--merge-git-sha "${ENERGY_GIT_COMMIT}"' in merge_ensemble_script
 
 
 def test_cross_region_ensemble_gate_requires_majority_and_tail_safety() -> None:
