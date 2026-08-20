@@ -1,0 +1,40 @@
+{
+  "evidence_status": "verified-real-four-season-out-of-time",
+  "scope": "AEMO NEMWeb; four 28-day seasonal test folds per region; prior 28-day calibration and at least 30 earlier training days; forecast-only dispatch and actual-price settlement",
+  "jobs": {
+    "tas1_pilot": "29455436",
+    "five_region_array": "29455576",
+    "quality_gated_merge": "29455578"
+  },
+  "git_sha": "65c8b9c731464ba2b0c79241d2a69dc4607ead38",
+  "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+  "merged_metrics_sha256": "a61034f81d3ea8c670bbc064b528d16a67eec380ce7fe723a1faa7bc4372892c",
+  "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+  "folds_per_region": 4,
+  "test_days_per_region": 112,
+  "total_region_days": 560,
+  "degradation_costs_aud_per_mwh_discharged": [0.0, 25.0, 50.0, 100.0],
+  "mean_net_operating_proxy_aud_per_mw_year": {
+    "0": 76551.29,
+    "25": 53180.57,
+    "50": 41048.15,
+    "100": 24188.17
+  },
+  "regional_net_operating_proxy_aud_per_mw_year": {
+    "NSW1": {"0": 117197.95, "25": 90367.44, "50": 75813.74, "100": 51900.32},
+    "QLD1": {"0": 68982.54, "25": 46479.59, "50": 31622.88, "100": 12054.83},
+    "SA1": {"0": 92908.92, "25": 67288.24, "50": 52732.55, "100": 34754.91},
+    "TAS1": {"0": 34438.33, "25": 16123.85, "50": 12759.80, "100": 8061.43},
+    "VIC1": {"0": 69228.70, "25": 45643.73, "50": 32311.79, "100": 14169.34}
+  },
+  "mean_positive_day_share": {"0": 0.99, "25": 0.93, "50": 0.84, "100": 0.46},
+  "forecast": {
+    "lightgbm_mae_wins_over_persistence": 9,
+    "region_season_folds": 20,
+    "conformal_90_coverage_min": 0.797371,
+    "conformal_90_coverage_max": 0.962054
+  },
+  "risk_observation": "At 50 AUD/MWh discharged, daily net-margin P05 was negative in all five regions. Tail and calibration failures vary materially by region and season.",
+  "economic_boundary": "Historical spot-market operating-margin proxy only. Cycling cost is user supplied, not an asset-specific degradation model. Excludes CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and investment returns.",
+  "merge_gate": "five unique regions; identical git SHA, input SHA256, degradation costs, scope and coverage"
+}

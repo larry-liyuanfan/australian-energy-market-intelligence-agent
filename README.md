@@ -43,15 +43,15 @@ On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 
 ### Forecast and anomaly stability
 
 - Baselines: persistence and 24-hour seasonal; candidate: LightGBM L1 plus quantile models.
-- LightGBM did **not** consistently beat persistence on MAE (it improved TAS1 and was nearly tied in VIC1), so no universal prediction-lift claim is made.
-- Adaptive rolling 90% conformal coverage ranged from **88.64% to 91.52%** across regions; fixed calibration is retained as an ablation. Daily MAE bootstrap intervals are recorded per model and region.
+- LightGBM did **not** consistently beat persistence on MAE. In the stronger four-season evaluation it won only **9 of 20 region-season folds**, so no universal prediction-lift claim is made.
+- Seasonal 90% conformal coverage ranged from **79.74% to 96.21%** across 20 folds; the 79.74% TAS1 winter result is retained as evidence of distribution shift rather than hidden by an aggregate. The earlier terminal-split rolling coverage range was 88.64%–91.52%.
 - Anomaly reporting compares a fixed `RRP >= AUD 5,000/MWh` baseline with robust-z thresholds 4/5/6, Jaccard stability and day-level bootstrap event-rate intervals. There is no labelled anomaly ground truth, so counts are not presented as precision/recall.
 
 ### BESS backtest
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
 
-Across **54 complete terminal-split test days per region**, the forecast MILP produced annualised gross-margin proxies of **AUD 48,651–86,768/MW-year**, with oracle capture rates **48.58%–76.42%**. A five-region sensitivity run then re-optimised the schedule at 0/25/50/100 AUD per discharged MWh: the mean annualised net-operating proxy fell from **AUD 61,561** with no cycling charge to **AUD 38,801 / 27,542 / 9,988 per MW-year**. At 100 AUD/MWh the regional range was **AUD 4,203–29,553/MW-year**, and several regions had negative daily P05/CVaR, so the economic conclusion is explicitly cost- and region-sensitive. Results include no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. The compact evidence artifact records Slurm jobs `29454598` and `29455412`, source/model Git SHA and data/output hashes.
+The primary evaluation now uses four independent seasonal folds per region: **112 out-of-time days per region, 560 region-days overall**. Re-optimising at 0/25/50/100 AUD per discharged MWh produced five-region mean annualised net-operating proxies of **AUD 76,551 / 53,181 / 41,048 / 24,188 per MW-year**. At 100 AUD/MWh the regional range was **AUD 8,061–51,900/MW-year** and mean positive-day share was only **46%**; at 50 AUD/MWh all five regional daily P05 values were negative. The earlier 54-day terminal split remains as a regression artifact rather than the headline result. Both evaluations report no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. Compact evidence records the Slurm arrays/merges, code/data hashes and merged-output hashes.
 
 These are **historical spot-market operating-margin proxy metrics only**. The cycling charge is a user-supplied sensitivity parameter, not an asset-specific degradation model; results still exclude CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
 
@@ -113,7 +113,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 
 - Official daily coverage can be incomplete; validation is fail-closed and repairs require a hashed official alternative source.
 - LightGBM is not consistently superior to persistence; the negative result remains visible.
-- TAS1 rolling conformal coverage is 88.64%, below the nominal 90% target.
+- Seasonal conformal coverage falls to 79.74% for TAS1 winter; aggregate calibration must not hide this distribution-shift failure.
 - Retrieval labels are source-level, anomaly labels are unavailable, and diagnostic associations are not causal attribution.
 - Elasticsearch is an actual fixed-query retrieval backend, but was observed near its 1 GiB container limit; production sizing still requires more headroom.
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
