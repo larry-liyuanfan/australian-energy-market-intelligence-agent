@@ -104,3 +104,7 @@ Only results that have a real-data artifact, run manifest, data hash, code SHA,
 resource record, and passing CI may enter the evidence ledger. A paper citation
 by itself is never project evidence. Fixture-only safety tests and planned
 semantic entailment evaluation must stay labelled as such.
+
+For Slurm arrays, every task also receives a distinct `%A_%a` log. Metrics and
+manifests remain region-sharded, so concurrent stdout cannot obscure which
+resource record produced a result.

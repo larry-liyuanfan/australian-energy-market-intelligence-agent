@@ -7,7 +7,9 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --mem=8G
 #SBATCH --time=02:00:00
-#SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
+# Array tasks must never share a log path. For a non-array pilot, Slurm uses its
+# sentinel array-task value; the filename remains unique and auditable.
+#SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%A_%a.out
 set -euo pipefail
 cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
 OUTPUT_ROOT="${OUTPUT_ROOT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
