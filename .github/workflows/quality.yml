@@ -28,6 +28,11 @@ jobs:
         run: mypy src scripts
       - name: Dependency vulnerability audit
         run: python -m pip_audit --skip-editable
+      - name: Prometheus config and alert-rule tests
+        run: |
+          docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 check rules /etc/prometheus/alerts.yml
+          docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 test rules /etc/prometheus/alerts_test.yml
       - name: High-confidence secret scan
         shell: bash
         run: |

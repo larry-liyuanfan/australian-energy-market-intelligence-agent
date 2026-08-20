@@ -1,0 +1,26 @@
+rule_files:
+  - alerts.yml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'up{job="energy-agent",instance="energy-agent:8080"}'
+        values: '0 0 0 0'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: EnergyAgentDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: energy-agent
+              instance: energy-agent:8080
+            exp_annotations:
+              summary: Energy Agent scrape target is unavailable
+  - interval: 1m
+    input_series:
+      - series: 'up{job="energy-agent",instance="energy-agent:8080"}'
+        values: '1 1 1 1'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: EnergyAgentDown
+        exp_alerts: []
