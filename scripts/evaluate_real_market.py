@@ -6,6 +6,7 @@ import gzip
 import hashlib
 import json
 import math
+import os
 import platform
 import subprocess
 import sys
@@ -783,7 +784,12 @@ def main() -> None:
     )
     metrics = {"scope": scope, "coverage": coverage, "regions": results}
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
-    git_sha = subprocess.run(["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+    git_sha = os.environ.get("ENERGY_GIT_COMMIT") or subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
     manifest = {
         "created_at": datetime.now(UTC).isoformat(),
         "git_sha": git_sha,
