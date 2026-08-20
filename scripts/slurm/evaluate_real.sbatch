@@ -10,8 +10,17 @@
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
 set -euo pipefail
 cd /data/gpfs/projects/punim2936/portfolio_20260820/energy-agent
-OUTPUT_DIR="${OUTPUT_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
 ENERGY_REGIONS="${ENERGY_REGIONS:-NSW1,QLD1,SA1,TAS1,VIC1}"
+if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+  REGIONS=(NSW1 QLD1 SA1 TAS1 VIC1)
+  if (( SLURM_ARRAY_TASK_ID < 0 || SLURM_ARRAY_TASK_ID >= ${#REGIONS[@]} )); then
+    echo "unsupported array task: ${SLURM_ARRAY_TASK_ID}" >&2
+    exit 2
+  fi
+  ENERGY_REGIONS="${REGIONS[SLURM_ARRAY_TASK_ID]}"
+fi
+OUTPUT_DIR="${OUTPUT_DIR:-${OUTPUT_ROOT}/${ENERGY_REGIONS}}"
 # Colons survive `sbatch --export`; commas are parsed by Slurm as variable separators.
 DEGRADATION_COSTS="${DEGRADATION_COSTS:-0:25:50:100}"
 VENV="/tmp/energy-eval-${SLURM_JOB_ID:?}"
