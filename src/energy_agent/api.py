@@ -5,6 +5,7 @@ import logging
 import os
 import time
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -26,8 +27,8 @@ store = load_dispatch_store(Path(data_path), Path(manifest_path)) if data_path a
 local_evidence_index = HybridEvidenceIndex(load_official_chunks(Path(evidence_path))) if evidence_path else None
 evidence_index: EvidenceIndex | None = local_evidence_index
 planner_provider = ModelStudioPlanner.from_environment()
-redis_client = None
-elasticsearch_client = None
+redis_client: Any = None
+elasticsearch_client: Any = None
 if redis_url := os.getenv("ENERGY_REDIS_URL"):
     try:
         from redis import Redis
