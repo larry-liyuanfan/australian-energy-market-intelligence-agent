@@ -85,8 +85,14 @@ reliability, and honest business boundaries.
   realised margin plus a tail guardrail; unseen seasonal prices are used only
   for settlement.
 - SA1 result: the raw candidate added AUD 180.20 over 112 test days, but worsened
-  daily CVaR05 from -9.36 to -12.45 AUD. The selector therefore retained the
-  baseline in 4/4 folds and the five-region expansion was stopped.
+  daily CVaR05 from -9.36 to -12.45 AUD. The binary selector therefore retained
+  the baseline in 4/4 folds.
+- Follow-up gate: before reading the five-region result, a fixed convex grid and
+  release rule were declared (positive aggregate, at least 3/5 positive regions,
+  and every regional CVaR05 above a 10% tail floor). SA1 selected 0.25 in two
+  seasons and improved 1.69%, but the 560-region-day run fell 3.54%, only 2/5
+  regions improved, and the paired region-season bootstrap interval crossed
+  zero. The cross-region gate rejected the pilot signal.
 - Boundary: this is a tested optimiser-informed regression proxy, not an SPO+
   implementation or a positive revenue/risk result.
 
