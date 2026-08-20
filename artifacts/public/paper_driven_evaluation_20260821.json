@@ -50,6 +50,22 @@
     "result": "failed improvement gate; all three region-fold CVaR selections that passed calibration were worse on unseen realised tail margin, while SA1 and VIC1 were unchanged because every fold fell back to point dispatch",
     "boundary": "Scenario CVaR is retained as a tested feasibility path and negative ablation, not a claimed risk or revenue improvement."
   },
+  "exact_reproduction": {
+    "all_cost_array_job": "29459252",
+    "dependency_light_merge_job": "29459308",
+    "evaluation_git_sha": "74ac2d122557898eda6bfccb0f9587e2483388f1",
+    "merge_git_sha": "836c745",
+    "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+    "all_cost_metrics_sha256": "7dd896ea9ce15d1427ba92677911e1e430a57914bd9836e473fd97fe7d6497d3",
+    "all_cost_manifest_sha256": "977929181986a747a7856734e2f83549ff5d3608320ba3f7efec704d949d31f1",
+    "cost50_projection_sha256": "233364c4cd8b09f0cc1123bb4f1dedffac3beec13943539cdd15085f907051b7",
+    "cost50_projection_equal_to_published_run": true,
+    "array_task_elapsed_seconds_range": [153, 1173],
+    "array_task_max_rss_kib_range": [734880, 837428],
+    "merge_elapsed_seconds": 3,
+    "merge_max_rss_kib": 10740,
+    "boundary": "The second run reproduced the published 50 AUD/MWh projection exactly while also evaluating the predeclared 0/25/50/100 cost grid. It is reproducibility evidence, not a new effectiveness gain."
+  },
   "resources": {
     "array_task_elapsed_seconds_range": [90, 95],
     "array_task_max_rss_kib_range": [728948, 817684],
@@ -65,6 +81,10 @@
     {
       "job": "29459077",
       "reason": "merge imported the ML evaluation module in a dependency-light runtime; afterok compute shards remained valid and only the merge was repaired"
+    },
+    {
+      "job": "29459259",
+      "reason": "pending merge dependency was cancelled before compute after the identical dependency-coupling defect was already demonstrated; replacement merge 29459308 used the tested dependency-light implementation"
     }
   ],
   "economic_boundary": "Historical spot-market operating-margin proxy only. Cycling cost is user supplied, not an asset-specific degradation model. Excludes CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and investment returns."

@@ -63,6 +63,12 @@ These are **historical spot-market operating-margin proxy metrics only**. The cy
 
 Decision-focused evaluation exposed why MAE is not the release metric: LightGBM won MAE in only **9/20** folds but produced the higher realised BESS net proxy in **17/20**, with MAE/net-margin rank agreement in only **8/20**. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. The five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year, so the CVaR path is published as a failed ablation, not an improvement. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
 
+An exact-SHA five-region reproduction then evaluated the full predeclared
+`0/25/50/100 AUD/MWh` cost grid. Its normalised `50 AUD/MWh` projection is
+byte-for-byte identical to the published decision run
+(`sha256=233364c4...51b7`); the complete all-cost metrics hash is
+`7dd896ea...7d3`. This is a reproducibility result, not another model gain.
+
 ### Agent evaluation
 
 The fixed suite has 80 real-window tasks plus 20 separately reported transient error/empty/timeout fixtures, comparing no-tools, single-tool and the full state machine. The full state machine completed **100/100 tasks** with 100% schema validity, citation completeness, logical-tool success and injected-failure recovery. Real-window raw attempt success was 100%; fault-fixture raw attempt success was 66.7% by construction because each fixture injects one failed attempt before recovery. Offline P95 latency was 644 ms and is not a public-network SLA.
