@@ -14,4 +14,4 @@ INPUT_ROOT="${INPUT_ROOT:?set INPUT_ROOT to the array output root}"
 OUTPUT_DIR="${OUTPUT_DIR:?set OUTPUT_DIR to the merged artifact directory}"
 module purge
 module load Python/3.11.3
-python scripts/merge_real_market_array.py --input-root "${INPUT_ROOT}" --output "${OUTPUT_DIR}"
+PYTHONPATH=src python scripts/merge_real_market_array.py --input-root "${INPUT_ROOT}" --output "${OUTPUT_DIR}"
