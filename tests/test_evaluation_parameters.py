@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from energy_agent.ensemble_gate import summarize_dispatch_ensemble
 from energy_agent.evaluation import (
     adaptive_conformal_bounds,
     citation_structure_metrics,
@@ -43,6 +44,40 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     assert 'checkout --detach "${ENERGY_GIT_COMMIT}"' in ensemble_script
     assert '[[ "$(git -C "${CODE_ROOT}" rev-parse HEAD)" == "${ENERGY_GIT_COMMIT}" ]]' in ensemble_script
     assert 'REGION="${REGION:-SA1}"' in ensemble_script
+
+
+def test_cross_region_ensemble_gate_requires_majority_and_tail_safety() -> None:
+    def region(delta: float, tail: float) -> dict[str, object]:
+        baseline = {
+            "days": 28,
+            "net_operating_margin_proxy_aud": 100.0,
+            "daily_cvar05_aud": -10.0,
+        }
+        ensemble = {
+            "days": 28,
+            "net_operating_margin_proxy_aud": 100.0 + delta,
+            "daily_cvar05_aud": tail,
+        }
+        return {
+            "overall": {"baseline": baseline, "ensemble_selected": ensemble},
+            "selected_ensemble_weight_counts": {"0.0": 0, "0.25": 1},
+            "folds": {
+                "fold": {
+                    "test_economics": {"baseline": baseline, "ensemble_selected": ensemble}
+                }
+            },
+        }
+
+    passed = summarize_dispatch_ensemble(
+        {"A": region(10.0, -10.5), "B": region(5.0, -10.0), "C": region(-1.0, -10.0)},
+        bootstrap_repetitions=100,
+    )
+    assert passed["aggregate"]["promotion_pass"] is True
+    failed = summarize_dispatch_ensemble(
+        {"A": region(10.0, -12.0), "B": region(5.0, -10.0), "C": region(-1.0, -10.0)},
+        bootstrap_repetitions=100,
+    )
+    assert failed["aggregate"]["promotion_pass"] is False
 
 
 def test_residual_scenarios_are_deterministic_and_use_complete_days() -> None:
