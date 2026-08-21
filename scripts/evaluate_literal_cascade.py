@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--fail-on-gate", action="store_true")
     args = parser.parse_args()
 
     rows = [json.loads(line) for line in args.predictions.read_text(encoding="utf-8").splitlines() if line]
@@ -74,6 +75,8 @@ def main() -> None:
     )
     (args.output / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     (args.output / "gate.json").write_text(json.dumps(gate, indent=2), encoding="utf-8")
+    if args.fail_on_gate and not gate["promotion_pass"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

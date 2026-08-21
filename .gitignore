@@ -13,6 +13,7 @@ artifacts/evidence-deploy-*/
 artifacts/passage-holdout-deploy-*/
 artifacts/minicheck-deberta-holdout-*/
 artifacts/literal-cascade-development-*/
+artifacts/claim-transport-holdout-*/
 artifacts/service-eval-*.json
 *.zip
 *.parquet
