@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=energy-chronos2-gate
 #SBATCH --account=punim2936
-#SBATCH --partition=cascade
+#SBATCH --partition=sapphire
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -18,14 +18,14 @@ set -euo pipefail
 
 git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-summary-${SLURM_JOB_ID:?}"
+VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-summary-venv-${SLURM_JOB_ID}"
 git clone --shared --no-checkout "${REPO_DIR}" "${CODE_ROOT}"
 git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
-trap 'rm -rf -- "${CODE_ROOT}"' EXIT
+trap 'rm -rf -- "${CODE_ROOT}" "${VENV}"' EXIT
 
 module purge
 module load GCCcore/11.3.0 Python/3.11.3
-VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-summary-venv-${SLURM_JOB_ID}"
 python -m venv --system-site-packages "${VENV}"
 source "${VENV}/bin/activate"
 mkdir -p "${OUTPUT_DIR}"

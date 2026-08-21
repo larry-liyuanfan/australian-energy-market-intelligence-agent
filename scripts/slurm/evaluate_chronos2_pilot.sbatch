@@ -7,6 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
+#SBATCH --tmp=20000
 #SBATCH --time=00:30:00
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
 
@@ -29,14 +30,14 @@ fi
 
 git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-${SLURM_JOB_ID:?}"
+VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-venv-${SLURM_JOB_ID}"
 git clone --shared --no-checkout "${REPO_DIR}" "${CODE_ROOT}"
 git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
-trap 'rm -rf -- "${CODE_ROOT}"' EXIT
+trap 'rm -rf -- "${CODE_ROOT}" "${VENV}"' EXIT
 
 module purge
 module load GCCcore/11.3.0 Python/3.11.3
-VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-venv-${SLURM_JOB_ID}"
 python -m venv "${VENV}"
 source "${VENV}/bin/activate"
 export PIP_NO_CACHE_DIR=1
