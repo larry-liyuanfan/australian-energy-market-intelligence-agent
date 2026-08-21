@@ -2,7 +2,7 @@
 # chronos-forecasting>=2.3.1 requirement (torch>=2.2), and Transformers 5.x
 # had a documented Chronos2 config incompatibility. Keep the pilot isolated
 # from the core service environment and update only through a new gate.
-torch==2.5.1
+torch==2.5.1+cu121
 transformers==4.57.1
 pydantic==2.10.6
 pydantic-core==2.27.2

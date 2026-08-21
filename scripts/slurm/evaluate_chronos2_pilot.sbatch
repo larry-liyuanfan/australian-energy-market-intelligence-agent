@@ -29,8 +29,10 @@ VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-venv-${SLURM_JOB_ID}"
 python -m venv "${VENV}"
 source "${VENV}/bin/activate"
 export PIP_NO_CACHE_DIR=1
+python -m pip install --no-input --retries 5 --upgrade 'pip>=25.1,<26'
 python -m pip install --no-input --retries 5 \
-  --index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1'
+  --index-url https://pypi.org/simple \
+  --extra-index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1+cu121'
 python -m pip install --no-input --retries 5 \
   --constraint scripts/chronos2-constraints.txt -e '.[ml,foundation]'
 
