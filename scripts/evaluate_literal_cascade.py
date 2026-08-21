@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--threshold", type=float, default=0.25)
     parser.add_argument("--fail-on-gate", action="store_true")
     args = parser.parse_args()
 
@@ -30,7 +31,13 @@ def main() -> None:
     for row in rows:
         consistency = literal_consistency(documents[str(row["evidence_chunk_id"])], str(row["claim"]))
         probability = float(row["support_probability"])
-        decision = "unsupported" if not consistency.consistent else "supported" if probability > 0.5 else "abstain"
+        decision = (
+            "unsupported"
+            if not consistency.consistent
+            else "supported"
+            if probability > args.threshold
+            else "abstain"
+        )
         consistencies.append(consistency.consistent)
         evaluated.append(
             {
@@ -43,7 +50,9 @@ def main() -> None:
         [int(row["label"]) for row in rows],
         [float(row["support_probability"]) for row in rows],
         consistencies,
+        threshold=args.threshold,
     )
+    metrics["threshold"] = args.threshold
     pair_ids = sorted({str(row["pair_id"]) for row in evaluated})
     pair_rows = {pair_id: [row for row in evaluated if row["pair_id"] == pair_id] for pair_id in pair_ids}
     rng = np.random.default_rng(20260822)
@@ -55,6 +64,7 @@ def main() -> None:
             [int(row["label"]) for row in sample],
             [float(row["support_probability"]) for row in sample],
             [bool(row["literal_consistency"]["consistent"]) for row in sample],
+            threshold=args.threshold,
         )
         bootstrap.append(sample_metrics["balanced_accuracy_with_abstention_as_miss"])
     metrics["paired_bootstrap_balanced_accuracy_95_interval"] = [

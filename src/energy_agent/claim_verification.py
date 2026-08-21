@@ -27,19 +27,26 @@ class LiteralConsistency:
 
 
 LITERAL = re.compile(r"(?<![a-z0-9])(?:q[1-4]|\$?\d[\d,]*(?:\.\d+)?%?)(?![a-z0-9])", re.IGNORECASE)
-CLAUSE_SPLIT = re.compile(r"(?<!\d),(?!\d)|[.;•\n]+", re.IGNORECASE)
-UP_CUES = frozenset({"up", "above", "higher", "increase", "increased", "rose", "rise", "grew", "growth"})
-DOWN_CUES = frozenset(
-    {"down", "below", "lower", "decrease", "decreased", "fell", "fall", "reduced", "reduction", "decline", "dropped"}
+CLAUSE_SPLIT = re.compile(r"(?<!\d),(?!\d)|[.;•\n]+|\b(?:but|while|whereas)\b", re.IGNORECASE)
+UP_CUE = re.compile(
+    r"\b(?:up|above|higher|increase(?:d|s|ing)?|rose|rise|rises|rising|grew|grow(?:s|ing|th)?|uplift)\b"
 )
-REGION_ENTITIES = (
-    "new south wales",
-    "south australia",
-    "victoria",
-    "queensland",
-    "tasmania",
+DOWN_CUE = re.compile(
+    r"\b(?:down|below|lower|decrease(?:d|s|ing)?|fell|fall(?:s|ing)?|reduce(?:d|s|ing)?|reduction|"
+    r"decline(?:d|s|ing)?|drop(?:ped|s|ping)?)\b"
 )
+REGION_ENTITIES = {
+    "new south wales": re.compile(r"\bnew south wales\b"),
+    "south australia": re.compile(r"\bsouth australia(?:n)?\b"),
+    "victoria": re.compile(r"\bvictori(?:a|an)\b"),
+    "queensland": re.compile(r"\bqueensland\b"),
+    "tasmania": re.compile(r"\btasmani(?:a|an)\b"),
+}
 TECHNOLOGY = re.compile(r"\b(batter(?:y|ies)|gas(?: facilities)?|coal|wind|solar)\b", re.IGNORECASE)
+LEXICAL_TOKEN = re.compile(r"[a-z]+")
+LEXICAL_STOP = frozenset(
+    {"a", "an", "and", "as", "at", "by", "for", "from", "in", "of", "on", "or", "the", "to", "while", "with"}
+)
 
 
 def _normalise_literal(value: str) -> str:
@@ -47,11 +54,11 @@ def _normalise_literal(value: str) -> str:
 
 
 def _direction_groups(text: str) -> set[str]:
-    words = set(re.findall(r"[a-z]+", text.lower()))
+    lowered = text.lower()
     groups: set[str] = set()
-    if words & UP_CUES:
+    if UP_CUE.search(lowered):
         groups.add("up")
-    if words & DOWN_CUES:
+    if DOWN_CUE.search(lowered):
         groups.add("down")
     return groups
 
@@ -69,6 +76,17 @@ def _entity_number_bindings(text: str) -> set[str]:
     return bindings
 
 
+def _region_number_bindings(text: str) -> set[str]:
+    lowered = text.lower()
+    bindings: set[str] = set()
+    for entity, pattern in REGION_ENTITIES.items():
+        for match in pattern.finditer(lowered):
+            number = LITERAL.search(lowered[match.end() : match.end() + 300])
+            if number is not None:
+                bindings.add(f"{entity}:{_normalise_literal(number.group(0))}")
+    return bindings
+
+
 def literal_consistency(document: str, claim: str) -> LiteralConsistency:
     """Conservative literal/relationship check used only as a verifier cascade.
 
@@ -81,22 +99,38 @@ def literal_consistency(document: str, claim: str) -> LiteralConsistency:
     document_literals = {_normalise_literal(value) for value in LITERAL.findall(document)}
     missing_literals = tuple(value for value in claim_literals if value not in document_literals)
 
-    claim_directions = _direction_groups(claim)
     direction_conflict = False
-    if claim_directions and claim_literals:
-        clauses = [clause for clause in CLAUSE_SPLIT.split(document_lower) if clause.strip()]
+    document_clauses = [clause for clause in CLAUSE_SPLIT.split(document_lower) if clause.strip()]
+    for claim_clause in (clause for clause in CLAUSE_SPLIT.split(claim.lower()) if clause.strip()):
+        claim_directions = _direction_groups(claim_clause)
+        clause_literals = tuple(_normalise_literal(value) for value in LITERAL.findall(claim_clause))
+        if not claim_directions or not clause_literals:
+            continue
+        claim_words = {word for word in LEXICAL_TOKEN.findall(claim_clause) if word not in LEXICAL_STOP}
         scored = [
-            (sum(value in {_normalise_literal(item) for item in LITERAL.findall(clause)} for value in claim_literals), clause)
-            for clause in clauses
+            (
+                sum(value in {_normalise_literal(item) for item in LITERAL.findall(clause)} for value in clause_literals),
+                len(claim_words & set(LEXICAL_TOKEN.findall(clause))),
+                clause,
+            )
+            for clause in document_clauses
         ]
-        best_overlap = max((score for score, _ in scored), default=0)
+        best_key = max(((numeric, lexical) for numeric, lexical, _ in scored), default=(0, 0))
         best_directions = set().union(
-            *(_direction_groups(clause) for score, clause in scored if score == best_overlap and score > 0)
+            *(
+                _direction_groups(clause)
+                for numeric, lexical, clause in scored
+                if (numeric, lexical) == best_key and numeric > 0
+            )
         )
-        direction_conflict = bool(best_directions) and claim_directions.isdisjoint(best_directions)
+        if best_directions and claim_directions.isdisjoint(best_directions):
+            direction_conflict = True
+            break
 
-    claim_entities = tuple(entity for entity in REGION_ENTITIES if entity in claim.lower())
-    missing_entities = tuple(entity for entity in claim_entities if entity not in document_lower)
+    claim_entities = tuple(entity for entity, pattern in REGION_ENTITIES.items() if pattern.search(claim.lower()))
+    missing_entities = tuple(
+        entity for entity in claim_entities if not REGION_ENTITIES[entity].search(document_lower)
+    )
 
     claim_bindings = _entity_number_bindings(claim)
     document_bindings = _entity_number_bindings(document)
@@ -106,6 +140,9 @@ def literal_consistency(document: str, claim: str) -> LiteralConsistency:
         if {"battery", "gas"}.issubset(binding_entities)
         else ()
     )
+    claim_region_bindings = _region_number_bindings(claim)
+    document_region_bindings = _region_number_bindings(document)
+    missing_bindings += tuple(sorted(claim_region_bindings - document_region_bindings))
     return LiteralConsistency(
         consistent=not (missing_literals or direction_conflict or missing_entities or missing_bindings),
         missing_literals=missing_literals,
@@ -115,12 +152,14 @@ def literal_consistency(document: str, claim: str) -> LiteralConsistency:
     )
 
 
-def selective_cascade_metrics(labels: list[int], probabilities: list[float], consistencies: list[bool]) -> dict[str, float]:
-    """Metrics for support / unsupported / abstain decisions at a frozen 0.5 threshold."""
+def selective_cascade_metrics(
+    labels: list[int], probabilities: list[float], consistencies: list[bool], *, threshold: float = 0.5
+) -> dict[str, float]:
+    """Metrics for support / unsupported / abstain decisions at an explicit threshold."""
     if not labels or not (len(labels) == len(probabilities) == len(consistencies)):
         raise ValueError("labels, probabilities and consistencies must be non-empty and equal length")
     decisions = [
-        "unsupported" if not consistent else "supported" if probability > 0.5 else "abstain"
+        "unsupported" if not consistent else "supported" if probability > threshold else "abstain"
         for probability, consistent in zip(probabilities, consistencies, strict=True)
     ]
     positives = sum(labels)

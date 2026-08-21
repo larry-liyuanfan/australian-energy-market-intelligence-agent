@@ -36,6 +36,16 @@ def test_literal_consistency_catches_numeric_direction_entity_and_binding_change
     assert literal_consistency(document, supported.replace("rose", "fell")).direction_conflict
     assert literal_consistency(document, supported.replace("2,157", "2,517")).missing_literals == ("2517",)
     assert literal_consistency(document, "Queensland gas demand reached 382 TJ.").missing_entities == ("queensland",)
+    region_binding = literal_consistency(
+        "Victorian demand rose 6.3%. Queensland demand reached 11,144 MW.",
+        "Victoria demand reached 11,144 MW.",
+    )
+    assert region_binding.missing_bindings == ("victoria:11144",)
+    relation_binding = literal_consistency(
+        "PV output was 16% above last year while operational demand fell to 21,380 MW.",
+        "PV output was 16% below last year while operational demand rose to 21,380 MW.",
+    )
+    assert relation_binding.direction_conflict
     swapped = literal_consistency(document, "Batteries provided 21% while gas facilities provided 61%.")
     assert swapped.missing_bindings == ("battery:21%", "gas:61%")
 
@@ -46,6 +56,8 @@ def test_selective_cascade_counts_abstention_as_unhandled() -> None:
     assert metrics["counterfactual_rejection_recall"] == 1.0
     assert metrics["coverage"] == pytest.approx(2 / 3)
     assert metrics["selective_accuracy"] == 1.0
+    calibrated = selective_cascade_metrics([1, 0], [0.3, 0.2], [True, True], threshold=0.25)
+    assert calibrated["support_recall"] == 1.0
 
 
 def test_minicheck_checkpoint_label_contract_is_frozen() -> None:
