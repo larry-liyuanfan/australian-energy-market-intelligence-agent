@@ -28,6 +28,8 @@ module purge
 module load GCCcore/11.3.0 Python/3.11.3
 python -m venv --system-site-packages "${VENV}"
 source "${VENV}/bin/activate"
+export PIP_NO_CACHE_DIR=1
+python -m pip install --no-input --retries 3 "numpy==2.4.6"
 mkdir -p "${OUTPUT_DIR}"
 python scripts/summarize_chronos2_gate.py \
   --input-root "${INPUT_ROOT}" \
