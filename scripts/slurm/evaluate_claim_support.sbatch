@@ -18,12 +18,14 @@ set -euo pipefail
 : "${OUTPUT_DIR:?Set a new artifact directory}"
 
 git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
-CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-claim-support-${SLURM_JOB_ID:?}"
-VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-claim-support-venv-${SLURM_JOB_ID}"
+TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+CODE_ROOT="${TASK_SCRATCH}/energy-claim-support-${SLURM_JOB_ID:?}"
+VENV="${TASK_SCRATCH}/energy-claim-support-venv-${SLURM_JOB_ID}"
+HF_JOB_CACHE="${TASK_SCRATCH}/energy-minicheck-hf-${SLURM_JOB_ID}"
 git clone --shared --no-checkout "${REPO_DIR}" "${CODE_ROOT}"
 git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
-trap 'rm -rf -- "${CODE_ROOT}" "${VENV}"' EXIT
+trap 'rm -rf -- "${CODE_ROOT}" "${VENV}" "${HF_JOB_CACHE}"' EXIT
 
 module purge
 module load GCCcore/11.3.0 Python/3.11.3
@@ -36,8 +38,7 @@ python -m pip install --no-input --retries 5 \
   --extra-index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1+cu121'
 python -m pip install --no-input --retries 5 -e '.[factcheck]'
 
-TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
-export HF_HOME="${TASK_SCRATCH}/energy-minicheck-hf-${SLURM_JOB_ID:?}"
+export HF_HOME="${HF_JOB_CACHE}"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export HF_HUB_DISABLE_TELEMETRY=1
 export PYTHONUNBUFFERED=1

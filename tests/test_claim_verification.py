@@ -37,3 +37,11 @@ def test_minicheck_benchmark_is_balanced_and_paired() -> None:
         assert len({row["evidence_chunk_id"] for row in selected}) == 1
     negative_types = {row["perturbation_type"] for row in rows if int(row["label"]) == 0}
     assert negative_types == {"numeric", "direction", "temporal", "entity", "quantifier_negation"}
+
+
+def test_minicheck_slurm_cache_has_job_unique_tmp_fallback_and_cleanup() -> None:
+    script = Path("scripts/slurm/evaluate_claim_support.sbatch").read_text(encoding="utf-8")
+    assert 'TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"' in script
+    assert 'HF_JOB_CACHE="${TASK_SCRATCH}/energy-minicheck-hf-${SLURM_JOB_ID}"' in script
+    assert 'export HF_HOME="${HF_JOB_CACHE}"' in script
+    assert '"${HF_JOB_CACHE}"' in script.split("trap ", maxsplit=1)[1].split(" EXIT", maxsplit=1)[0]
