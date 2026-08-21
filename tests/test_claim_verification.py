@@ -9,6 +9,8 @@ from energy_agent.claim_verification import (
     MINICHECK_NEGATIVE_TOKEN_ID,
     MINICHECK_POSITIVE_TOKEN_ID,
     binary_metrics,
+    literal_consistency,
+    selective_cascade_metrics,
 )
 
 DEBERTA_HOLDOUT = Path("benchmarks/minicheck_claim_support_holdout_q2_2025.jsonl")
@@ -21,6 +23,28 @@ def test_binary_metrics_perfect_separation() -> None:
     assert metrics["counterfactual_rejection_recall"] == 1.0
     assert metrics["auroc"] == 1.0
     assert metrics["brier_score"] == pytest.approx(0.025)
+
+
+def test_literal_consistency_catches_numeric_direction_entity_and_binding_changes() -> None:
+    document = (
+        "Gas-fired generation rose from 1,040 MW in April 2025 to 2,157 MW in June. "
+        "Victorian gas demand reached 382 TJ. Batteries provided 61% while gas facilities provided 21%."
+    )
+    supported = "Gas-fired generation rose from 1,040 MW in April 2025 to 2,157 MW in June."
+    assert literal_consistency(document, supported).consistent
+    assert literal_consistency(document, supported.replace("rose", "fell")).direction_conflict
+    assert literal_consistency(document, supported.replace("2,157", "2,517")).missing_literals == ("2517",)
+    assert literal_consistency(document, "Queensland gas demand reached 382 TJ.").missing_entities == ("queensland",)
+    swapped = literal_consistency(document, "Batteries provided 21% while gas facilities provided 61%.")
+    assert swapped.missing_bindings == ("battery:21%", "gas:61%")
+
+
+def test_selective_cascade_counts_abstention_as_unhandled() -> None:
+    metrics = selective_cascade_metrics([1, 0, 1], [0.9, 0.8, 0.4], [True, False, True])
+    assert metrics["support_recall"] == 0.5
+    assert metrics["counterfactual_rejection_recall"] == 1.0
+    assert metrics["coverage"] == pytest.approx(2 / 3)
+    assert metrics["selective_accuracy"] == 1.0
 
 
 def test_minicheck_checkpoint_label_contract_is_frozen() -> None:

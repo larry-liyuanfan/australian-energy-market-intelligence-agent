@@ -11,6 +11,8 @@ artifacts/private/
 artifacts/energy-passage-holdout/
 artifacts/evidence-deploy-*/
 artifacts/passage-holdout-deploy-*/
+artifacts/minicheck-deberta-holdout-*/
+artifacts/literal-cascade-development-*/
 artifacts/service-eval-*.json
 *.zip
 *.parquet

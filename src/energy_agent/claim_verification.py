@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from itertools import pairwise
 from typing import Any
@@ -14,6 +15,137 @@ MINICHECK_POSITIVE_TOKEN_ID = 209
 class ClaimSupportScore:
     support_probability: float
     predicted_supported: bool
+
+
+@dataclass(frozen=True)
+class LiteralConsistency:
+    consistent: bool
+    missing_literals: tuple[str, ...]
+    direction_conflict: bool
+    missing_entities: tuple[str, ...]
+    missing_bindings: tuple[str, ...]
+
+
+LITERAL = re.compile(r"(?<![a-z0-9])(?:q[1-4]|\$?\d[\d,]*(?:\.\d+)?%?)(?![a-z0-9])", re.IGNORECASE)
+CLAUSE_SPLIT = re.compile(r"(?<!\d),(?!\d)|[.;•\n]+", re.IGNORECASE)
+UP_CUES = frozenset({"up", "above", "higher", "increase", "increased", "rose", "rise", "grew", "growth"})
+DOWN_CUES = frozenset(
+    {"down", "below", "lower", "decrease", "decreased", "fell", "fall", "reduced", "reduction", "decline", "dropped"}
+)
+REGION_ENTITIES = (
+    "new south wales",
+    "south australia",
+    "victoria",
+    "queensland",
+    "tasmania",
+)
+TECHNOLOGY = re.compile(r"\b(batter(?:y|ies)|gas(?: facilities)?|coal|wind|solar)\b", re.IGNORECASE)
+
+
+def _normalise_literal(value: str) -> str:
+    return value.lower().replace("$", "").replace(",", "")
+
+
+def _direction_groups(text: str) -> set[str]:
+    words = set(re.findall(r"[a-z]+", text.lower()))
+    groups: set[str] = set()
+    if words & UP_CUES:
+        groups.add("up")
+    if words & DOWN_CUES:
+        groups.add("down")
+    return groups
+
+
+def _entity_number_bindings(text: str) -> set[str]:
+    bindings: set[str] = set()
+    for match in TECHNOLOGY.finditer(text):
+        suffix = text[match.end() : match.end() + 100]
+        number = LITERAL.search(suffix)
+        if number is None:
+            continue
+        entity = match.group(1).lower()
+        entity = "battery" if entity.startswith("batter") else "gas" if entity.startswith("gas") else entity
+        bindings.add(f"{entity}:{_normalise_literal(number.group(0))}")
+    return bindings
+
+
+def literal_consistency(document: str, claim: str) -> LiteralConsistency:
+    """Conservative literal/relationship check used only as a verifier cascade.
+
+    It does not claim semantic entailment. It checks that claim literals occur in
+    the passage, that direction cues agree in the clause with the strongest
+    numeric overlap, and that repeated technology-number bindings are preserved.
+    """
+    document_lower = document.lower()
+    claim_literals = tuple(dict.fromkeys(_normalise_literal(value) for value in LITERAL.findall(claim)))
+    document_literals = {_normalise_literal(value) for value in LITERAL.findall(document)}
+    missing_literals = tuple(value for value in claim_literals if value not in document_literals)
+
+    claim_directions = _direction_groups(claim)
+    direction_conflict = False
+    if claim_directions and claim_literals:
+        clauses = [clause for clause in CLAUSE_SPLIT.split(document_lower) if clause.strip()]
+        scored = [
+            (sum(value in {_normalise_literal(item) for item in LITERAL.findall(clause)} for value in claim_literals), clause)
+            for clause in clauses
+        ]
+        best_overlap = max((score for score, _ in scored), default=0)
+        best_directions = set().union(
+            *(_direction_groups(clause) for score, clause in scored if score == best_overlap and score > 0)
+        )
+        direction_conflict = bool(best_directions) and claim_directions.isdisjoint(best_directions)
+
+    claim_entities = tuple(entity for entity in REGION_ENTITIES if entity in claim.lower())
+    missing_entities = tuple(entity for entity in claim_entities if entity not in document_lower)
+
+    claim_bindings = _entity_number_bindings(claim)
+    document_bindings = _entity_number_bindings(document)
+    binding_entities = {binding.split(":", maxsplit=1)[0] for binding in claim_bindings}
+    missing_bindings = (
+        tuple(sorted(claim_bindings - document_bindings))
+        if {"battery", "gas"}.issubset(binding_entities)
+        else ()
+    )
+    return LiteralConsistency(
+        consistent=not (missing_literals or direction_conflict or missing_entities or missing_bindings),
+        missing_literals=missing_literals,
+        direction_conflict=direction_conflict,
+        missing_entities=missing_entities,
+        missing_bindings=missing_bindings,
+    )
+
+
+def selective_cascade_metrics(labels: list[int], probabilities: list[float], consistencies: list[bool]) -> dict[str, float]:
+    """Metrics for support / unsupported / abstain decisions at a frozen 0.5 threshold."""
+    if not labels or not (len(labels) == len(probabilities) == len(consistencies)):
+        raise ValueError("labels, probabilities and consistencies must be non-empty and equal length")
+    decisions = [
+        "unsupported" if not consistent else "supported" if probability > 0.5 else "abstain"
+        for probability, consistent in zip(probabilities, consistencies, strict=True)
+    ]
+    positives = sum(labels)
+    negatives = len(labels) - positives
+    supported_true_positives = sum(
+        label == 1 and decision == "supported" for label, decision in zip(labels, decisions, strict=True)
+    )
+    rejected_true_negatives = sum(
+        label == 0 and decision == "unsupported" for label, decision in zip(labels, decisions, strict=True)
+    )
+    handled = sum(decision != "abstain" for decision in decisions)
+    handled_correct = sum(
+        (label == 1 and decision == "supported") or (label == 0 and decision == "unsupported")
+        for label, decision in zip(labels, decisions, strict=True)
+    )
+    support_recall = supported_true_positives / positives if positives else 0.0
+    rejection_recall = rejected_true_negatives / negatives if negatives else 0.0
+    return {
+        "balanced_accuracy_with_abstention_as_miss": (support_recall + rejection_recall) / 2,
+        "support_recall": support_recall,
+        "counterfactual_rejection_recall": rejection_recall,
+        "coverage": handled / len(labels),
+        "selective_accuracy": handled_correct / handled if handled else 0.0,
+        "abstention_rate": 1 - handled / len(labels),
+    }
 
 
 class MiniCheckFlanVerifier:
