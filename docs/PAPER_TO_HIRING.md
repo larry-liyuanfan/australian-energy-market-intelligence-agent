@@ -101,34 +101,42 @@ reliability, and honest business boundaries.
 - Primary sources: Gao et al., [Enabling Large Language Models to Generate Text
   with Citations](https://aclanthology.org/2023.emnlp-main.398/), EMNLP 2023;
   Ru et al., [RAGChecker](https://proceedings.neurips.cc/paper_files/paper/2024/hash/27245589131d17368cccdfa990cbf16e-Abstract-Datasets_and_Benchmarks_Track.html),
-  NeurIPS 2024 Datasets and Benchmarks Track.
+  NeurIPS 2024 Datasets and Benchmarks Track; Stammbach and Neumann,
+  [Improving Evidence Retrieval with Claim-Evidence Entailment](https://aclanthology.org/2021.ranlp-1.174/),
+  RANLP 2021.
 - Hiring-relevant gap: the earlier “citation completeness” metric passed when an
   answer had any citation, even if another generated claim had none.
 - Implemented: every deterministic answer claim carries explicit evidence IDs.
-  Offline evaluation now separates claim-level citation completeness from
-  citation-ID validity, while retrieval source routing remains a separate MRR /
-  Recall@5 benchmark.
-- Boundary: ID validity and provenance association do not prove semantic
-  entailment. Passage-level human labels or a separately validated entailment
-  judge are still required before claiming citation correctness.
+  Offline evaluation separates claim-level citation completeness from
+  citation-ID validity. A new 20-claim author-curated exact-support set then
+  tests passage retrieval separately from report routing. It exposed dense-only
+  Recall@5 0.50 and RRF 0.70; numeric-preserving hybrid reranking reached 1.00
+  Recall@5 and MRR 0.80 while retaining source-routing MRR/Recall@5 1.00/1.00.
+- Boundary: ID validity, term-consistent support labels and passage retrieval do
+  not prove answer-level semantic entailment. Independent human-blind labels or
+  a separately validated entailment judge remain required before claiming
+  citation correctness.
 
 ### Tool-agent reliability and untrusted evidence
 
 - Primary sources: Yao et al., [τ-bench](https://arxiv.org/abs/2406.12045), ICLR
   2025; Debenedetti et al., [AgentDojo](https://proceedings.neurips.cc/paper_files/paper/2024/hash/97091a5177d8dc64b1da8bf3e1f6fb54-Abstract-Datasets_and_Benchmarks_Track.html),
-  NeurIPS 2024 Datasets and Benchmarks Track.
+  NeurIPS 2024 Datasets and Benchmarks Track; Zhan et al.,
+  [InjecAgent](https://arxiv.org/abs/2403.02691), ACL Findings 2024.
 - Existing implementation retained: typed tool schemas, bounded parallel calls,
   timeout/retry, loop detection, empty-result recovery, trace persistence, and
   deterministic planner fallback. Retrieved text is data and cannot introduce
   SQL, Elasticsearch DSL, or optimisation expressions.
-- Implemented fixture: an official-evidence test double returns an embedded
-  instruction to skip registered tools and reveal environment secrets. The
-  state machine keeps the original typed plan, stores the text only as cited
-  evidence data, and excludes it from the answer narrative.
-- Boundary: this is one deterministic indirect-prompt-injection regression, not
-  the AgentDojo benchmark or evidence of broad prompt-injection robustness.
-  Repeat-trial `pass^k`, attack diversity, live-model behaviour and human
-  policy grading remain future gates.
+- Implemented: 24 attacks span instruction override, secret exfiltration, tool
+  substitution, SQL/DSL injection, optimisation-expression injection, citation
+  spoofing, fake role boundaries and split instructions; eight benign controls
+  measure overblocking. Five deterministic repetitions yield 120/120 attack
+  plan-integrity passes, zero unsafe tool actions/marker leakage and 40/40
+  benign successes. The zero-failure Wilson 95% upper bound remains 3.10%.
+- Boundary: retrieved text never enters the deterministic planner, so `pass^5`
+  is a regression invariant rather than stochastic model reliability. This is
+  not the AgentDojo/InjecAgent benchmark, live-model behaviour or evidence of
+  broad prompt-injection robustness; human policy grading remains future work.
 
 ## Evidence gate for career materials
 

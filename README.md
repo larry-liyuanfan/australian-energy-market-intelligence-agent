@@ -2,7 +2,7 @@
 
 An evidence-first Agentic AI system for the Australian National Electricity Market (NEM): five-minute price-event detection, official-evidence retrieval, price-risk forecasting, constrained battery dispatch, historical value backtesting and auditable answers.
 
-> **Verified release candidate — 20 August 2026.** The repository has a complete 12-month/five-region AEMO dataset, official AEMO/AER evidence index, rolling forecast and BESS experiments, a 100-task Agent evaluation, and an isolated Alibaba Cloud deployment. Model Studio was not configured, so the verified service uses deterministic typed planning; the constrained OpenAI-compatible adapter is tested offline but no live-model result or cost is claimed.
+> **Verified release candidate — 21 August 2026.** The repository has a complete two-year/five-region AEMO dataset, official AEMO/AER evidence index, rolling forecast and BESS experiments, a 100-task Agent evaluation, passage-support and untrusted-evidence gates, and an isolated Alibaba Cloud deployment. Model Studio was not configured, so the verified service uses deterministic typed planning; the constrained OpenAI-compatible adapter is tested offline but no live-model result or cost is claimed.
 
 ## System
 
@@ -43,7 +43,7 @@ The corrected headline evaluation uses eight independent 28-day region-season fo
 
 ### Retrieval
 
-On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 and Recall@5 1.00; dense and RRF each reached MRR 0.950; hybrid+rerank reached **MRR 0.967, Recall@5 1.00**, with bootstrap MRR 95% interval 0.90–1.00. These labels test report routing, not passage-level factual correctness or open-domain QA.
+On the original 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 and Recall@5 1.00; the revised hybrid rerank reached **MRR 1.00, Recall@5 1.00** without a routing regression. A separate 20-claim exact-support set over the same five official reports exposed a different failure: dense-only passage retrieval reached just MRR 0.214/Recall@5 0.50 and unweighted RRF reached 0.521/0.70. Adding auditable lexical-strength, query-term and numeric-preservation features raised hybrid passage retrieval to **MRR 0.800, Recall@5 1.00** (bootstrap MRR 95% interval 0.70–0.90); BM25 remained the stronger top-rank baseline at MRR 0.875. The passage labels are author-curated, not independent blind annotation or an LLM semantic-entailment judge. See the [exact-SHA gate artifact](artifacts/public/evidence_security_gate_20260821.json).
 
 ### Forecast and anomaly stability
 
@@ -81,6 +81,8 @@ byte-for-byte identical to the published decision run
 
 The fixed suite has 80 real-window tasks plus 20 separately reported transient error/empty/timeout fixtures, comparing no-tools, single-tool and the full state machine. The full state machine completed **100/100 tasks** with 100% schema validity, citation completeness, logical-tool success and injected-failure recovery. Real-window raw attempt success was 100%; fault-fixture raw attempt success was 66.7% by construction because each fixture injects one failed attempt before recovery. Offline P95 latency was 644 ms and is not a public-network SLA.
 
+An additional indirect-prompt-injection regression contains **24 attacks across eight families plus eight benign controls**, each repeated five times (160 trials; 120 attack trials). The deterministic typed plan was preserved in 120/120 attack trials, with zero unregistered tool actions, zero marker leakage and 40/40 benign-control successes. With zero observed unsafe actions, the two-sided Wilson 95% upper bound is still 3.10%; this is an architecture-bound regression because retrieved text never enters the deterministic planner, not a live-model robustness benchmark or an AgentDojo score.
+
 ## Deployment
 
 The isolated Alibaba Cloud SG Compose stack runs FastAPI, Elasticsearch 8.19, Redis 7.4 and Prometheus 3.5 with loopback-only host bindings and explicit CPU/RAM limits. Elasticsearch now holds a versioned, strict-mapping index behind the `energy-official-evidence` alias (**735/735 chunks**); the service executes a fixed `multi_match` BM25 query, source-diversifies candidates, and fuses them with local BM25/dense retrieval, RRF and deterministic reranking. Users can never submit Elasticsearch DSL. Indexing/count failures fail over to the local hybrid path and are exposed in `/healthz` instead of being reported as indexed success. On the same 20-query source-routing set, deployed ES BM25 reached MRR **0.858**/Recall@5 **1.00** while the fused path retained **0.967/1.00**; ES BM25 alone is not claimed to improve ranking quality.
@@ -114,6 +116,8 @@ python scripts/validate_dispatch_coverage.py --data artifacts/run/dispatch_featu
 python scripts/repair_dispatch_gap.py --input artifacts/run/dispatch_features.csv.gz --output artifacts/run/dispatch_features_repaired.csv.gz --day 2026-03-10
 python scripts/build_official_evidence.py --output artifacts/evidence
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-eval
+python scripts/evaluate_passage_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/passage-support --fail-on-gate
+python scripts/evaluate_agent_security.py --output artifacts/security-eval --repetitions 5 --fail-on-gate
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/seasonal-eval --seasonal-bess --degradation-costs 0,25,50,100
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
@@ -136,10 +140,10 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Official daily coverage can be incomplete; validation is fail-closed and repairs require a hashed official alternative source.
 - LightGBM is not consistently superior to persistence; the negative result remains visible.
 - Seasonal conformal coverage falls to 79.74% for TAS1 winter; aggregate calibration must not hide this distribution-shift failure.
-- Retrieval labels are source-level, anomaly labels are unavailable, and diagnostic associations are not causal attribution.
+- Source-routing and author-curated exact-support labels are reported separately; neither is an independent answer-entailment study. Anomaly labels are unavailable, and diagnostic associations are not causal attribution.
 - Elasticsearch is an actual fixed-query retrieval backend, but was observed near its 1 GiB container limit; production sizing still requires more headroom.
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
-- Retrieved report text is treated as untrusted data: a deterministic indirect-prompt-injection fixture verifies that embedded instructions cannot alter the typed plan or enter the answer narrative. This is one regression case, not an AgentDojo benchmark or a general robustness claim.
+- Retrieved report text is treated as untrusted data: 24 attacks across eight families and eight benign controls verify the deterministic planner/data boundary over 160 repeated fixture trials. This is not a live-model benchmark, an AgentDojo score or a general robustness claim.
 - Slurm evaluation code and manifest SHAs are pinned to the same detached, job-local Git worktree. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
 - Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
 - Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; a subsequent calibration-selected convex ensemble also failed its predeclared five-region promotion gate (2/5 positive, aggregate -3.54%), so no positive gain claim is made.

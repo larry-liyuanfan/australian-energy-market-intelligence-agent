@@ -16,9 +16,12 @@ region/timestamp keys. An interval-ending day-boundary defect in the first build
 created five duplicate keys and one ten-minute gap per region; the validator
 failed closed, and I repaired only the affected official days from AEMO monthly
 MMSDM archives rather than interpolating. The official-document index contains
-735 chunks; fused retrieval reached MRR 0.967 and Recall@5 1.00 on the fixed
-20-query set, while the Elasticsearch-only path remained a measured negative
-baseline.
+735 chunks. The revised fused path retained source-routing MRR/Recall@5 at
+1.00/1.00 and reached passage-support MRR 0.80/Recall@5 1.00 on a separate
+20-claim author-curated set. Dense-only passage Recall@5 was 0.50, so I added
+numeric-preservation and lexical-strength features instead of assuming semantic
+retrieval solved exact evidence routing. The deployed Elasticsearch-only path
+remains a measured negative baseline.
 
 For the business decision, persistence and LightGBM forecasts drive the same
 1 MW/2 MWh battery MILP and are settled only on future realised prices. Across
@@ -68,6 +71,12 @@ asset-specific degradation and investment return.
 26. What remains unverified because live Model Studio credentials were not used?
 27. Which assumptions prevent the historical operating proxy from becoming an investment recommendation?
 28. What evidence would be required before adding FCAS, degradation or prospective bidding claims?
+29. Why did dense retrieval route reports well but fail exact numeric passages within a report?
+30. Which rerank features preserve numbers without letting users submit retrieval DSL?
+31. What does author-curated exact support validate, and what semantic-entailment claim does it not validate?
+32. How were the eight indirect-prompt-injection families selected, and why include benign controls?
+33. Why is deterministic pass^5 a regression invariant rather than a live-model reliability estimate?
+34. Why report a 3.10% Wilson upper bound after observing zero unsafe actions?
 
 ## Code evidence map
 
@@ -81,6 +90,7 @@ asset-specific degradation and investment return.
 | Two-year decision transport gate | `scripts/summarize_history_transport.py`, `docs/HISTORICAL_TRANSPORT_GATE.md`, `artifacts/public/historical_transport_gate_20260821.json` |
 | Scenario-CVaR negative gate | `scripts/summarize_risk_transport.py`, `docs/RISK_TRANSPORT_GATE.md`, `artifacts/public/risk_transport_gate_20260821.json` |
 | Official-document hybrid retrieval | `src/energy_agent/evidence.py`, `scripts/build_official_evidence.py`, `scripts/evaluate_retrieval.py` |
+| Passage support and injection gates | `benchmarks/official_passage_support.jsonl`, `benchmarks/indirect_prompt_injection.jsonl`, `scripts/evaluate_passage_support.py`, `scripts/evaluate_agent_security.py`, `artifacts/public/evidence_security_gate_20260821.json` |
 | Provider boundary and deterministic fallback | `src/energy_agent/providers.py` |
 | FastAPI, traces and metrics | `src/energy_agent/api.py`, `scripts/evaluate_service.py` |
 | Agent task evaluation | `scripts/evaluate_agent_real.py`, `src/energy_agent/evaluation.py` |
@@ -94,3 +104,4 @@ asset-specific degradation and investment return.
 - The failed scenario-CVaR gate prohibits a claim of lower tail risk.
 - Loopback service evaluation is not a public-internet SLA.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
+- Passage labels are author-curated rather than independent human-blind judgments; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
