@@ -2,7 +2,7 @@
 
 An evidence-first Agentic AI system for the Australian National Electricity Market (NEM): five-minute price-event detection, official-evidence retrieval, price-risk forecasting, constrained battery dispatch, historical value backtesting and auditable answers.
 
-> **Verified release candidate — 20 August 2026.** The repository has a complete 12-month/five-region AEMO dataset, official AEMO/AER evidence index, rolling forecast and BESS experiments, a 100-task Agent evaluation, and an isolated Alibaba Cloud deployment. Model Studio was not configured, so the verified service uses deterministic typed planning; the constrained OpenAI-compatible adapter is tested offline but no live-model result or cost is claimed.
+> **Verified release candidate — 21 August 2026.** The repository has a complete two-year/five-region AEMO dataset, official AEMO/AER evidence index, rolling forecast and BESS experiments, a 100-task Agent evaluation, passage-support and untrusted-evidence gates, and an isolated Alibaba Cloud deployment. Model Studio was not configured, so the verified service uses deterministic typed planning; the constrained OpenAI-compatible adapter is tested offline but no live-model result or cost is claimed.
 
 ## System
 
@@ -25,10 +25,10 @@ API: `POST /api/agent/query`, `GET /api/agent/traces/{trace_id}`, `GET /api/tool
 
 ## Data and evidence provenance
 
-- Market data: official [AEMO NEMWeb DispatchIS archive](https://nemweb.com.au/Reports/Archive/DispatchIS_Reports/), 18 August 2025–17 August 2026, 365 days × 288 intervals × five regions = **525,600 standard rows**.
+- Market data: official [AEMO NEMWeb](https://nemweb.com.au/) DispatchIS plus monthly MMSDM archives, 18 August 2024–17 August 2026, 730 days × 288 intervals × five regions = **1,051,200 standard rows**.
 - Fields: RRP, total demand, available generation, net interchange and intervention. The validated window contains no intervention rows.
-- The daily archive for 10 March 2026 was incomplete (267 rather than 288 intervals per region). The pipeline failed closed, then replaced that day only from AEMO's official monthly MMSDM `DISPATCHPRICE` and `DISPATCHREGIONSUM` archives—no interpolation or synthetic fill.
-- Final processed-data SHA-256: `7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd`.
+- The daily archive for 10 March 2026 was incomplete. A v1 repair exposed a settlement-time bug: five duplicated midnight keys and one 10-minute gap per region. The v2 pipeline assigns each interval-ending timestamp to its preceding five-minute dispatch day, fails closed on global duplicate/gap checks, and replaces the affected official day from monthly `DISPATCHPRICE` and `DISPATCHREGIONSUM` only—no interpolation or synthetic fill.
+- Corrected current-year SHA-256: `9025d32d...209567`; earlier-year SHA-256: `d82826a2...656da`; contiguous two-year SHA-256: `e06384b6...60795`. Duplicate keys and five-minute gaps are both **zero**.
 - Explanatory corpus: four AEMO Quarterly Energy Dynamics reports (Q3 2025–Q2 2026) and the AER January–March 2026 significant-price report; **735 chunks** with URL, publication/retrieval times, source hash, size, page count and usage boundary.
 - Large artifacts and report text stay outside GitHub. Only compact, non-sensitive manifests and metrics are published under `artifacts/public/`; AEMO/AER source rights and terms remain with their publishers.
 
@@ -39,11 +39,11 @@ research in [the paper-to-hiring map](docs/PAPER_TO_HIRING.md). Paper names are
 not treated as accomplishments: the map distinguishes method-inspired code,
 verified evaluation and work that remains outside the evidence gate.
 
-The verified terminal-split results use chronological 70% train / 15% calibration / 15% test splits. The repository also supports four independent 28-day seasonal test folds, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules.
+The corrected headline evaluation uses eight independent 28-day region-season folds over the two contiguous years, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules. Older one-year v1 artifacts remain regression diagnostics only and are not the current evidence source.
 
 ### Retrieval
 
-On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 and Recall@5 1.00; dense and RRF each reached MRR 0.950; hybrid+rerank reached **MRR 0.967, Recall@5 1.00**, with bootstrap MRR 95% interval 0.90–1.00. These labels test report routing, not passage-level factual correctness or open-domain QA.
+On the original 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 and Recall@5 1.00; the revised hybrid rerank reached **MRR 1.00, Recall@5 1.00** without a routing regression. A separate 20-claim exact-support set over the same five official reports exposed a different failure: dense-only passage retrieval reached just MRR 0.214/Recall@5 0.50 and unweighted RRF reached 0.521/0.70. Adding auditable lexical-strength, query-term and numeric-preservation features raised hybrid passage retrieval to **MRR 0.800, Recall@5 1.00** (bootstrap MRR 95% interval 0.70–0.90); BM25 remained the stronger top-rank baseline at MRR 0.875. The passage labels are author-curated, not independent blind annotation or an LLM semantic-entailment judge. See the [exact-SHA gate artifact](artifacts/public/evidence_security_gate_20260821.json).
 
 ### Forecast and anomaly stability
 
@@ -53,19 +53,60 @@ On a 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 
 - An ACI-inspired online controller narrowed the five-region coverage range to **89.81%–90.31%** and reduced mean absolute nominal-coverage gap from 2.74 to 0.08 percentage points. It narrowed intervals in only 12/20 folds, however, and TAS1 winter width increased **10.07x**; coverage stability is therefore not presented as uniformly better operational uncertainty.
 - Anomaly reporting compares a fixed `RRP >= AUD 5,000/MWh` baseline with robust-z thresholds 4/5/6, Jaccard stability and day-level bootstrap event-rate intervals. There is no labelled anomaly ground truth, so counts are not presented as precision/recall.
 
+An official Chronos-2 zero-shot challenger was then run over a recent 28-day
+window in all five regions (140 region-days, 40,320 intervals). Rolling forecast
+origins use 14 days of context and explicitly disable Chronos-2 cross-learning
+so later origins cannot share outcomes with earlier origins in the same batch.
+The predeclared transport gate failed: weighted MAE was **28.62** versus **25.36**
+for the region-wise best persistence/LightGBM baseline; raw q10–q90 coverage was
+**74.33%**; and only **2/5** regions had positive BESS proxy deltas. Although the
+aggregate delta was AUD 387.86, the paired seven-day circular moving-block 95%
+interval for mean daily delta was **-AUD 9.03 to 15.63 per region**. This is a
+negative foundation-model baseline, not a promoted model gain. See the
+[exact-SHA stop artifact](artifacts/public/chronos2_transport_gate_20260821.json)
+and [gate note](docs/CHRONOS2_TRANSPORT_GATE.md).
+
+A paper-aligned covariate remediation was then frozen on an earlier,
+non-overlapping SA1 development window. Past demand, available generation and
+interchange plus known calendar covariates reduced Chronos-2 MAE from **49.67 to
+47.73**; preceding-only split conformal calibration produced **84.77%** coverage
+for the nominal 80% interval. That did not transport into the decision:
+same-information LightGBM returned AUD 1,444.61 over 28 days versus AUD 413.22
+for covariate Chronos-2, a **-AUD 1,031.39** delta with seven-day moving-block
+interval **-151.65 to 32.86 AUD/day**. The development gate stopped before
+five-region expansion. See the [development stop artifact](artifacts/public/chronos2_covariate_development_stop_20260821.json).
+
 ### BESS backtest
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
 
-The primary evaluation now uses four independent seasonal folds per region: **112 out-of-time days per region, 560 region-days overall**. Re-optimising at 0/25/50/100 AUD per discharged MWh produced five-region mean annualised net-operating proxies of **AUD 76,551 / 53,181 / 41,048 / 24,188 per MW-year**. At 100 AUD/MWh the regional range was **AUD 8,061–51,900/MW-year** and mean positive-day share was only **46%**; at 50 AUD/MWh all five regional daily P05 values were negative. The earlier 54-day terminal split remains as a regression artifact rather than the headline result. Both evaluations report no-storage, threshold, perfect-foresight oracle, relative lift, equivalent full cycles, oracle regret, daily bootstrap intervals and calculation time. Compact evidence records the Slurm arrays/merges, code/data hashes and merged-output hashes.
+The corrected two-year transport gate covers **224 out-of-time days per region, 1,120 region-days overall** at the predeclared 50 AUD/MWh discharged-energy cost. LightGBM won point MAE in only **15/40** folds but its forecast-driven MILP beat the threshold-rule dispatch in **39/40**. All five regions had positive annualised net-operating proxies; the five-region mean was **AUD 84,792/MW-year** versus **AUD 23,279/MW-year** for the rule baseline (3.64x). The mean per-fold improvement was AUD 4,718.80 with a paired-bootstrap 95% interval of **AUD 3,079.62–6,912.10**. Mean equivalent full cycles were 234.94, mean oracle capture was 57.08%, and mean positive-day share was 90.71%. The predeclared 60%-fold/4-region gate passed. See the [compact exact-SHA artifact](artifacts/public/historical_transport_gate_20260821.json).
 
 These are **historical spot-market operating-margin proxy metrics only**. The cycling charge is a user-supplied sensitivity parameter, not an asset-specific degradation model; results still exclude CAPEX, fixed O&M, network fees, FCAS, bidding/settlement complexity and any claim of investment return.
 
-Decision-focused evaluation exposed why MAE is not the release metric: LightGBM won MAE in only **9/20** folds but produced the higher realised BESS net proxy in **17/20**, with MAE/net-margin rank agreement in only **8/20**. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. The five-region annualised mean moved from AUD 41,048.15 to 41,011.24/MW-year, so the CVaR path is published as a failed ablation, not an improvement. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
+Decision-focused evaluation exposed why MAE is not the release metric: on the corrected two-year gate, MAE won only 37.5% of folds while realised dispatch value won 97.5%. Lower tails remain material—the regional daily CVaR05 range is **-155.05 to -8.36 AUD**—so the positive mean is not presented without downside evidence.
+
+The corrected two-year risk gate then aggregated the already-settled nested scenario-CVaR policy across the same 40 folds. Seven folds selected non-point risk aversion. Mean annualised operating proxy rose from **AUD 84,792 to 86,191/MW-year (+1.65%)**, but mean fold-level CVaR05 worsened by **AUD 3.62** with a 95% paired-bootstrap interval of **-10.60 to -0.003 AUD**; only **1/5** regions improved aggregate CVaR05 and TAS1 retained only **88.18%** of point value. The predeclared tail-and-mean promotion gate therefore failed. This is a useful scenario-transport stop result, not a positive risk claim; see the [exact-SHA artifact](artifacts/public/risk_transport_gate_20260821.json).
+
+The following CVaR, optimiser-weighting and ensemble experiments were run on the superseded one-year v1 time axis. They remain reproducible methodological/negative ablations, but their numeric outcomes are not combined with the corrected v2 headline and do not enter resume claims. A nested calibration gate selected point dispatch in 17/20 folds and CVaR candidates in three; all three selected candidates were worse on unseen realised tail margin. See the compact [paper-driven artifact](artifacts/public/paper_driven_evaluation_20260821.json).
+
+An additional SA1 pilot used training-only perfect-foresight optimiser actions to up-weight charge/discharge intervals in the LightGBM L1 loss. The raw weighted candidate increased the 112-day net proxy by **AUD 180.20** (annualised **AUD 53,319.81 vs 52,732.55/MW-year**) but worsened daily CVaR05 from **-9.36 to -12.45 AUD**. A pre-test mean-plus-tail calibration gate therefore selected the baseline in all four seasonal folds, giving zero selected-policy lift. The raw weighted model was not expanded directly. This is an optimiser-informed loss-proxy negative gate, not SPO+ or a claimed improvement; see the [compact pilot artifact](artifacts/public/decision_weighted_sa1_gate_20260821.json).
+
+A follow-up fixed-grid ensemble used only each fold's preceding calibration window to choose weight 0/0.25/0.5/0.75/1.0, with a tail floor declared before the five-region run. SA1 alone improved from **AUD 52,732.55 to 53,626.36/MW-year**, but the exact-SHA 560-region-day gate rejected promotion: the five-region mean fell from **AUD 41,048.15 to 39,595.59/MW-year (-3.54%)**, only **2/5** regions improved versus a required 3/5, and the paired region-season mean-delta 95% bootstrap interval was **-366.73 to 31.39 AUD**. All regional tail floors passed, but `promotion_pass=false`; the SA1 result is not promoted as economic lift. See the [cross-region stop artifact](artifacts/public/dispatch_ensemble_gate_20260821.json).
+
+The v1 exact-SHA five-region reproduction also evaluated the full predeclared
+`0/25/50/100 AUD/MWh` cost grid. Its normalised `50 AUD/MWh` projection is
+byte-for-byte identical to the published decision run
+(`sha256=233364c4...51b7`); the complete all-cost metrics hash is
+`7dd896ea...7d3`. It is retained as a superseded reproducibility result, not another model gain or current economic evidence.
 
 ### Agent evaluation
 
 The fixed suite has 80 real-window tasks plus 20 separately reported transient error/empty/timeout fixtures, comparing no-tools, single-tool and the full state machine. The full state machine completed **100/100 tasks** with 100% schema validity, citation completeness, logical-tool success and injected-failure recovery. Real-window raw attempt success was 100%; fault-fixture raw attempt success was 66.7% by construction because each fixture injects one failed attempt before recovery. Offline P95 latency was 644 ms and is not a public-network SLA.
+
+An additional indirect-prompt-injection regression contains **24 attacks across eight families plus eight benign controls**, each repeated five times (160 trials; 120 attack trials). The deterministic typed plan was preserved in 120/120 attack trials, with zero unregistered tool actions, zero marker leakage and 40/40 benign-control successes. With zero observed unsafe actions, the two-sided Wilson 95% upper bound is still 3.10%; this is an architecture-bound regression because retrieved text never enters the deterministic planner, not a live-model robustness benchmark or an AgentDojo score.
+
+A pinned 770M MiniCheck verifier was then tested on 20 official AEMO/AER passages, each paired with one supported claim and one controlled counterfactual. Canonical job `29482437` at exact SHA `1620958` **failed** the fixed-threshold gate: counterfactual rejection was 90%, but supported-claim recall was only 45%, balanced accuracy was 67.5%, and the paired-bootstrap 95% interval was 57.5%–77.5%. The model is therefore not promoted to an online guardrail or a citation-correctness claim; see the [exact-SHA stop artifact](artifacts/public/minicheck_claim_support_stop_20260821.json).
 
 ## Deployment
 
@@ -100,6 +141,9 @@ python scripts/validate_dispatch_coverage.py --data artifacts/run/dispatch_featu
 python scripts/repair_dispatch_gap.py --input artifacts/run/dispatch_features.csv.gz --output artifacts/run/dispatch_features_repaired.csv.gz --day 2026-03-10
 python scripts/build_official_evidence.py --output artifacts/evidence
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-eval
+python scripts/evaluate_passage_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/passage-support --fail-on-gate
+python scripts/evaluate_agent_security.py --output artifacts/security-eval --repetitions 5 --fail-on-gate
+python scripts/evaluate_claim_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/claim-support
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/seasonal-eval --seasonal-bess --degradation-costs 0,25,50,100
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
@@ -122,12 +166,16 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Official daily coverage can be incomplete; validation is fail-closed and repairs require a hashed official alternative source.
 - LightGBM is not consistently superior to persistence; the negative result remains visible.
 - Seasonal conformal coverage falls to 79.74% for TAS1 winter; aggregate calibration must not hide this distribution-shift failure.
-- Retrieval labels are source-level, anomaly labels are unavailable, and diagnostic associations are not causal attribution.
+- Source-routing and author-curated exact-support labels are reported separately; neither is an independent answer-entailment study. Anomaly labels are unavailable, and diagnostic associations are not causal attribution.
 - Elasticsearch is an actual fixed-query retrieval backend, but was observed near its 1 GiB container limit; production sizing still requires more headroom.
 - Model Studio live planning is blocked only by absent workspace endpoint/API credentials; deterministic planning and all non-model chains are complete.
-- Retrieved report text is treated as untrusted data: a deterministic indirect-prompt-injection fixture verifies that embedded instructions cannot alter the typed plan or enter the answer narrative. This is one regression case, not an AgentDojo benchmark or a general robustness claim.
+- Retrieved report text is treated as untrusted data: 24 attacks across eight families and eight benign controls verify the deterministic planner/data boundary over 160 repeated fixture trials. This is not a live-model benchmark, an AgentDojo score or a general robustness claim.
 - Slurm evaluation code and manifest SHAs are pinned to the same detached, job-local Git worktree. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
 - Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
+- Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; a subsequent calibration-selected convex ensemble also failed its predeclared five-region promotion gate (2/5 positive, aggregate -3.54%), so no positive gain claim is made.
+- Zero-shot Chronos-2 also failed its five-region 28-day transport gate: MAE ratio 1.1285, raw q10–q90 coverage 74.33%, only 2/5 positive regions and a moving-block economic interval crossing zero. The experiment partly overlaps an inspected SA1 pilot and is not a prospective test.
+- A covariate+conformal Chronos-2 remediation improved SA1 development-window MAE and coverage but lost AUD 1,031.39 to same-information LightGBM on the constrained BESS proxy; its economic moving-block interval crossed zero, so the predeclared five-region expansion was not run.
+- The pinned MiniCheck verifier rejected 90% of controlled counterfactuals but recalled only 45% of supported energy claims; its balanced-accuracy bootstrap interval stayed below the frozen gate, so it is not an online guardrail or semantic-citation claim.
 
 ## Attribution
 

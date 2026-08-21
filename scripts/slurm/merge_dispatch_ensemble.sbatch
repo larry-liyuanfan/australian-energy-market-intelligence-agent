@@ -1,0 +1,40 @@
+#!/bin/bash
+#SBATCH --job-name=energy-ensemble-merge
+#SBATCH --partition=cascade
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=2G
+#SBATCH --time=00:05:00
+#SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/logs/%x-%j.out
+set -euo pipefail
+
+: "${ENERGY_GIT_COMMIT:?set exact pushed commit}"
+: "${EVALUATION_GIT_COMMIT:?set exact evaluation commit in source manifests}"
+: "${OUTPUT_DIR:?set merged output directory}"
+SOURCE_REPO="${REPO_DIR:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent}"
+git -C "${SOURCE_REPO}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
+CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-code-${SLURM_JOB_ID:?}"
+git clone --shared --no-checkout "${SOURCE_REPO}" "${CODE_ROOT}"
+git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
+[[ "$(git -C "${CODE_ROOT}" rev-parse HEAD)" == "${ENERGY_GIT_COMMIT}" ]]
+cd "${CODE_ROOT}"
+VENV="${SLURM_TMPDIR:-/tmp}/energy-merge-venv-${SLURM_JOB_ID:?}"
+trap 'rm -rf -- "${VENV}" "${CODE_ROOT}"' EXIT
+module purge
+module load GCCcore/11.3.0
+module load Python/3.11.3
+python -m venv "${VENV}"
+"${VENV}/bin/python" -m pip install -e .
+MERGE_ARGS=(
+  --output "${OUTPUT_DIR}"
+  --evaluation-git-sha "${EVALUATION_GIT_COMMIT}"
+  --merge-git-sha "${ENERGY_GIT_COMMIT}"
+)
+if [[ -n "${INPUT_TEMPLATE:-}" ]]; then
+  MERGE_ARGS+=(--input-template "${INPUT_TEMPLATE}")
+else
+  : "${INPUT_ROOT:?set array result root when INPUT_TEMPLATE is absent}"
+  MERGE_ARGS+=(--input-root "${INPUT_ROOT}")
+fi
+"${VENV}/bin/python" scripts/merge_dispatch_ensemble.py "${MERGE_ARGS[@]}"

@@ -1,0 +1,74 @@
+{
+  "evidence_status": "verified-real-negative-promotion-gate",
+  "scope": "Official AEMO two-year backward historical transport; five NEM regions; 40 out-of-time region-season folds; calibration-only scenario-CVaR selection at 50 AUD/MWh discharged-energy cost",
+  "slurm": {
+    "summary_job": "29464324",
+    "state": "COMPLETED",
+    "elapsed_seconds": 12,
+    "max_rss_kib": 206672
+  },
+  "provenance": {
+    "evaluation_git_sha": "e79b2b7ad69417ee52d67cc50a13e1d27c06c295",
+    "summary_git_sha": "919d3c44b79dda5b69a1afebf04c8d1fe2db3bc9",
+    "source_metrics_sha256": "382039a4796e56c978b29b570803536a71222aa9c3fa412406d50c6074e40c0e",
+    "gate_metrics_sha256": "6553f246dbf018e3fd7f8011eec87fde2bdcf3330ef9b2466f43f2fc57c0b9c9",
+    "bootstrap_samples": 5000
+  },
+  "gate": {
+    "folds": 40,
+    "non_point_policy_selections": 7,
+    "positive_aggregate_cvar05_regions": 1,
+    "promotion_pass": false,
+    "promotion_rules": {
+      "fold_cvar05_lift_95pct_bootstrap_lower_must_exceed_aud": 0.0,
+      "minimum_positive_aggregate_cvar05_regions": 3,
+      "minimum_five_region_mean_margin_retention_ratio": 0.95,
+      "minimum_single_region_margin_retention_ratio": 0.9
+    }
+  },
+  "aggregate": {
+    "mean_fold_cvar05_lift_aud": -3.6196765776455635,
+    "mean_fold_cvar05_lift_95pct_paired_bootstrap_aud": [
+      -10.602225756861069,
+      -0.0027328659878113224
+    ],
+    "mean_fold_margin_delta_aud": 107.30248489524547,
+    "mean_fold_margin_delta_95pct_paired_bootstrap_aud": [
+      -104.80606972283165,
+      441.12941735341496
+    ],
+    "point_mean_net_operating_proxy_aud_per_mw_year": 84792.08222761715,
+    "risk_aware_mean_net_operating_proxy_aud_per_mw_year": 86190.84676285877,
+    "five_region_mean_margin_retention_ratio": 1.0164964050710155,
+    "minimum_single_region_margin_retention_ratio": 0.8818204593178677
+  },
+  "regions": {
+    "NSW1": {
+      "non_point_policy_selections": 2,
+      "aggregate_cvar05_lift_aud": -0.3770054562226335,
+      "margin_retention_ratio": 0.998002961753262
+    },
+    "QLD1": {
+      "non_point_policy_selections": 3,
+      "aggregate_cvar05_lift_aud": 0.4092177116654945,
+      "margin_retention_ratio": 1.1215916388573137
+    },
+    "SA1": {
+      "non_point_policy_selections": 0,
+      "aggregate_cvar05_lift_aud": 0.0,
+      "margin_retention_ratio": 1.0
+    },
+    "TAS1": {
+      "non_point_policy_selections": 2,
+      "aggregate_cvar05_lift_aud": -50.39775689231362,
+      "margin_retention_ratio": 0.8818204593178677
+    },
+    "VIC1": {
+      "non_point_policy_selections": 0,
+      "aggregate_cvar05_lift_aud": 0.0,
+      "margin_retention_ratio": 1.0
+    }
+  },
+  "diagnosis": "Calibration-residual resampling did not transport the lower-tail price-spike regime reliably. Higher mean operating proxy is not evidence of lower risk.",
+  "boundary": "Backward historical transport aggregation, not a prospective or untouched trial. Historical spot-market operating proxy only; excludes CAPEX, fixed O&M, network charges, FCAS, taxes, financing, complete degradation, bidding/settlement complexity and investment return."
+}

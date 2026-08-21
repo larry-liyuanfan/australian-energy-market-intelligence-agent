@@ -4,12 +4,16 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from energy_agent.ensemble_gate import summarize_dispatch_ensemble
 from energy_agent.evaluation import (
     adaptive_conformal_bounds,
     citation_structure_metrics,
+    optimizer_action_weights,
     parse_degradation_costs,
     residual_price_scenarios,
     seasonal_fold_windows,
+    select_decision_weighted_model,
+    select_dispatch_ensemble_weight,
     select_tail_policy,
 )
 
@@ -32,6 +36,58 @@ def test_slurm_evaluation_pins_code_and_manifest_to_one_commit() -> None:
     assert 'git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"' in merge_script
     assert "export ENERGY_GIT_COMMIT" in merge_script
     assert 'cd "${CODE_ROOT}"' in merge_script
+
+    ensemble_script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "evaluate_dispatch_ensemble.sbatch"
+    ).read_text(encoding="utf-8")
+    assert '${ENERGY_GIT_COMMIT:?set exact pushed commit}' in ensemble_script
+    assert 'checkout --detach "${ENERGY_GIT_COMMIT}"' in ensemble_script
+    assert '[[ "$(git -C "${CODE_ROOT}" rev-parse HEAD)" == "${ENERGY_GIT_COMMIT}" ]]' in ensemble_script
+    assert 'REGION="${REGION:-SA1}"' in ensemble_script
+    assert "git -C \"${SOURCE_REPO}\" fetch" not in ensemble_script
+    assert 'OUTPUT_DIR="${OUTPUT_ROOT}/${REGION}"' in ensemble_script
+
+    merge_ensemble_script = (
+        Path(__file__).parents[1] / "scripts" / "slurm" / "merge_dispatch_ensemble.sbatch"
+    ).read_text(encoding="utf-8")
+    assert '--input-template "${INPUT_TEMPLATE}"' in merge_ensemble_script
+    assert '${INPUT_ROOT:?set array result root when INPUT_TEMPLATE is absent}' in merge_ensemble_script
+    assert '${EVALUATION_GIT_COMMIT:?set exact evaluation commit in source manifests}' in merge_ensemble_script
+    assert '--merge-git-sha "${ENERGY_GIT_COMMIT}"' in merge_ensemble_script
+
+
+def test_cross_region_ensemble_gate_requires_majority_and_tail_safety() -> None:
+    def region(delta: float, tail: float) -> dict[str, object]:
+        baseline = {
+            "days": 28,
+            "net_operating_margin_proxy_aud": 100.0,
+            "daily_cvar05_aud": -10.0,
+        }
+        ensemble = {
+            "days": 28,
+            "net_operating_margin_proxy_aud": 100.0 + delta,
+            "daily_cvar05_aud": tail,
+        }
+        return {
+            "overall": {"baseline": baseline, "ensemble_selected": ensemble},
+            "selected_ensemble_weight_counts": {"0.0": 0, "0.25": 1},
+            "folds": {
+                "fold": {
+                    "test_economics": {"baseline": baseline, "ensemble_selected": ensemble}
+                }
+            },
+        }
+
+    passed = summarize_dispatch_ensemble(
+        {"A": region(10.0, -10.5), "B": region(5.0, -10.0), "C": region(-1.0, -10.0)},
+        bootstrap_repetitions=100,
+    )
+    assert passed["aggregate"]["promotion_pass"] is True
+    failed = summarize_dispatch_ensemble(
+        {"A": region(10.0, -12.0), "B": region(5.0, -10.0), "C": region(-1.0, -10.0)},
+        bootstrap_repetitions=100,
+    )
+    assert failed["aggregate"]["promotion_pass"] is False
 
 
 def test_residual_scenarios_are_deterministic_and_use_complete_days() -> None:
@@ -112,3 +168,42 @@ def test_tail_policy_selects_improvement_or_falls_back_to_point() -> None:
         {"0.5": [-5.0, -4.0, 20.0, 20.0, 20.0]},
     )
     assert fallback["selected_policy"] == "point"
+
+
+def test_optimizer_action_weights_are_bounded_and_action_sensitive() -> None:
+    weights = optimizer_action_weights(
+        [0.0, 0.5, 0.0],
+        [0.0, 0.0, 1.0],
+        power_mw=1.0,
+        emphasis=4.0,
+    )
+    assert weights.tolist() == pytest.approx([1.0, 3.0, 5.0])
+
+
+def test_decision_weighted_selector_uses_mean_and_tail_guardrail() -> None:
+    selected = select_decision_weighted_model(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        [2.0, 3.0, 10.0, 10.0, 10.0],
+    )
+    assert selected["selected_model"] == "decision_weighted"
+    rejected = select_decision_weighted_model(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        [-10.0, -9.0, 20.0, 20.0, 20.0],
+    )
+    assert rejected["selected_model"] == "baseline"
+
+
+def test_dispatch_ensemble_selector_uses_fixed_grid_and_tail_guardrail() -> None:
+    selected = select_dispatch_ensemble_weight(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {
+            "0.25": [2.0, 3.0, 10.0, 10.0, 10.0],
+            "0.5": [2.0, 3.0, 12.0, 12.0, 12.0],
+        },
+    )
+    assert selected["selected_weight"] == pytest.approx(0.5)
+    fallback = select_dispatch_ensemble_weight(
+        [1.0, 2.0, 10.0, 10.0, 10.0],
+        {"0.25": [-10.0, -9.0, 20.0, 20.0, 20.0]},
+    )
+    assert fallback["selected_weight"] == pytest.approx(0.0)

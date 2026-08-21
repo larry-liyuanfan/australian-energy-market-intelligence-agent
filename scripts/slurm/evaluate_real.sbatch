@@ -23,6 +23,7 @@ git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
 export ENERGY_GIT_COMMIT
 OUTPUT_ROOT="${OUTPUT_ROOT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/real-eval}"
+ENERGY_INPUT="${ENERGY_INPUT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz}"
 ENERGY_REGIONS="${ENERGY_REGIONS:-NSW1,QLD1,SA1,TAS1,VIC1}"
 if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
   REGIONS=(NSW1 QLD1 SA1 TAS1 VIC1)
@@ -47,7 +48,7 @@ module load Python/3.11.3
 python -m venv "${VENV}"
 "${VENV}/bin/python" -m pip install -e '.[ml]'
 /usr/bin/time -v "${VENV}/bin/python" scripts/evaluate_real_market.py \
-  --input /data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired.csv.gz \
+  --input "${ENERGY_INPUT}" \
   --output "${OUTPUT_DIR}" \
   --regions "${ENERGY_REGIONS}" \
   --degradation-costs "${DEGRADATION_COSTS}" \

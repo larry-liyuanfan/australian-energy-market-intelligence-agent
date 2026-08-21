@@ -1,0 +1,80 @@
+{
+  "artifact_type": "passage_support_and_indirect_injection_gate",
+  "created_at": "2026-08-21T06:05:00Z",
+  "code_git_sha": "dae61beafc384d51d9146613e0f7388155b44968",
+  "evidence_corpus": {
+    "documents": 735,
+    "sha256": "f3cd5fc3727c924bed509605cffb5b205a68d9c567aad28ade7e10f6927dbb04"
+  },
+  "passage_support_gate": {
+    "tasks": 20,
+    "label_scope": "author-curated exact-support records over five official AEMO/AER reports",
+    "gold_label_term_consistency": 1.0,
+    "bm25": {
+      "mrr": 0.875,
+      "recall_at_5": 1.0,
+      "top1_gold_support_rate": 0.75
+    },
+    "dense": {
+      "mrr": 0.21416666666666667,
+      "recall_at_5": 0.5,
+      "top1_gold_support_rate": 0.05
+    },
+    "rrf": {
+      "mrr": 0.5208333333333333,
+      "recall_at_5": 0.7,
+      "top1_gold_support_rate": 0.4
+    },
+    "hybrid_rerank": {
+      "mrr": 0.8,
+      "recall_at_5": 1.0,
+      "top1_gold_support_rate": 0.6,
+      "mrr_bootstrap_95_interval": [0.7, 0.9]
+    },
+    "promotion_pass": true,
+    "benchmark_sha256": "27f09e8ed1b84a4d92d951667ca5c74b8c57cc2c52c16a697ef5c35ca3609a74",
+    "predictions_sha256": "0b92c855e83ec3ed55143e5662a6e5bd4758246a0837c2d3e3b1510ed328add3"
+  },
+  "source_routing_regression": {
+    "tasks": 20,
+    "hybrid_rerank_mrr": 1.0,
+    "hybrid_rerank_recall_at_5": 1.0,
+    "predictions_sha256": "6ddf10e1de8e3eda42d4336ca2f4968a46d9dc4de3de62144a757f5ccc0bea01"
+  },
+  "indirect_prompt_injection_gate": {
+    "attack_cases": 24,
+    "benign_cases": 8,
+    "attack_families": 8,
+    "repetitions": 5,
+    "trials": 160,
+    "attack_trials": 120,
+    "attack_case_pass_k": 1.0,
+    "plan_integrity_rate": 1.0,
+    "unsafe_tool_action_rate": 0.0,
+    "unsafe_tool_action_rate_wilson_95_upper": 0.031019166418703486,
+    "answer_marker_leakage_rate": 0.0,
+    "benign_task_success_rate": 1.0,
+    "promotion_pass": true,
+    "case_sha256": "9ec859e94248c01d5b59edf6df9fa393fa6421919cd20bba2fc37b28b7ff0128",
+    "predictions_sha256": "5fcde91580d7c1cf87718ef52c6f4a2f9a6b35b3369bc08de9df0ac33e115f8b"
+  },
+  "quality_gate": {
+    "pytest": "93 passed",
+    "ruff": "passed",
+    "mypy": "passed",
+    "pip_audit": "no known vulnerabilities",
+    "github_actions": {
+      "run_id": 32452916184,
+      "head_sha": "dae61beafc384d51d9146613e0f7388155b44968",
+      "conclusion": "success",
+      "url": "https://github.com/larry-liyuanfan/australian-energy-market-intelligence-agent/actions/runs/32452916184"
+    }
+  },
+  "boundaries": [
+    "The passage set is author-curated and not an independent human-blind annotation study or an LLM entailment judge.",
+    "The security suite is deterministic and architecture-bound because retrieved text never enters the deterministic planner.",
+    "Repeated deterministic trials are regression invariants, not stochastic live-model reliability.",
+    "Zero observed unsafe actions does not prove a zero population rate; the two-sided Wilson 95% upper bound is 3.10% over 120 attack trials.",
+    "Live Model Studio behaviour and cost remain unverified."
+  ]
+}

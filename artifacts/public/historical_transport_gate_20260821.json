@@ -1,0 +1,63 @@
+{
+  "evidence_status": "verified-real-backward-temporal-transport",
+  "scope": "Official AEMO DispatchIS/monthly MMSDM; 2024-08-18 to 2026-08-17; five NEM regions; eight 28-day out-of-time folds per region; 50 AUD/MWh discharged-energy cost proxy",
+  "data": {
+    "rows": 1051200,
+    "days": 730,
+    "regions": 5,
+    "earlier_year_sha256": "d82826a2fed4b4fa9980ea5becee33e479342d531768e6bdf5a0462a648656da",
+    "current_year_sha256": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "merged_sha256": "e06384b6b529c36c90be12a9b00fd7467d5321df571d177df720674fb8b60795",
+    "duplicate_region_timestamp_keys": 0,
+    "five_minute_gaps": 0,
+    "boundary": "Official monthly archives were streamed and not retained; no interpolation or synthetic fill. The v1 current-year repair with five duplicate keys and five 10-minute regional gaps is superseded."
+  },
+  "slurm": {
+    "current_year_time_axis_v2": "29462616",
+    "earlier_year_ingest": "29462617",
+    "two_year_merge": "29462620",
+    "five_region_evaluation_array": "29462792",
+    "metrics_merge": "29462808",
+    "verified_summary": "29463216",
+    "evaluation_array_max_elapsed_seconds": 215,
+    "evaluation_array_max_rss_kib": 999236,
+    "summary_max_rss_kib": 206628
+  },
+  "provenance": {
+    "evaluation_git_sha": "e79b2b7ad69417ee52d67cc50a13e1d27c06c295",
+    "summary_git_sha": "248cd620e97887656841deb6f95574c42902dd92",
+    "merged_metrics_sha256": "382039a4796e56c978b29b570803536a71222aa9c3fa412406d50c6074e40c0e",
+    "gate_metrics_sha256": "79ac0847235da3d075df6115fd7839a3a44866a2c4f9ed03ef11c67e777af246"
+  },
+  "gate": {
+    "folds": 40,
+    "lightgbm_dispatch_wins": 39,
+    "lightgbm_dispatch_win_share": 0.975,
+    "lightgbm_mae_wins": 15,
+    "lightgbm_mae_win_share": 0.375,
+    "positive_annualised_regions": 5,
+    "promotion_pass": true,
+    "promotion_rules": {
+      "minimum_dispatch_win_share": 0.6,
+      "minimum_positive_regions": 4
+    }
+  },
+  "aggregate": {
+    "mean_net_operating_proxy_aud_per_mw_year": 84792.08222761715,
+    "mean_rule_net_operating_proxy_aud_per_mw_year": 23279.09600129269,
+    "relative_lift_vs_rule": 2.6424130139292625,
+    "fold_delta_mean_aud": 4718.8044228413255,
+    "fold_delta_mean_95pct_paired_bootstrap_aud": [3079.6237451289053, 6912.102790198259],
+    "mean_equivalent_full_cycles": 234.93519594692143,
+    "mean_oracle_capture_rate": 0.5708184717643807,
+    "mean_positive_day_share": 0.9071428571428571
+  },
+  "regions": {
+    "NSW1": {"aud_per_mw_year": 162804.71489937897, "dispatch_wins": 7, "daily_cvar05_aud": -96.28485521504065},
+    "QLD1": {"aud_per_mw_year": 78540.57250891007, "dispatch_wins": 8, "daily_cvar05_aud": -29.00554441331103},
+    "SA1": {"aud_per_mw_year": 109713.40203369003, "dispatch_wins": 8, "daily_cvar05_aud": -8.355002680804295},
+    "TAS1": {"aud_per_mw_year": 18877.438486067706, "dispatch_wins": 8, "daily_cvar05_aud": -155.05156396313166},
+    "VIC1": {"aud_per_mw_year": 54024.283210039015, "dispatch_wins": 8, "daily_cvar05_aud": -25.58589363227074}
+  },
+  "boundary": "Backward historical transport of a frozen protocol, not a prospective or untouched final test. Historical spot-market operating proxy for five separate hypothetical 1 MW/2 MWh batteries. Excludes CAPEX, fixed O&M, network charges, FCAS, taxes, financing, complete degradation and investment return."
+}

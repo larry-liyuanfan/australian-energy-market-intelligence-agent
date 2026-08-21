@@ -1,0 +1,47 @@
+{
+  "evidence_status": "verified-real-negative-cross-region-promotion-gate",
+  "scope": "AEMO NEMWeb; five NEM regions; four 28-day out-of-time seasonal folds per region; 560 region-days; 50 AUD/MWh-discharged operating-cost proxy",
+  "slurm": {
+    "evaluation_array": "29461450",
+    "failed_layout_merge": "29461467",
+    "successful_provenance_merge": "29461780"
+  },
+  "provenance": {
+    "evaluation_git_sha": "cb018be82f54850bf1e02cb8af59a4413f40e539",
+    "merge_git_sha": "de1529e9a1b72b22899f2c889ecde7963e66fada",
+    "input_sha256": "7a82656c7571c28934407370155625bb64330e1d2b16dc68976dcdf5f1cf18dd",
+    "merged_metrics_sha256": "2509a1d23243eccf93a1974e0856963e1a94e6101d3807aa7ff3c21d920531d4",
+    "merged_manifest_sha256": "787bc9bc3f8ded45bb7d7363d368ff8cc3ad84374123f6a029667214ce10da7a"
+  },
+  "method": {
+    "training_signal": "Training-day perfect-foresight BESS actions provide bounded LightGBM L1 sample weights.",
+    "selection": "Each fold uses only its preceding calibration window to select convex forecast weight 0, 0.25, 0.5, 0.75 or 1.0 with a tail floor; test labels are settlement-only.",
+    "promotion_gate": {
+      "minimum_positive_regions": 3,
+      "requires_positive_aggregate_delta": true,
+      "regional_tail_tolerance_fraction": 0.1,
+      "paired_bootstrap_unit": "region-season total net operating margin proxy",
+      "bootstrap_repetitions": 5000,
+      "bootstrap_seed": 20260821
+    }
+  },
+  "aggregate": {
+    "baseline_aud_per_mw_year": 41048.15440152563,
+    "ensemble_aud_per_mw_year": 39595.5937020162,
+    "relative_lift": -0.035386748093488865,
+    "delta_aud_over_560_region_days": -2228.5862786993894,
+    "positive_regions": 2,
+    "paired_region_season_delta_mean_aud": -111.42931393496994,
+    "paired_region_season_delta_mean_95_interval_aud": [-366.7257038592942, 31.394671827008345],
+    "all_regional_tail_gates_passed": true,
+    "promotion_pass": false
+  },
+  "region_delta_aud": {
+    "NSW1": -143.9954773851532,
+    "QLD1": 63.113520084640186,
+    "SA1": 274.2622168519647,
+    "TAS1": -0.9775051031260773,
+    "VIC1": -2420.9890331477172
+  },
+  "boundary": "Historical spot-market net operating proxy for five separate hypothetical 1 MW/2 MWh batteries. The cycling-cost sensitivity is user-specified. Excludes CAPEX, fixed O&M, network charges, FCAS, real bidding/settlement complexity and investment return. The positive SA1 pilot is not promoted because the predeclared cross-region gate failed."
+}

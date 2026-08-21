@@ -28,6 +28,127 @@ class AdaptiveIntervalResult:
     alpha_history: list[float]
 
 
+def optimizer_action_weights(
+    charge_mw: list[float],
+    discharge_mw: list[float],
+    *,
+    power_mw: float,
+    emphasis: float = 4.0,
+) -> np.ndarray:
+    """Turn historical optimiser actions into bounded regression weights.
+
+    The schedule must have been computed only from the training window.  A
+    non-action interval receives weight one; a full-power charge or discharge
+    interval receives ``1 + emphasis``.  This is an optimiser-informed loss
+    proxy, not an implementation of SPO+.
+    """
+
+    charge = np.asarray(charge_mw, dtype=float)
+    discharge = np.asarray(discharge_mw, dtype=float)
+    if charge.shape != discharge.shape or charge.ndim != 1:
+        raise ValueError("charge and discharge must be aligned one-dimensional arrays")
+    if power_mw <= 0 or emphasis < 0:
+        raise ValueError("power_mw must be positive and emphasis must be non-negative")
+    if np.any(charge < -1e-8) or np.any(discharge < -1e-8):
+        raise ValueError("charge and discharge must be non-negative")
+    action_fraction = np.clip((charge + discharge) / power_mw, 0.0, 1.0)
+    weights: np.ndarray = 1.0 + emphasis * action_fraction
+    return weights
+
+
+def select_decision_weighted_model(
+    baseline_values: list[float],
+    weighted_values: list[float],
+    *,
+    tail_probability: float = 0.2,
+    tail_tolerance_fraction: float = 0.1,
+) -> dict[str, float | str]:
+    """Use a pre-test calibration window to gate a decision-weighted model."""
+
+    if not baseline_values or len(baseline_values) != len(weighted_values):
+        raise ValueError("aligned non-empty calibration values are required")
+    if not 0 < tail_probability <= 1 or tail_tolerance_fraction < 0:
+        raise ValueError("invalid selection parameters")
+
+    def tail_mean(values: list[float]) -> float:
+        count = max(1, math.ceil(len(values) * tail_probability))
+        return float(np.mean(sorted(values)[:count]))
+
+    baseline_mean = float(np.mean(baseline_values))
+    weighted_mean = float(np.mean(weighted_values))
+    baseline_tail = tail_mean(baseline_values)
+    weighted_tail = tail_mean(weighted_values)
+    tail_floor = baseline_tail - tail_tolerance_fraction * max(abs(baseline_tail), 1.0)
+    selected = "decision_weighted" if weighted_mean > baseline_mean and weighted_tail >= tail_floor else "baseline"
+    return {
+        "selected_model": selected,
+        "baseline_validation_mean_aud": baseline_mean,
+        "weighted_validation_mean_aud": weighted_mean,
+        "baseline_validation_tail_mean_aud": baseline_tail,
+        "weighted_validation_tail_mean_aud": weighted_tail,
+        "tail_floor_aud": tail_floor,
+    }
+
+
+def select_dispatch_ensemble_weight(
+    baseline_values: list[float],
+    candidate_values: dict[str, list[float]],
+    *,
+    tail_probability: float = 0.2,
+    tail_tolerance_fraction: float = 0.1,
+) -> dict[str, float]:
+    """Select a fixed convex-ensemble weight using only calibration economics.
+
+    Candidate keys are numeric weights in ``(0, 1]``.  The test split is not
+    accepted by this function.  A candidate must improve calibration mean and
+    respect the baseline lower-tail floor; otherwise weight zero is retained.
+    """
+
+    if not baseline_values or not candidate_values:
+        raise ValueError("baseline and candidate calibration values are required")
+    if not 0 < tail_probability <= 1 or tail_tolerance_fraction < 0:
+        raise ValueError("invalid selection parameters")
+    if any(len(values) != len(baseline_values) for values in candidate_values.values()):
+        raise ValueError("candidate calibration values must align with baseline")
+
+    def tail_mean(values: list[float]) -> float:
+        count = max(1, math.ceil(len(values) * tail_probability))
+        return float(np.mean(sorted(values)[:count]))
+
+    baseline_mean = float(np.mean(baseline_values))
+    baseline_tail = tail_mean(baseline_values)
+    tail_floor = baseline_tail - tail_tolerance_fraction * max(abs(baseline_tail), 1.0)
+    eligible: list[tuple[float, float, float]] = []
+    for raw_weight, values in candidate_values.items():
+        weight = float(raw_weight)
+        if not 0 < weight <= 1:
+            raise ValueError("ensemble weights must be in (0, 1]")
+        candidate_mean = float(np.mean(values))
+        candidate_tail = tail_mean(values)
+        if candidate_mean > baseline_mean and candidate_tail >= tail_floor:
+            # Prefer higher calibration mean, then stronger tail, then the
+            # smaller perturbation when candidates are otherwise tied.
+            eligible.append((candidate_mean, candidate_tail, -weight))
+    if not eligible:
+        return {
+            "selected_weight": 0.0,
+            "validation_mean_aud": baseline_mean,
+            "validation_tail_mean_aud": baseline_tail,
+            "baseline_validation_mean_aud": baseline_mean,
+            "baseline_validation_tail_mean_aud": baseline_tail,
+            "tail_floor_aud": tail_floor,
+        }
+    selected_mean, selected_tail, negative_weight = max(eligible)
+    return {
+        "selected_weight": -negative_weight,
+        "validation_mean_aud": selected_mean,
+        "validation_tail_mean_aud": selected_tail,
+        "baseline_validation_mean_aud": baseline_mean,
+        "baseline_validation_tail_mean_aud": baseline_tail,
+        "tail_floor_aud": tail_floor,
+    }
+
+
 def adaptive_conformal_bounds(
     actual: np.ndarray,
     predicted: np.ndarray,

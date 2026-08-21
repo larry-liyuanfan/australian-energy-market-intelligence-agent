@@ -121,12 +121,19 @@ class HybridEvidenceIndex:
         local_bm25_ranks, dense_ranks = self._ranks(local_bm25), self._ranks(dense)
         external_bm25_ranks = self._ranks(external_bm25) if external_bm25 is not None else None
         query_terms = set(tokens(query))
+        numeric_query_terms = {term for term in query_terms if any(character.isdigit() for character in term)}
+        lexical = external_bm25 if external_bm25 is not None else local_bm25
+        lexical_max = float(np.max(lexical)) if len(lexical) else 0.0
         candidates: list[tuple[float, int]] = []
         for index, doc in enumerate(self.documents):
             rrf = 1 / (60 + local_bm25_ranks[index]) + 1 / (60 + dense_ranks[index])
             if external_bm25_ranks is not None:
                 rrf += 1 / (60 + external_bm25_ranks[index])
+            document_terms = set(self.tokenized[index])
             title_overlap = len(query_terms & set(tokens(doc.title))) / max(1, len(query_terms))
+            lexical_coverage = len(query_terms & document_terms) / max(1, len(query_terms))
+            numeric_coverage = len(numeric_query_terms & document_terms) / max(1, len(numeric_query_terms))
+            lexical_strength = float(lexical[index]) / lexical_max if lexical_max > 0 else 0.0
             exact_boost = 0.02 if query.lower() in doc.text.lower() else 0.0
             if mode == "bm25":
                 score = float(external_bm25[index] if external_bm25 is not None else local_bm25[index])
@@ -135,7 +142,16 @@ class HybridEvidenceIndex:
             elif mode == "rrf":
                 score = rrf
             else:
-                score = rrf + 0.03 * title_overlap + exact_boost
+                # Claim/evidence routing needs exact numbers and local passage terms
+                # to survive dense fusion among adjacent chunks from the same report.
+                score = (
+                    rrf
+                    + 0.03 * title_overlap
+                    + 0.08 * lexical_strength
+                    + 0.04 * numeric_coverage
+                    + 0.02 * lexical_coverage
+                    + exact_boost
+                )
             candidates.append((score, index))
         output: list[dict[str, Any]] = []
         source_counts: Counter[str] = Counter()
@@ -144,6 +160,9 @@ class HybridEvidenceIndex:
             if max_per_source is not None and source_counts[doc.source_id] >= max_per_source:
                 continue
             source_counts[doc.source_id] += 1
+            selected_terms = set(self.tokenized[index])
+            lexical_coverage = len(query_terms & selected_terms) / max(1, len(query_terms))
+            numeric_coverage = len(numeric_query_terms & selected_terms) / max(1, len(numeric_query_terms))
             rank = len(output) + 1
             output.append(
                 {
@@ -152,6 +171,8 @@ class HybridEvidenceIndex:
                     "bm25_score": float(external_bm25[index] if external_bm25 is not None else local_bm25[index]),
                     "local_bm25_score": float(local_bm25[index]),
                     "dense_score": float(dense[index]),
+                    "lexical_coverage": lexical_coverage,
+                    "numeric_coverage": numeric_coverage,
                     **doc.__dict__,
                 }
             )
