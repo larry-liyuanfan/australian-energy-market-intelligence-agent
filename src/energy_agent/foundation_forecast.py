@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -40,6 +40,12 @@ class FoundationForecast:
     model_id: str
 
 
+def _model_timestamp(value: datetime) -> datetime:
+    """Convert aware timestamps to UTC-naive values required by Chronos DataFrames."""
+
+    return value.astimezone(UTC).replace(tzinfo=None) if value.tzinfo is not None else value
+
+
 def predict_windows(
     pipeline: Any,
     windows: Sequence[FoundationWindow],
@@ -70,7 +76,7 @@ def predict_windows(
         context_rows.extend(
             {
                 "id": window.series_id,
-                "timestamp": timestamp,
+                "timestamp": _model_timestamp(timestamp),
                 "target": float(target),
             }
             for timestamp, target in zip(
@@ -78,12 +84,16 @@ def predict_windows(
             )
         )
         future_rows.extend(
-            {"id": window.series_id, "timestamp": timestamp}
+            {"id": window.series_id, "timestamp": _model_timestamp(timestamp)}
             for timestamp in window.future_timestamps
         )
+    context_frame = pd.DataFrame(context_rows)
+    future_frame = pd.DataFrame(future_rows)
+    context_frame["timestamp"] = pd.to_datetime(context_frame["timestamp"]).astype("datetime64[ns]")
+    future_frame["timestamp"] = pd.to_datetime(future_frame["timestamp"]).astype("datetime64[ns]")
     prediction = pipeline.predict_df(
-        pd.DataFrame(context_rows),
-        future_df=pd.DataFrame(future_rows),
+        context_frame,
+        future_df=future_frame,
         prediction_length=lengths.pop(),
         quantile_levels=[lower_quantile, 0.5, upper_quantile],
         id_column="id",
@@ -101,12 +111,15 @@ def predict_windows(
         if identifier not in expected:
             raise ValueError(f"unexpected prediction series_id: {identifier}")
         ordered = group.sort_values("timestamp")
-        timestamps = tuple(pd.Timestamp(value).to_pydatetime() for value in ordered["timestamp"])
-        if timestamps != expected[identifier].future_timestamps:
+        model_timestamps = tuple(pd.Timestamp(value).to_pydatetime() for value in ordered["timestamp"])
+        expected_model_timestamps = tuple(
+            _model_timestamp(value) for value in expected[identifier].future_timestamps
+        )
+        if model_timestamps != expected_model_timestamps:
             raise ValueError(f"forecast timestamps do not align for {identifier}")
         output[identifier] = FoundationForecast(
             series_id=identifier,
-            timestamps=timestamps,
+            timestamps=expected[identifier].future_timestamps,
             point=tuple(float(value) for value in ordered["predictions"]),
             lower=tuple(float(value) for value in ordered[str(lower_quantile)]),
             upper=tuple(float(value) for value in ordered[str(upper_quantile)]),

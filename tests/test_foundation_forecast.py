@@ -13,6 +13,8 @@ class FakeChronos2:
         future = kwargs["future_df"]
         assert isinstance(future, pd.DataFrame)
         assert kwargs["prediction_length"] == 2
+        assert context_df["timestamp"].dtype == "datetime64[ns]"
+        assert future["timestamp"].dtype == "datetime64[ns]"
         output = future.copy()
         output["predictions"] = [10.0, 20.0]
         output["0.1"] = [5.0, 15.0]
@@ -35,6 +37,7 @@ def test_predict_windows_validates_and_aligns_pipeline_output() -> None:
     result = predict_windows(FakeChronos2(), [window()], model_id="amazon/chronos-2")
     assert result[window().series_id].point == (10.0, 20.0)
     assert result[window().series_id].lower == (5.0, 15.0)
+    assert result[window().series_id].timestamps == window().future_timestamps
 
 
 def test_window_rejects_future_leakage() -> None:
