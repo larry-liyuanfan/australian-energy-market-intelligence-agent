@@ -99,6 +99,10 @@ def predict_windows(
         id_column="id",
         timestamp_column="timestamp",
         target="target",
+        # Each row-group is a different rolling forecast origin. Chronos-2's
+        # cross-learning would let later origins share information with earlier
+        # origins in the same batch, so it is explicitly disabled here.
+        cross_learning=False,
     )
     required = {"id", "timestamp", "predictions", str(lower_quantile), str(upper_quantile)}
     missing = required - set(prediction.columns)

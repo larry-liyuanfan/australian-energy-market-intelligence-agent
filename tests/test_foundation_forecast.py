@@ -13,6 +13,7 @@ class FakeChronos2:
         future = kwargs["future_df"]
         assert isinstance(future, pd.DataFrame)
         assert kwargs["prediction_length"] == 2
+        assert kwargs["cross_learning"] is False
         assert context_df["timestamp"].dtype == "datetime64[ns]"
         assert future["timestamp"].dtype == "datetime64[ns]"
         output = future.copy()
