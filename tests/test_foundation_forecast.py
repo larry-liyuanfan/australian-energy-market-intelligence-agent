@@ -56,3 +56,40 @@ def test_window_rejects_future_leakage() -> None:
 def test_predict_windows_rejects_duplicate_ids() -> None:
     with pytest.raises(ValueError, match="duplicate series_id"):
         predict_windows(FakeChronos2(), [window(), window()], model_id="amazon/chronos-2")
+
+
+def test_predict_windows_carries_past_and_known_future_covariates() -> None:
+    item = window()
+    with_covariates = FoundationWindow(
+        series_id=item.series_id,
+        context_timestamps=item.context_timestamps,
+        context_target=item.context_target,
+        future_timestamps=item.future_timestamps,
+        context_covariates={"demand": (100.0, 101.0), "minute_sin": (0.0, 0.1)},
+        future_covariates={"minute_sin": (0.2, 0.3)},
+    )
+
+    class CovariateChronos2(FakeChronos2):
+        def predict_df(self, context_df: pd.DataFrame, **kwargs: object) -> pd.DataFrame:
+            future = kwargs["future_df"]
+            assert isinstance(future, pd.DataFrame)
+            assert list(context_df["demand"]) == [100.0, 101.0]
+            assert "demand" not in future
+            assert list(future["minute_sin"]) == [0.2, 0.3]
+            return super().predict_df(context_df, **kwargs)
+
+    result = predict_windows(CovariateChronos2(), [with_covariates], model_id="amazon/chronos-2")
+    assert result[item.series_id].point == (10.0, 20.0)
+
+
+def test_window_rejects_future_covariate_without_context_history() -> None:
+    item = window()
+    invalid = FoundationWindow(
+        series_id=item.series_id,
+        context_timestamps=item.context_timestamps,
+        context_target=item.context_target,
+        future_timestamps=item.future_timestamps,
+        future_covariates={"minute_sin": (0.2, 0.3)},
+    )
+    with pytest.raises(ValueError, match="context history"):
+        invalid.validate()

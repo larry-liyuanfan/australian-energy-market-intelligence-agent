@@ -56,6 +56,17 @@ export HF_HUB_DISABLE_TELEMETRY=1
 export PYTHONUNBUFFERED=1
 mkdir -p "${HF_HOME}" "${OUTPUT_DIR}"
 
+EXTRA_ARGS=()
+if [[ "${USE_COVARIATES:-0}" == "1" ]]; then
+  EXTRA_ARGS+=(--covariates)
+fi
+if [[ "${INTERVAL_CALIBRATION_DAYS:-0}" != "0" ]]; then
+  EXTRA_ARGS+=(--interval-calibration-days "${INTERVAL_CALIBRATION_DAYS}")
+fi
+if [[ -n "${TEST_END:-}" ]]; then
+  EXTRA_ARGS+=(--test-end "${TEST_END}")
+fi
+
 python - <<'PY'
 import torch
 from chronos import Chronos2Pipeline
@@ -73,4 +84,5 @@ PY
   --context-days "${CONTEXT_DAYS:-14}" \
   --test-days "${TEST_DAYS:-7}" \
   --model-id "${MODEL_ID:-amazon/chronos-2}" \
-  --device cuda
+  --device cuda \
+  "${EXTRA_ARGS[@]}"

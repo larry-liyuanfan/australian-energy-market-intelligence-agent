@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
@@ -14,6 +14,8 @@ class FoundationWindow:
     context_timestamps: tuple[datetime, ...]
     context_target: tuple[float, ...]
     future_timestamps: tuple[datetime, ...]
+    context_covariates: dict[str, tuple[float, ...]] = field(default_factory=dict)
+    future_covariates: dict[str, tuple[float, ...]] = field(default_factory=dict)
 
     def validate(self) -> None:
         if not self.series_id:
@@ -28,6 +30,15 @@ class FoundationWindow:
             raise ValueError("future timestamps must be sorted")
         if self.context_timestamps[-1] >= self.future_timestamps[0]:
             raise ValueError("context must end before the forecast horizon")
+        reserved = {"id", "timestamp", "target"}
+        if reserved & (set(self.context_covariates) | set(self.future_covariates)):
+            raise ValueError("covariate names must not use reserved dataframe columns")
+        if not set(self.future_covariates).issubset(self.context_covariates):
+            raise ValueError("known future covariates must also have context history")
+        if any(len(values) != len(self.context_timestamps) for values in self.context_covariates.values()):
+            raise ValueError("context covariates must align with context timestamps")
+        if any(len(values) != len(self.future_timestamps) for values in self.future_covariates.values()):
+            raise ValueError("future covariates must align with future timestamps")
 
 
 @dataclass(frozen=True)
@@ -73,20 +84,24 @@ def predict_windows(
         if window.series_id in seen:
             raise ValueError(f"duplicate series_id: {window.series_id}")
         seen.add(window.series_id)
-        context_rows.extend(
-            {
+        for index, (timestamp, target) in enumerate(
+            zip(window.context_timestamps, window.context_target, strict=True)
+        ):
+            row: dict[str, Any] = {
                 "id": window.series_id,
                 "timestamp": _model_timestamp(timestamp),
                 "target": float(target),
             }
-            for timestamp, target in zip(
-                window.context_timestamps, window.context_target, strict=True
+            row.update(
+                {name: float(values[index]) for name, values in window.context_covariates.items()}
             )
-        )
-        future_rows.extend(
-            {"id": window.series_id, "timestamp": _model_timestamp(timestamp)}
-            for timestamp in window.future_timestamps
-        )
+            context_rows.append(row)
+        for index, timestamp in enumerate(window.future_timestamps):
+            row = {"id": window.series_id, "timestamp": _model_timestamp(timestamp)}
+            row.update(
+                {name: float(values[index]) for name, values in window.future_covariates.items()}
+            )
+            future_rows.append(row)
     context_frame = pd.DataFrame(context_rows)
     future_frame = pd.DataFrame(future_rows)
     context_frame["timestamp"] = pd.to_datetime(context_frame["timestamp"]).astype("datetime64[ns]")
