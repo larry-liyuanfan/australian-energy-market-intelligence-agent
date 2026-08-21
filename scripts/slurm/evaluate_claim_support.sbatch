@@ -35,7 +35,7 @@ export PIP_NO_CACHE_DIR=1
 python -m pip install --no-input --retries 5 --upgrade 'pip>=25.1,<26'
 python -m pip install --no-input --retries 5 \
   --index-url https://pypi.org/simple \
-  --extra-index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1+cu121'
+  --extra-index-url https://download.pytorch.org/whl/cu118 'torch==2.6.0+cu118'
 python -m pip install --no-input --retries 5 -e '.[factcheck]'
 
 export HF_HOME="${HF_JOB_CACHE}"
