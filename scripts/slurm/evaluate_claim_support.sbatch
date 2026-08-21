@@ -36,7 +36,8 @@ python -m pip install --no-input --retries 5 \
   --extra-index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1+cu121'
 python -m pip install --no-input --retries 5 -e '.[factcheck]'
 
-export HF_HOME="${SLURM_TMPDIR:?}/huggingface"
+TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+export HF_HOME="${TASK_SCRATCH}/energy-minicheck-hf-${SLURM_JOB_ID:?}"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export HF_HUB_DISABLE_TELEMETRY=1
 export PYTHONUNBUFFERED=1
