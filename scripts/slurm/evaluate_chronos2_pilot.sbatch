@@ -14,7 +14,18 @@ set -euo pipefail
 : "${REPO_DIR:?Set REPO_DIR to the Spartan energy checkout}"
 : "${ENERGY_GIT_COMMIT:?Set an exact pushed Git commit}"
 : "${ENERGY_INPUT:?Set the verified AEMO transport file}"
-: "${OUTPUT_DIR:?Set a new artifact directory}"
+if [[ -n "${SLURM_ARRAY_TASK_ID:-}" ]]; then
+  : "${OUTPUT_ROOT:?Set a new array artifact root}"
+  REGIONS=(NSW1 QLD1 SA1 TAS1 VIC1)
+  if (( SLURM_ARRAY_TASK_ID < 0 || SLURM_ARRAY_TASK_ID >= ${#REGIONS[@]} )); then
+    echo "invalid region array index: ${SLURM_ARRAY_TASK_ID}" >&2
+    exit 2
+  fi
+  export ENERGY_REGION="${REGIONS[SLURM_ARRAY_TASK_ID]}"
+  OUTPUT_DIR="${OUTPUT_ROOT}/${ENERGY_REGION}"
+else
+  : "${OUTPUT_DIR:?Set a new artifact directory}"
+fi
 
 git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-${SLURM_JOB_ID:?}"
