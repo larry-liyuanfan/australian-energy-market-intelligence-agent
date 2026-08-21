@@ -9,5 +9,8 @@ data/raw/
 data/processed/
 artifacts/private/
 artifacts/energy-passage-holdout/
+artifacts/evidence-deploy-*/
+artifacts/passage-holdout-deploy-*/
+artifacts/service-eval-*.json
 *.zip
 *.parquet
