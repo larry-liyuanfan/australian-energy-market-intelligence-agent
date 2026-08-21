@@ -24,11 +24,15 @@ cd "${CODE_ROOT}"
 trap 'rm -rf -- "${CODE_ROOT}"' EXIT
 
 module purge
-module load GCC/11.3.0 OpenMPI/4.1.4 PyTorch/2.1.2-CUDA-12.2.0
+module load GCCcore/11.3.0 Python/3.11.3
 VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-venv-${SLURM_JOB_ID}"
-python -m venv --system-site-packages "${VENV}"
+python -m venv "${VENV}"
 source "${VENV}/bin/activate"
-python -m pip install --no-input --retries 5 -e '.[ml,foundation]'
+export PIP_NO_CACHE_DIR=1
+python -m pip install --no-input --retries 5 \
+  --index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1'
+python -m pip install --no-input --retries 5 \
+  --constraint scripts/chronos2-constraints.txt -e '.[ml,foundation]'
 
 export ENERGY_GIT_COMMIT
 export HF_HOME="${ARTIFACT_ROOT:-/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts}/.cache/huggingface"
@@ -43,6 +47,7 @@ import torch
 from chronos import Chronos2Pipeline
 
 print({"torch": torch.__version__, "cuda": torch.version.cuda, "gpu": torch.cuda.get_device_name(0)})
+assert tuple(int(part) for part in torch.__version__.split("+")[0].split(".")[:2]) >= (2, 2)
 assert torch.cuda.is_available()
 assert Chronos2Pipeline is not None
 PY
