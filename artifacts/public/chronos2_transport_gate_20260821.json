@@ -1,0 +1,83 @@
+{
+  "artifact_type": "chronos2_five_region_transport_stop_gate",
+  "created_at": "2026-08-21T06:45:37.540014+00:00",
+  "scope": {
+    "data": "official AEMO five-minute dispatch rows",
+    "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+    "test_window": "2026-07-21/2026-08-17",
+    "region_days": 140,
+    "intervals": 40320,
+    "context_days_per_origin": 14,
+    "forecast_horizon_intervals": 288,
+    "model": "amazon/chronos-2",
+    "chronos_forecasting_version": "2.3.1",
+    "cross_learning": false
+  },
+  "provenance": {
+    "evaluation_git_sha": "d6cc4b6b623c3dd9298f78d9dbbd84970165e1dd",
+    "summary_git_sha": "7be672d3d0c0e93800b0f5a4e07333ff71c62a29",
+    "input_sha256": "e06384b6b529c36c90be12a9b00fd7467d5321df571d177df720674fb8b60795",
+    "metrics_sha256": "209334f80315b83daf397597ec4cb76cd26d6bba36e2aa1fd8423411b325d53f",
+    "manifest_sha256": "c9ebd719643f4a54f60e10a43c75255a416c954c46c3cac196c537bbec24f442",
+    "evaluation_array_job": "29479727",
+    "failed_summary_job": "29479733",
+    "replacement_summary_job": "29479957"
+  },
+  "aggregate": {
+    "chronos2_weighted_mae": 28.617096761722728,
+    "best_region_baseline_weighted_mae": 25.35855512963366,
+    "chronos2_mae_ratio": 1.1284987104127704,
+    "raw_q10_q90_coverage": 0.7433035714285714,
+    "net_delta_vs_region_best_baselines_aud": 387.863736151409,
+    "positive_regions": 2,
+    "paired_circular_moving_block_bootstrap": {
+      "calendar_days": 28,
+      "block_length_days": 7,
+      "mean_daily_delta_aud_per_region": 2.770455258224348,
+      "ci_95": [-9.032081106183874, 15.631296747086603]
+    }
+  },
+  "regions": {
+    "NSW1": {"chronos2_mae": 18.103572587279213, "best_baseline_mae": 18.38833309476375, "coverage": 0.8288690476190477, "net_delta_aud": -116.46168275932007},
+    "QLD1": {"chronos2_mae": 16.963298694166532, "best_baseline_mae": 15.027520605297385, "coverage": 0.7534722222222222, "net_delta_aud": -181.2875394687278},
+    "SA1": {"chronos2_mae": 52.2616673848308, "best_baseline_mae": 42.94901999790356, "coverage": 0.6305803571428571, "net_delta_aud": 609.9084604927166},
+    "TAS1": {"chronos2_mae": 25.890320570165997, "best_baseline_mae": 24.454101633083763, "coverage": 0.730530753968254, "net_delta_aud": 111.88657729588894},
+    "VIC1": {"chronos2_mae": 29.866624572171105, "best_baseline_mae": 25.973800317119856, "coverage": 0.7730654761904762, "net_delta_aud": -36.182079409148685}
+  },
+  "promotion_conditions": {
+    "total_net_delta_positive": true,
+    "paired_moving_block_bootstrap_ci_lower_positive": false,
+    "positive_regions_gte_3": false,
+    "mae_ratio_lte_1_10": false,
+    "raw_interval_coverage_between_0_75_and_0_85": false,
+    "promotion_pass": false
+  },
+  "resources": {
+    "array_tasks_completed": 5,
+    "array_elapsed_range_seconds": [109, 125],
+    "array_batch_max_rss_kib_range": [8052560, 8054196],
+    "evaluation_elapsed_seconds_range": [25.1799355186522, 26.90811779629439],
+    "evaluation_cuda_peak_memory_bytes": 794805760,
+    "summary_elapsed_seconds": 12,
+    "summary_max_rss_kib": 199268,
+    "provider_cost_usd": 0.0
+  },
+  "quality_gate": {
+    "pytest": "100 passed",
+    "ruff": "passed",
+    "mypy": "passed",
+    "dependency_audit": "passed",
+    "secret_scan": "passed",
+    "github_actions_run": 32455607072,
+    "github_actions_head_sha": "7be672d3d0c0e93800b0f5a4e07333ff71c62a29",
+    "github_actions_conclusion": "success"
+  },
+  "boundaries": [
+    "This is a backward historical extension selected after viewing a seven-day SA1 pilot; it is not a prospective or untouched final test.",
+    "The 28-day window offers limited regime coverage even though the moving-block bootstrap preserves same-day cross-region and within-week dependence.",
+    "Raw Chronos-2 q10-q90 intervals were not conformalised.",
+    "The economic metric is a historical spot-market net operating-margin proxy at 50 AUD/MWh discharged, not revenue guidance or investment return.",
+    "CAPEX, fixed OPEX, FCAS, network fees, taxes, financing and asset-specific degradation are excluded.",
+    "The failed gate prohibits a claim that Chronos-2 improved forecast accuracy, calibrated risk or transportable BESS value in this experiment."
+  ]
+}

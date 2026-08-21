@@ -6,7 +6,7 @@ unsupported resume keywords.
 
 ## Sampled Australian hiring signals
 
-The sample was checked on 20 August 2026 and is deliberately small. It supports
+The sample was rechecked on 21 August 2026 and is deliberately small. It supports
 project prioritisation, not a claim about the entire labour market.
 
 | Current role sample | Repeated signal used here | Project evidence target |
@@ -50,6 +50,49 @@ reliability, and honest business boundaries.
   winner, ranking agreement, and oracle regret.
 - Boundary: the models are **not** trained with SPO+ loss. This is a
   decision-focused evaluation inspired by SPO, not decision-focused training.
+
+### Chronos-2 universal forecasting
+
+- Primary source: Ansari et al., [Chronos-2: From Univariate to Universal
+  Forecasting](https://arxiv.org/abs/2510.15821), 2025; official
+  [implementation](https://github.com/amazon-science/chronos-forecasting).
+- Hiring-relevant question: does a 120M zero-shot time-series foundation model
+  justify its GPU and dependency cost on five-minute NEM prices, and does
+  forecast quality transport into the constrained battery decision?
+- Implemented: an official-pipeline adapter with typed aligned windows, strict
+  UTC timestamp normalization, lazy optional dependencies and exact runtime
+  manifests. Rolling origins use 14 context days and a 288-step horizon.
+  Cross-learning is disabled because later origins contain outcomes that would
+  be future information for earlier origins if the batch shared state.
+- Evaluation: a seven-day SA1 pilot was followed by a declared five-region,
+  28-day gate against persistence and LightGBM through the same BESS MILP. The
+  paired economic interval uses seven-day circular moving blocks to retain
+  within-week dependence and same-day cross-region pairing.
+- Verified result: aggregate delta was positive, but only 2/5 regions improved;
+  the moving-block 95% interval crossed zero. Weighted MAE regressed 12.85% and
+  raw q10–q90 coverage was 74.33%. Four of five conditions failed, so the model
+  was not promoted.
+- Production evidence: five isolated A100 MIG tasks completed in 1:49–2:05;
+  model evaluation used about 0.74 GiB peak CUDA memory and 25–27 seconds, while
+  complete environment provisioning drove job MaxRSS to about 7.68 GiB. A
+  missing-NumPy summary failure led to pinned runtime provisioning and separate
+  evaluation/summary SHAs.
+- Boundary: this is a backward extension partly overlapping the inspected pilot,
+  not a prospective or untouched test. It tests univariate zero-shot forecasting,
+  not Chronos-2's multivariate/covariate advantage or fine-tuning.
+
+### Dependence-aware economic uncertainty
+
+- Method source: circular block bootstrap methods preserve local time dependence
+  by resampling contiguous blocks rather than individual observations; see the
+  method discussion in [Bootstrapping Generalization Error Bounds for Time
+  Series](https://link.springer.com/article/10.1007/s13171-026-00452-x).
+- Implemented: the Chronos gate first averages five paired regional deltas on
+  each calendar day, then resamples seven-day circular blocks. This retains
+  cross-region shocks on a day and local serial structure within each block.
+- Boundary: 28 days still provide only four weekly blocks and limited price
+  regimes. The interval is a stability diagnostic, not a universal performance
+  guarantee or a substitute for a later prospective window.
 
 ### Scenario-based CVaR optimisation
 
@@ -144,6 +187,10 @@ Only results that have a real-data artifact, run manifest, data hash, code SHA,
 resource record, and passing CI may enter the evidence ledger. A paper citation
 by itself is never project evidence. Fixture-only safety tests and planned
 semantic entailment evaluation must stay labelled as such.
+
+A failed paper-driven gate may enter the evidence ledger as an engineering stop
+result, but it cannot enter resume bullets as a positive accuracy, safety or
+economic lift. The Chronos-2 run is retained on exactly that basis.
 
 For Slurm arrays, every task also receives a distinct `%A_%a` log. Metrics and
 manifests remain region-sharded, so concurrent stdout cannot obscure which

@@ -53,6 +53,19 @@ On the original 20-query curated official-source routing benchmark, BM25 reached
 - An ACI-inspired online controller narrowed the five-region coverage range to **89.81%–90.31%** and reduced mean absolute nominal-coverage gap from 2.74 to 0.08 percentage points. It narrowed intervals in only 12/20 folds, however, and TAS1 winter width increased **10.07x**; coverage stability is therefore not presented as uniformly better operational uncertainty.
 - Anomaly reporting compares a fixed `RRP >= AUD 5,000/MWh` baseline with robust-z thresholds 4/5/6, Jaccard stability and day-level bootstrap event-rate intervals. There is no labelled anomaly ground truth, so counts are not presented as precision/recall.
 
+An official Chronos-2 zero-shot challenger was then run over a recent 28-day
+window in all five regions (140 region-days, 40,320 intervals). Rolling forecast
+origins use 14 days of context and explicitly disable Chronos-2 cross-learning
+so later origins cannot share outcomes with earlier origins in the same batch.
+The predeclared transport gate failed: weighted MAE was **28.62** versus **25.36**
+for the region-wise best persistence/LightGBM baseline; raw q10–q90 coverage was
+**74.33%**; and only **2/5** regions had positive BESS proxy deltas. Although the
+aggregate delta was AUD 387.86, the paired seven-day circular moving-block 95%
+interval for mean daily delta was **-AUD 9.03 to 15.63 per region**. This is a
+negative foundation-model baseline, not a promoted model gain. See the
+[exact-SHA stop artifact](artifacts/public/chronos2_transport_gate_20260821.json)
+and [gate note](docs/CHRONOS2_TRANSPORT_GATE.md).
+
 ### BESS backtest
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
@@ -147,6 +160,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Slurm evaluation code and manifest SHAs are pinned to the same detached, job-local Git worktree. A legacy queued chain that observed a changing shared checkout was rejected at the provenance gate; its completed metrics are not published as a verified experiment.
 - Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
 - Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; a subsequent calibration-selected convex ensemble also failed its predeclared five-region promotion gate (2/5 positive, aggregate -3.54%), so no positive gain claim is made.
+- Zero-shot Chronos-2 also failed its five-region 28-day transport gate: MAE ratio 1.1285, raw q10–q90 coverage 74.33%, only 2/5 positive regions and a moving-block economic interval crossing zero. The experiment partly overlaps an inspected SA1 pilot and is not a prospective test.
 
 ## Attribution
 

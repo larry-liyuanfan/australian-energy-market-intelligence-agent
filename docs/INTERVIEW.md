@@ -77,6 +77,12 @@ asset-specific degradation and investment return.
 32. How were the eight indirect-prompt-injection families selected, and why include benign controls?
 33. Why is deterministic pass^5 a regression invariant rather than a live-model reliability estimate?
 34. Why report a 3.10% Wilson upper bound after observing zero unsafe actions?
+35. Why can batching rolling Chronos-2 origins create leakage if cross-learning is enabled?
+36. Why compare a time-series foundation model with persistence and LightGBM instead of only another transformer?
+37. Why did positive aggregate Chronos-2 BESS proxy fail promotion?
+38. What does a seven-day circular moving-block bootstrap preserve that an iid day bootstrap does not?
+39. Why is raw q10–q90 coverage of 74.33% a stop signal even when the economic total is positive?
+40. Which resource measurements separate model inference cost from reproducible environment cost?
 
 ## Code evidence map
 
@@ -89,6 +95,7 @@ asset-specific degradation and investment return.
 | Rolling evaluation and metric definitions | `src/energy_agent/evaluation.py`, `src/energy_agent/metrics.py` |
 | Two-year decision transport gate | `scripts/summarize_history_transport.py`, `docs/HISTORICAL_TRANSPORT_GATE.md`, `artifacts/public/historical_transport_gate_20260821.json` |
 | Scenario-CVaR negative gate | `scripts/summarize_risk_transport.py`, `docs/RISK_TRANSPORT_GATE.md`, `artifacts/public/risk_transport_gate_20260821.json` |
+| Chronos-2 adapter and transport stop gate | `src/energy_agent/foundation_forecast.py`, `scripts/evaluate_chronos2_bess.py`, `scripts/summarize_chronos2_gate.py`, `docs/CHRONOS2_TRANSPORT_GATE.md`, `artifacts/public/chronos2_transport_gate_20260821.json` |
 | Official-document hybrid retrieval | `src/energy_agent/evidence.py`, `scripts/build_official_evidence.py`, `scripts/evaluate_retrieval.py` |
 | Passage support and injection gates | `benchmarks/official_passage_support.jsonl`, `benchmarks/indirect_prompt_injection.jsonl`, `scripts/evaluate_passage_support.py`, `scripts/evaluate_agent_security.py`, `artifacts/public/evidence_security_gate_20260821.json` |
 | Provider boundary and deterministic fallback | `src/energy_agent/providers.py` |
@@ -105,3 +112,4 @@ asset-specific degradation and investment return.
 - Loopback service evaluation is not a public-internet SLA.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
 - Passage labels are author-curated rather than independent human-blind judgments; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
+- Chronos-2 is a reproducible negative challenger: its five-region gate failed four of five conditions, the 28-day window partly overlaps the SA1 pilot, and no foundation-model lift is claimed.
