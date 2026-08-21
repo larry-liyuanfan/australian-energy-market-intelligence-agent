@@ -18,10 +18,13 @@ failed closed, and I repaired only the affected official days from AEMO monthly
 MMSDM archives rather than interpolating. The official-document index contains
 735 chunks. The revised fused path retained source-routing MRR/Recall@5 at
 1.00/1.00 and reached passage-support MRR 0.80/Recall@5 1.00 on a separate
-20-claim author-curated set. Dense-only passage Recall@5 was 0.50, so I added
-numeric-preservation and lexical-strength features instead of assuming semantic
-retrieval solved exact evidence routing. The deployed Elasticsearch-only path
-remains a measured negative baseline.
+20-claim author-curated development set. The dense-like channel is a
+TF-IDF/64-D TruncatedSVD LSA baseline, not a neural embedding; its passage
+Recall@5 was 0.50, so I added numeric-preservation and lexical-strength features
+instead of assuming semantic retrieval solved exact evidence routing. Because
+those features were selected on the same 20 claims, the result is a development
+gate rather than untouched-holdout evidence. The deployed Elasticsearch-only
+path remains a measured negative baseline.
 
 For the business decision, persistence and LightGBM forecasts drive the same
 1 MW/2 MWh battery MILP and are settled only on future realised prices. Across
@@ -71,8 +74,8 @@ asset-specific degradation and investment return.
 26. What remains unverified because live Model Studio credentials were not used?
 27. Which assumptions prevent the historical operating proxy from becoming an investment recommendation?
 28. What evidence would be required before adding FCAS, degradation or prospective bidding claims?
-29. Why did dense retrieval route reports well but fail exact numeric passages within a report?
-30. Which rerank features preserve numbers without letting users submit retrieval DSL?
+29. Why did the 64-D LSA channel route reports better than exact numeric passages within a report?
+30. Why use an auditable feature reranker here instead of calling it a cross-encoder?
 31. What does author-curated exact support validate, and what semantic-entailment claim does it not validate?
 32. How were the eight indirect-prompt-injection families selected, and why include benign controls?
 33. Why is deterministic pass^5 a regression invariant rather than a live-model reliability estimate?
@@ -120,7 +123,9 @@ asset-specific degradation and investment return.
 - The failed scenario-CVaR gate prohibits a claim of lower tail risk.
 - Loopback service evaluation is not a public-internet SLA.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
-- Passage labels are author-curated rather than independent human-blind judgments; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
+- The 100-task suite uses template-declared expected tools and a deterministic planner; it proves contract routing/recovery, not live-LLM reasoning quality.
+- Passage labels are author-curated and the feature reranker was developed on the same 20-claim set rather than an untouched holdout; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
+- The SG service loaded one year/525,600 market rows; the two-year/1,051,200-row result is an offline Spartan transport gate.
 - Chronos-2 is a reproducible negative challenger: its five-region gate failed four of five conditions, the 28-day window partly overlaps the SA1 pilot, and no foundation-model lift is claimed.
 - Covariate Chronos-2 improved MAE and conformal coverage on one backward SA1 development window but lost the BESS economic comparison; no cross-region expansion or resume gain is claimed.
 - MiniCheck rejected most controlled counterfactuals but missed most supported energy claims; it remains an offline stop result rather than a semantic verifier or resume gain.
