@@ -36,7 +36,7 @@ python -m pip install --no-input --retries 5 \
   --extra-index-url https://download.pytorch.org/whl/cu121 'torch==2.5.1+cu121'
 python -m pip install --no-input --retries 5 -e '.[factcheck]'
 
-export HF_HOME="/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/.cache/huggingface"
+export HF_HOME="${SLURM_TMPDIR:?}/huggingface"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export HF_HUB_DISABLE_TELEMETRY=1
 export PYTHONUNBUFFERED=1
