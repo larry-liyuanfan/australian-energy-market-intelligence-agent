@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from energy_agent.claim_verification import MiniCheckFlanVerifier, binary_metrics
+from energy_agent.claim_verification import MiniCheckDebertaVerifier, MiniCheckFlanVerifier, binary_metrics
 from energy_agent.evidence import load_official_chunks
 
 
@@ -29,6 +29,7 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--model-id", default="lytang/MiniCheck-Flan-T5-Large")
     parser.add_argument("--model-revision", default="a496016e7b493686ed6e1c52250b9b9d39b0dcb2")
+    parser.add_argument("--verifier", choices=("flan-t5-large", "deberta-v3-large"), default="flan-t5-large")
     parser.add_argument("--fail-on-gate", action="store_true")
     args = parser.parse_args()
 
@@ -37,7 +38,8 @@ def main() -> None:
     missing = sorted({str(row["evidence_chunk_id"]) for row in rows} - documents.keys())
     if missing:
         raise ValueError(f"benchmark references missing chunks: {missing}")
-    verifier = MiniCheckFlanVerifier(model_id=args.model_id, revision=args.model_revision, device=args.device)
+    verifier_type = MiniCheckFlanVerifier if args.verifier == "flan-t5-large" else MiniCheckDebertaVerifier
+    verifier = verifier_type(model_id=args.model_id, revision=args.model_revision, device=args.device)
     started = time.perf_counter()
     scores = verifier.score(
         [documents[str(row["evidence_chunk_id"])].text for row in rows],
@@ -105,6 +107,7 @@ def main() -> None:
         "platform": platform.platform(),
         "model_id": args.model_id,
         "model_revision": args.model_revision,
+        "verifier": args.verifier,
         "threshold": 0.5,
         "evidence_sha256": sha256(args.evidence),
         "benchmark_sha256": sha256(args.benchmark),

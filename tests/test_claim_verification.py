@@ -11,6 +11,8 @@ from energy_agent.claim_verification import (
     binary_metrics,
 )
 
+DEBERTA_HOLDOUT = Path("benchmarks/minicheck_claim_support_holdout_q2_2025.jsonl")
+
 
 def test_binary_metrics_perfect_separation() -> None:
     metrics = binary_metrics([1, 0, 1, 0], [0.9, 0.1, 0.8, 0.2])
@@ -23,6 +25,27 @@ def test_binary_metrics_perfect_separation() -> None:
 
 def test_minicheck_checkpoint_label_contract_is_frozen() -> None:
     assert (MINICHECK_NEGATIVE_TOKEN_ID, MINICHECK_POSITIVE_TOKEN_ID) == (3, 209)
+
+
+def test_deberta_holdout_is_source_disjoint_balanced_and_paired() -> None:
+    development = [
+        json.loads(line)
+        for line in Path("benchmarks/minicheck_claim_support.jsonl").read_text(encoding="utf-8").splitlines()
+        if line
+    ]
+    holdout = [json.loads(line) for line in DEBERTA_HOLDOUT.read_text(encoding="utf-8").splitlines() if line]
+    assert len(holdout) == 28
+    assert sum(int(row["label"]) for row in holdout) == 14
+    assert {str(row["source_id"]) for row in holdout} == {"aemo-qed-q2-2025"}
+    assert not {str(row["evidence_chunk_id"]) for row in development} & {
+        str(row["evidence_chunk_id"]) for row in holdout
+    }
+    pairs = {str(row["pair_id"]) for row in holdout}
+    assert len(pairs) == 14
+    for pair in pairs:
+        selected = [row for row in holdout if row["pair_id"] == pair]
+        assert sorted(int(row["label"]) for row in selected) == [0, 1]
+        assert len({row["evidence_chunk_id"] for row in selected}) == 1
 
 
 def test_binary_metrics_reject_invalid_inputs() -> None:

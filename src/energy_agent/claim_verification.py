@@ -87,6 +87,79 @@ class MiniCheckFlanVerifier:
         return results
 
 
+class MiniCheckDebertaVerifier:
+    """Pinned official MiniCheck DeBERTa adapter for a source-disjoint transport gate.
+
+    This is the second sub-1B verifier exposed by the official MiniCheck project.
+    Its checkpoint, revision, 2,048-token contract and 0.5 threshold are frozen
+    before the Q2 2025 source-disjoint holdout is scored.
+    """
+
+    def __init__(
+        self,
+        *,
+        model_id: str = "lytang/MiniCheck-DeBERTa-v3-Large",
+        revision: str = "2f2d01a54fa022a7ffadb76260e1ea8bc88c82bb",
+        device: str = "cpu",
+        max_length: int = 2048,
+    ) -> None:
+        try:
+            import torch
+            from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
+        except ImportError as exc:  # pragma: no cover - exercised only without optional dependency
+            raise RuntimeError("Install the factcheck optional dependencies") from exc
+        self._torch = torch
+        config = AutoConfig.from_pretrained(
+            model_id,
+            revision=revision,
+            num_labels=2,
+            finetuning_task="text-classification",
+        )
+        config.problem_type = "single_label_classification"
+        self.tokenizer: Any = AutoTokenizer.from_pretrained(model_id, revision=revision, use_fast=True)
+        self.model: Any = AutoModelForSequenceClassification.from_pretrained(
+            model_id,
+            revision=revision,
+            config=config,
+        )
+        self.model.to(device)
+        self.model.eval()
+        self.device = device
+        self.max_length = max_length
+        self.model_id = model_id
+        self.revision = revision
+
+    def score(self, documents: list[str], claims: list[str], *, batch_size: int = 8) -> list[ClaimSupportScore]:
+        if len(documents) != len(claims):
+            raise ValueError("documents and claims must have equal length")
+        if batch_size < 1:
+            raise ValueError("batch_size must be positive")
+        results: list[ClaimSupportScore] = []
+        separator = str(self.tokenizer.eos_token)
+        for start in range(0, len(documents), batch_size):
+            texts = [
+                f"{document}{separator}{claim}"
+                for document, claim in zip(
+                    documents[start : start + batch_size], claims[start : start + batch_size], strict=True
+                )
+            ]
+            encoded = self.tokenizer(
+                texts,
+                max_length=self.max_length,
+                truncation=True,
+                padding=True,
+                return_tensors="pt",
+            )
+            encoded = {name: value.to(self.device) for name, value in encoded.items()}
+            with self._torch.inference_mode():
+                logits = self.model(**encoded).logits
+                probabilities = self._torch.softmax(logits, dim=-1)[:, 1].detach().cpu().numpy()
+            results.extend(
+                ClaimSupportScore(float(probability), bool(probability > 0.5)) for probability in probabilities
+            )
+        return results
+
+
 def binary_metrics(labels: list[int], probabilities: list[float], *, bins: int = 5) -> dict[str, float]:
     """Dependency-light classification, ranking and calibration diagnostics."""
     if not labels or len(labels) != len(probabilities):
