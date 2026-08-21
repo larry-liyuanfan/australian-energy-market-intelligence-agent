@@ -88,6 +88,22 @@ reliability, and honest business boundaries.
   in market time and is development evidence only; it does not establish
   cross-region transport, fine-tuning value or a positive foundation-model gain.
 
+### 2026 electricity-price TSFM evidence
+
+- Primary source: Bui et al., [Empirical evaluation of Time Series Foundation
+  Models for Day-ahead and Imbalance Electricity Price Forecasting in
+  Belgium](https://arxiv.org/abs/2605.17045), 2026.
+- Relevant finding: Chronos-2 was the strongest tested TSFM in ARX mode and beat
+  the best comparison ensemble on day-ahead MAE, but lost on most imbalance
+  horizons and remained weak under extreme market conditions.
+- Project consequence: keep the domain baseline, covariate ablation, price-event
+  slices and BESS settlement gate. A positive aggregate from a volatile-price
+  foundation model cannot override cross-region consistency, interval coverage
+  or decision-value uncertainty.
+- Boundary: this repository does not reproduce the Belgian experiment and does
+  not use that paper as evidence for the NEM result; it is post-design external
+  context consistent with the already measured stop decision.
+
 ### Dependence-aware economic uncertainty
 
 - Method source: circular block bootstrap methods preserve local time dependence
@@ -158,11 +174,13 @@ reliability, and honest business boundaries.
   answer had any citation, even if another generated claim had none.
 - Implemented: every deterministic answer claim carries explicit evidence IDs.
   Offline evaluation separates claim-level citation completeness from
-  citation-ID validity. A new 20-claim author-curated exact-support set then
-  tests passage retrieval separately from report routing. It exposed dense-only
+  citation-ID validity. A new 20-claim author-curated exact-support development set then
+  tests passage retrieval separately from report routing. It exposed 64-D LSA-only
   Recall@5 0.50 and RRF 0.70; numeric-preserving hybrid reranking reached 1.00
   Recall@5 and MRR 0.80 while retaining source-routing MRR/Recall@5 1.00/1.00.
-- Boundary: ID validity, term-consistent support labels and passage retrieval do
+- Boundary: the lexical/numeric features were selected on this same small set,
+  so bootstrap intervals do not turn it into untouched-holdout evidence. ID
+  validity, term-consistent support labels and passage retrieval do
   not prove answer-level semantic entailment. Independent human-blind labels or
   a separately validated entailment judge remain required before claiming
   citation correctness.
