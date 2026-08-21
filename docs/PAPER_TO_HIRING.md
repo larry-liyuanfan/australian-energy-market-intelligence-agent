@@ -184,6 +184,13 @@ reliability, and honest business boundaries.
   not prove answer-level semantic entailment. Independent human-blind labels or
   a separately validated entailment judge remain required before claiming
   citation correctness.
+- Source-disjoint follow-up: the feature implementation was frozen at commit
+  `1fd514f` before adding the previously unused AEMO Q2 2025 report. On 14 new
+  exact-support queries over the 905-chunk corpus, BM25 reached MRR/Recall@5
+  `0.714/1.00`, LSA only `0.056/0.214`, RRF `0.310/0.643`, and the frozen
+  deterministic reranker `0.750/1.00` (MRR bootstrap interval
+  `0.607–0.893`). The predeclared gate passed. This is author-curated
+  source-disjoint transport evidence, still not blind judgments or entailment.
 
 ### MiniCheck: sentence-level grounded fact checking
 

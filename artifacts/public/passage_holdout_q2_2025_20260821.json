@@ -1,0 +1,64 @@
+{
+  "artifact_type": "frozen_feature_passage_retrieval_holdout",
+  "created_at": "2026-08-21",
+  "evaluation_commit": "06fe6f8cc3e1078c356104266efc031c1f5c5eee",
+  "frozen_feature_sha": "1fd514fcf406f36c2848632b613bcd208e004779",
+  "feature_file": "src/energy_agent/evidence.py",
+  "holdout_source": {
+    "source_id": "aemo-qed-q2-2025",
+    "title": "Quarterly Energy Dynamics Q2 2025",
+    "url": "https://www.aemo.com.au/-/media/files/major-publications/qed/2025/qed-q2-2025.pdf",
+    "sha256": "50fdfc6fbbf64d526a9087aa7a25b2917fd2140d916c10a98d15627763462c1c",
+    "bytes": 3161475,
+    "pages": 97,
+    "chunks": 170
+  },
+  "corpus": {
+    "official_reports": 6,
+    "chunks": 905,
+    "evidence_sha256": "dab6df12a3aef34d973d2177fb34c094ac034925b358803009c06d5e7ba29ca4"
+  },
+  "benchmark": {
+    "tasks": 14,
+    "benchmark_sha256": "ca5d786bd9a2019d87ac1778c34561db2b19d1f4936039f67d2415dd60f5acd0",
+    "source_disjoint_from_development_set": true,
+    "gold_label_term_consistency": 1.0,
+    "label_scope": "Author-curated exact-support labels on one previously unused official report; not human-blind annotation or semantic entailment."
+  },
+  "results": {
+    "bm25": {
+      "mrr": 0.7142857143,
+      "recall_at_5": 1.0,
+      "top1_gold_support_rate": 0.4285714286,
+      "mrr_bootstrap_95_interval": [0.5714285714, 0.8571428571]
+    },
+    "lsa_64d": {
+      "mrr": 0.055952381,
+      "recall_at_5": 0.2142857143,
+      "top1_gold_support_rate": 0.0,
+      "mrr_bootstrap_95_interval": [0.0, 0.119047619]
+    },
+    "rrf": {
+      "mrr": 0.3095238095,
+      "recall_at_5": 0.6428571429,
+      "top1_gold_support_rate": 0.0714285714,
+      "mrr_bootstrap_95_interval": [0.1666666667, 0.4642857143]
+    },
+    "deterministic_feature_rerank": {
+      "mrr": 0.75,
+      "recall_at_5": 1.0,
+      "top1_gold_support_rate": 0.5,
+      "mrr_bootstrap_95_interval": [0.6071428571, 0.8928571429]
+    }
+  },
+  "gate": {
+    "criteria": "Label consistency 1.0, frozen-feature holdout rerank Recall@5 >= 0.80 and MRR >= 0.60.",
+    "pass": true
+  },
+  "decision": "The frozen deterministic feature reranker transported to the source-disjoint report and slightly exceeded BM25 MRR, while the LSA-only and unweighted-RRF channels failed. Retain BM25 plus auditable feature reranking; do not describe the LSA channel as neural dense retrieval.",
+  "boundaries": [
+    "The 14 labels are author-curated and small; the result is not independent human-blind annotation, answer entailment or production traffic.",
+    "The report was absent from the 20-claim development set, and retrieval features were frozen at the declared SHA before the first holdout run.",
+    "The Alibaba Cloud deployment still holds the earlier 735-chunk index; this 905-chunk result is an offline release gate."
+  ]
+}

@@ -15,16 +15,21 @@ five NEM regions and 1,051,200 five-minute rows with no duplicate or missing
 region/timestamp keys. An interval-ending day-boundary defect in the first build
 created five duplicate keys and one ten-minute gap per region; the validator
 failed closed, and I repaired only the affected official days from AEMO monthly
-MMSDM archives rather than interpolating. The official-document index contains
-735 chunks. The revised fused path retained source-routing MRR/Recall@5 at
+MMSDM archives rather than interpolating. The offline official-document index
+contains 905 chunks across six reports; the SG service still has the earlier
+735-chunk index. The revised fused path retained source-routing MRR/Recall@5 at
 1.00/1.00 and reached passage-support MRR 0.80/Recall@5 1.00 on a separate
 20-claim author-curated development set. The dense-like channel is a
 TF-IDF/64-D TruncatedSVD LSA baseline, not a neural embedding; its passage
 Recall@5 was 0.50, so I added numeric-preservation and lexical-strength features
 instead of assuming semantic retrieval solved exact evidence routing. Because
 those features were selected on the same 20 claims, the result is a development
-gate rather than untouched-holdout evidence. The deployed Elasticsearch-only
-path remains a measured negative baseline.
+gate. I therefore froze the feature code before adding an unused Q2 2025 report:
+on 14 source-disjoint claims, BM25 scored MRR/Recall@5 0.714/1.00, LSA only
+0.056/0.214, RRF 0.310/0.643, and the frozen feature reranker 0.750/1.00. The
+labels are still small and author-curated, but the result no longer reuses the
+feature-development source. The deployed Elasticsearch-only path remains a
+measured negative baseline.
 
 For the business decision, persistence and LightGBM forecasts drive the same
 1 MW/2 MWh battery MILP and are settled only on future realised prices. Across
@@ -108,7 +113,7 @@ asset-specific degradation and investment return.
 | Scenario-CVaR negative gate | `scripts/summarize_risk_transport.py`, `docs/RISK_TRANSPORT_GATE.md`, `artifacts/public/risk_transport_gate_20260821.json` |
 | Chronos-2 adapter and stop gates | `src/energy_agent/foundation_forecast.py`, `scripts/evaluate_chronos2_bess.py`, `scripts/summarize_chronos2_gate.py`, `docs/CHRONOS2_TRANSPORT_GATE.md`, `docs/CHRONOS2_COVARIATE_DEVELOPMENT_GATE.md`, `artifacts/public/chronos2_transport_gate_20260821.json`, `artifacts/public/chronos2_covariate_development_stop_20260821.json` |
 | Official-document hybrid retrieval | `src/energy_agent/evidence.py`, `scripts/build_official_evidence.py`, `scripts/evaluate_retrieval.py` |
-| Passage support and injection gates | `benchmarks/official_passage_support.jsonl`, `benchmarks/indirect_prompt_injection.jsonl`, `scripts/evaluate_passage_support.py`, `scripts/evaluate_agent_security.py`, `artifacts/public/evidence_security_gate_20260821.json` |
+| Passage support, holdout and injection gates | `benchmarks/official_passage_support.jsonl`, `benchmarks/official_passage_support_holdout_q2_2025.jsonl`, `benchmarks/indirect_prompt_injection.jsonl`, `scripts/evaluate_passage_support.py`, `scripts/evaluate_agent_security.py`, `docs/PASSAGE_HOLDOUT_Q2_2025.md`, `artifacts/public/passage_holdout_q2_2025_20260821.json` |
 | Sentence-level claim verification stop gate | `src/energy_agent/claim_verification.py`, `benchmarks/minicheck_claim_support.jsonl`, `scripts/evaluate_claim_support.py`, `docs/MINICHECK_CLAIM_SUPPORT_GATE.md`, `artifacts/public/minicheck_claim_support_stop_20260821.json` |
 | Provider boundary and deterministic fallback | `src/energy_agent/providers.py` |
 | FastAPI, traces and metrics | `src/energy_agent/api.py`, `scripts/evaluate_service.py` |
@@ -124,7 +129,7 @@ asset-specific degradation and investment return.
 - Loopback service evaluation is not a public-internet SLA.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
 - The 100-task suite uses template-declared expected tools and a deterministic planner; it proves contract routing/recovery, not live-LLM reasoning quality.
-- Passage labels are author-curated and the feature reranker was developed on the same 20-claim set rather than an untouched holdout; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
+- Passage labels remain author-curated: the 20-claim development score is not generalisation evidence, while the 14-claim Q2 2025 gate is source-disjoint with frozen features but still not human-blind relevance or answer entailment. Security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
 - The SG service loaded one year/525,600 market rows; the two-year/1,051,200-row result is an offline Spartan transport gate.
 - Chronos-2 is a reproducible negative challenger: its five-region gate failed four of five conditions, the 28-day window partly overlaps the SA1 pilot, and no foundation-model lift is claimed.
 - Covariate Chronos-2 improved MAE and conformal coverage on one backward SA1 development window but lost the BESS economic comparison; no cross-region expansion or resume gain is claimed.
