@@ -6,6 +6,9 @@ from typing import Any
 
 import numpy as np
 
+MINICHECK_NEGATIVE_TOKEN_ID = 3
+MINICHECK_POSITIVE_TOKEN_ID = 209
+
 
 @dataclass(frozen=True)
 class ClaimSupportScore:
@@ -42,14 +45,11 @@ class MiniCheckFlanVerifier:
         self.max_length = max_length
         self.model_id = model_id
         self.revision = revision
-        self.negative_token_id = self._single_token_id("0")
-        self.positive_token_id = self._single_token_id("1")
-
-    def _single_token_id(self, label: str) -> int:
-        token_ids = self.tokenizer.encode(label, add_special_tokens=False)
-        if len(token_ids) != 1:
-            raise RuntimeError(f"MiniCheck label {label!r} is not a single token: {token_ids}")
-        return int(token_ids[0])
+        self.negative_token_id = MINICHECK_NEGATIVE_TOKEN_ID
+        self.positive_token_id = MINICHECK_POSITIVE_TOKEN_ID
+        vocabulary_size = int(self.model.config.vocab_size)
+        if self.positive_token_id >= vocabulary_size:
+            raise RuntimeError("MiniCheck label token IDs exceed the pinned model vocabulary")
 
     def score(self, documents: list[str], claims: list[str], *, batch_size: int = 8) -> list[ClaimSupportScore]:
         if len(documents) != len(claims):

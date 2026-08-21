@@ -5,7 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from energy_agent.claim_verification import binary_metrics
+from energy_agent.claim_verification import (
+    MINICHECK_NEGATIVE_TOKEN_ID,
+    MINICHECK_POSITIVE_TOKEN_ID,
+    binary_metrics,
+)
 
 
 def test_binary_metrics_perfect_separation() -> None:
@@ -15,6 +19,10 @@ def test_binary_metrics_perfect_separation() -> None:
     assert metrics["counterfactual_rejection_recall"] == 1.0
     assert metrics["auroc"] == 1.0
     assert metrics["brier_score"] == pytest.approx(0.025)
+
+
+def test_minicheck_checkpoint_label_contract_is_frozen() -> None:
+    assert (MINICHECK_NEGATIVE_TOKEN_ID, MINICHECK_POSITIVE_TOKEN_ID) == (3, 209)
 
 
 def test_binary_metrics_reject_invalid_inputs() -> None:
