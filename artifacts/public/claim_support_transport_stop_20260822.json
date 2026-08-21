@@ -1,0 +1,93 @@
+{
+  "artifact_type": "source_disjoint_selective_claim_support_stop_gate",
+  "created_at": "2026-08-21T16:53:00Z",
+  "model": {
+    "id": "lytang/MiniCheck-DeBERTa-v3-Large",
+    "revision": "2f2d01a54fa022a7ffadb76260e1ea8bc88c82bb",
+    "raw_threshold": 0.5,
+    "selective_threshold": 0.25,
+    "selective_policy": "literal/entity/direction consistency -> unsupported; otherwise DeBERTa probability above threshold -> supported; otherwise abstain"
+  },
+  "protocol": {
+    "official_minicheck_reference_sha": "b58b9fa69acbd1015ec970fa65dd752413a053d2",
+    "cascade_freeze_sha": "c8a194bf0b982562350ac7d99b662f2c5f2f72ef",
+    "final_execution_sha": "8560e1638c53286f50d94788a08ef85606274a9a",
+    "development_sources": ["aemo-qed-q2-2025", "aemo-qed-q1-2025"],
+    "final_source": "aemo-qed-q4-2024",
+    "pairs_per_source": 14,
+    "final_examples": 28,
+    "bootstrap_replicates": 5000,
+    "label_scope": "author-written, non-blind controlled pairs over official AEMO passages"
+  },
+  "development_only": {
+    "q2_2025": {
+      "balanced_accuracy": 1.0,
+      "support_recall": 1.0,
+      "counterfactual_rejection_recall": 1.0,
+      "coverage": 1.0,
+      "bootstrap_95_interval": [1.0, 1.0]
+    },
+    "q1_2025": {
+      "balanced_accuracy": 0.8928571428571428,
+      "support_recall": 0.9285714285714286,
+      "counterfactual_rejection_recall": 0.8571428571428571,
+      "coverage": 0.8928571428571429,
+      "selective_accuracy": 1.0,
+      "bootstrap_95_interval": [0.7857142857142857, 1.0]
+    },
+    "boundary": "Used to design and calibrate the frozen cascade; not transport evidence."
+  },
+  "final_source_disjoint_gate": {
+    "source": "AEMO Quarterly Energy Dynamics Q4 2024",
+    "source_sha256": "b900ab9accba88aff3a5a8b8520f22ed7e5d37d350251ab6b9a7111605e5d914",
+    "evidence_sha256": "ea6d26aa41dc9269ffbb3e79e9c072abf572bfc6d5f7f1a536a1af2efac6763b",
+    "benchmark_sha256": "b6604a79be07b67e35861cc93a2c547983f5d709e5e80b63516818495513d989",
+    "metrics": {
+      "balanced_accuracy_with_abstention_as_miss": 0.8571428571428572,
+      "support_recall": 0.7142857142857143,
+      "counterfactual_rejection_recall": 1.0,
+      "coverage": 0.9285714285714286,
+      "selective_accuracy": 0.9230769230769231,
+      "abstention_rate": 0.0714285714285714,
+      "paired_bootstrap_balanced_accuracy_95_interval": [0.75, 0.9642857142857143]
+    },
+    "gate": {
+      "balanced_accuracy_gte_0_85": true,
+      "support_recall_gte_0_85": false,
+      "counterfactual_rejection_gte_0_85": true,
+      "coverage_gte_0_80": true,
+      "selective_accuracy_gte_0_95": false,
+      "bootstrap_lower_gte_0_75": true,
+      "promotion_pass": false
+    },
+    "error_summary": {
+      "supported_abstentions": 2,
+      "supported_literal_false_rejections": 2,
+      "counterfactual_false_supports": 0
+    }
+  },
+  "slurm": {
+    "job": "29491950",
+    "state": "FAILED",
+    "state_boundary": "Expected non-zero exit from --fail-on-gate after successful inference and artifact writes; not an infrastructure failure.",
+    "elapsed": "00:01:55",
+    "requested_memory": "16G",
+    "batch_max_rss_kib": 10755540,
+    "model_scoring_seconds": 5.097778937779367
+  },
+  "artifact_hashes": {
+    "raw_predictions_sha256": "e9556c431ee1ff2414fddb8eb2d3a4cfb1fa0ce6f4b24fab919a1d6da868e26f",
+    "raw_metrics_sha256": "d19bd718ce5356017ffd9169532e001fb39c83fc6735904ba6389b1148ed2714",
+    "cascade_predictions_sha256": "379cb7bc0eb63a2e34c86939f6932946975f148ff1a23e867d3117fd8a63c935",
+    "cascade_metrics_sha256": "a3350490cf8e9d89e0c075ffde26487ab3edc9c2e5bacedcf11bf89ed414b52d",
+    "cascade_gate_sha256": "a569c62b55785d69fc36af25553d04f1b2deaf7e2cf1c41ac2b1f3159ee3bdd7"
+  },
+  "decision": "STOP. The cascade rejected every controlled counterfactual but missed too many supported claims. It is not promoted to the online answer path or a semantic citation-correctness claim.",
+  "boundaries": [
+    "Final labels are author-written and non-blind, not independent human agreement.",
+    "The final source was not used to change thresholds, literal rules or model selection.",
+    "Development results are not reported as source-disjoint transport performance.",
+    "The benchmark covers controlled single-sentence claim-passage pairs, not end-to-end live answers.",
+    "This failed gate is not a positive resume metric."
+  ]
+}
