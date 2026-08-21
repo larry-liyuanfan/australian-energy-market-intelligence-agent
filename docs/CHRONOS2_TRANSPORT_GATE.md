@@ -35,13 +35,14 @@ baseline, a ratio of **1.1285**. Raw q10–q90 coverage was **74.33%**; SA1 fell
 The model is therefore retained as a reproducible negative foundation-model
 baseline, not promoted as a forecasting or BESS-value improvement.
 
-Evaluation array `29479727` completed five tasks at `d6cc4b6`; each full job took
-1:49–2:05 including isolated dependency setup, with batch MaxRSS about 7.68 GiB.
-Model evaluation itself took 25.18–26.91 seconds and peaked at 794,805,760 CUDA
-bytes. Initial summary job `29479733` failed because the selected system Python
-lacked NumPy. The single replacement `29479957` pinned NumPy 2.4.6, separated
-evaluation and summary SHAs in provenance, and completed in 12 seconds at about
-195 MiB MaxRSS. The compact evidence is
+Corrected evaluation array `29479941` completed five tasks at `dd0459f`; that
+exact code explicitly sets `cross_learning=False`. Each full job took 1:48–2:03
+including isolated dependency setup, with batch MaxRSS about 7.68 GiB. Model
+evaluation itself took 25.21–26.60 seconds and peaked at 794,805,760 CUDA bytes.
+Summary job `29479949` ran from the same exact SHA and completed in 10 seconds at
+201,920 KiB MaxRSS. An earlier array bound to `d6cc4b6` produced the same numbers,
+but its manifest could not prove the explicit cross-learning setting and is
+excluded from published provenance. The compact evidence is
 [`artifacts/public/chronos2_transport_gate_20260821.json`](../artifacts/public/chronos2_transport_gate_20260821.json).
 
 This extension partly overlaps the inspected SA1 pilot and contains only one
