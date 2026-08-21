@@ -78,7 +78,7 @@ reliability, and honest business boundaries.
   coverage. Same-information LightGBM still beat the candidate's BESS proxy by
   AUD 1,031.39, and the paired moving-block interval crossed zero; the declared
   five-region expansion therefore stopped.
-- Production evidence: five isolated A100 MIG tasks completed in 1:49–2:05;
+- HPC execution evidence: five isolated A100 MIG tasks completed in 1:49–2:05;
   model evaluation used about 0.74 GiB peak CUDA memory and 25–27 seconds, while
   complete environment provisioning drove job MaxRSS to about 7.68 GiB. A
   missing-NumPy summary failure led to pinned runtime provisioning and separate
