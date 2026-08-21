@@ -136,6 +136,7 @@ def main() -> None:
     parser.add_argument("--input-root", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--expected-git-sha", required=True)
+    parser.add_argument("--summary-git-sha", required=True)
     parser.add_argument("--expected-input-sha", required=True)
     args = parser.parse_args()
     records: list[dict[str, Any]] = []
@@ -164,11 +165,14 @@ def main() -> None:
     metrics_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     manifest = {
         "created_at": datetime.now(UTC).isoformat(),
-        "git_sha": args.expected_git_sha,
+        "git_sha": args.summary_git_sha,
+        "summary_git_sha": args.summary_git_sha,
+        "evaluation_git_sha": args.expected_git_sha,
         "input_sha256": args.expected_input_sha,
         "source_hashes": source_hashes,
         "metrics_sha256": sha256(metrics_path),
         "python": sys.version,
+        "numpy": np.__version__,
         "platform": platform.platform(),
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
     }

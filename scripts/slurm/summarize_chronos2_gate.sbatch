@@ -11,16 +11,17 @@
 
 set -euo pipefail
 : "${REPO_DIR:?Set REPO_DIR to the Spartan energy checkout}"
-: "${ENERGY_GIT_COMMIT:?Set an exact pushed Git commit}"
+: "${SUMMARY_GIT_COMMIT:?Set the exact pushed summary-code commit}"
+: "${EVALUATION_GIT_COMMIT:?Set the exact evaluation commit in the input manifests}"
 : "${INPUT_ROOT:?Set the completed five-region root}"
 : "${OUTPUT_DIR:?Set a new summary directory}"
 : "${EXPECTED_INPUT_SHA:?Set the verified AEMO input hash}"
 
-git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
+git -C "${REPO_DIR}" cat-file -e "${SUMMARY_GIT_COMMIT}^{commit}"
 CODE_ROOT="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-summary-${SLURM_JOB_ID:?}"
 VENV="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-chronos2-summary-venv-${SLURM_JOB_ID}"
 git clone --shared --no-checkout "${REPO_DIR}" "${CODE_ROOT}"
-git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
+git -C "${CODE_ROOT}" checkout --detach "${SUMMARY_GIT_COMMIT}"
 cd "${CODE_ROOT}"
 trap 'rm -rf -- "${CODE_ROOT}" "${VENV}"' EXIT
 
@@ -34,5 +35,6 @@ mkdir -p "${OUTPUT_DIR}"
 python scripts/summarize_chronos2_gate.py \
   --input-root "${INPUT_ROOT}" \
   --output "${OUTPUT_DIR}" \
-  --expected-git-sha "${ENERGY_GIT_COMMIT}" \
+  --expected-git-sha "${EVALUATION_GIT_COMMIT}" \
+  --summary-git-sha "${SUMMARY_GIT_COMMIT}" \
   --expected-input-sha "${EXPECTED_INPUT_SHA}"
