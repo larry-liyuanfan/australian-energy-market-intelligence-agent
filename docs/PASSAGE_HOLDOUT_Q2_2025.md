@@ -42,8 +42,11 @@ rerank MRR was 0.6071–0.8929.
 This supports retaining BM25 plus the auditable numeric/lexical feature reranker.
 It also confirms that the 64-D LSA channel is a weak baseline on exact numeric
 passages; it must not be presented as a neural embedding or as the source of the
-quality gain. The deployed SG index still contains the earlier 735 chunks, so
-this is an offline release gate rather than a production-index claim.
+quality gain. After this frozen-feature gate passed, the sixth report was
+promoted and the deployed SG index was reverified at 905/905 chunks, so
+this evaluation remains an offline release gate while deployment health is
+recorded separately in
+[`sg_evidence_905_deployment_20260821.json`](../artifacts/public/sg_evidence_905_deployment_20260821.json).
 
 Compact public evidence:
 [`artifacts/public/passage_holdout_q2_2025_20260821.json`](../artifacts/public/passage_holdout_q2_2025_20260821.json).
