@@ -1,0 +1,78 @@
+{
+  "artifact_type": "pinned_minicheck_energy_claim_support_stop_gate",
+  "created_at": "2026-08-21T07:30:00Z",
+  "code_git_sha": "1620958077da9c49a29919db01458b3cacbe6a71",
+  "slurm": {
+    "successful_job": "29482437",
+    "state": "COMPLETED",
+    "elapsed": "00:01:42",
+    "requested_memory": "16G",
+    "batch_max_rss_kib": 14910080,
+    "scoring_elapsed_seconds": 6.212631539441645,
+    "excluded_duplicate": {
+      "29482427": "Same code SHA and aggregate quality result, but a concurrent rerun reused and overwrote its output directory; excluded from canonical artifact provenance."
+    },
+    "failed_predecessors": {
+      "29482100": "persistent Hugging Face cache exceeded project quota before model load",
+      "29482182": "partition did not export SLURM_TMPDIR; no model load or scoring",
+      "29482211": "Transformers rejected Torch 2.5 checkpoint loading under CVE-2025-32434 protection",
+      "29482274": "concurrent exact-SHA attempt still pinned Torch 2.5; no quality result",
+      "29482324": "adapter incorrectly inferred label token IDs instead of using the published checkpoint contract"
+    }
+  },
+  "model": {
+    "id": "lytang/MiniCheck-Flan-T5-Large",
+    "revision": "a496016e7b493686ed6e1c52250b9b9d39b0dcb2",
+    "parameters": "770M",
+    "threshold": 0.5,
+    "negative_token_id": 3,
+    "positive_token_id": 209,
+    "runtime": "Torch 2.6.0+cu118 with Transformers 4.57.6"
+  },
+  "challenge_set": {
+    "official_passages": 20,
+    "supported_claims": 20,
+    "controlled_counterfactuals": 20,
+    "families": ["numeric", "direction", "temporal", "entity", "quantifier_negation"],
+    "label_scope": "author-written, non-blind controlled pairs over official AEMO/AER passages"
+  },
+  "metrics": {
+    "accuracy": 0.675,
+    "balanced_accuracy": 0.675,
+    "support_recall": 0.45,
+    "counterfactual_rejection_recall": 0.9,
+    "auroc": 0.7875,
+    "brier_score": 0.2703042976226687,
+    "ece_5_bin": 0.27112366599030796,
+    "paired_bootstrap_balanced_accuracy_95_interval": [0.575, 0.775],
+    "rejection_by_perturbation": {
+      "direction": 1.0,
+      "entity": 1.0,
+      "numeric": 0.8571428571428571,
+      "quantifier_negation": 0.5,
+      "temporal": 1.0
+    }
+  },
+  "gate": {
+    "balanced_accuracy_gte_0_85": false,
+    "support_recall_gte_0_85": false,
+    "counterfactual_rejection_gte_0_85": true,
+    "bootstrap_lower_gte_0_75": false,
+    "promotion_pass": false
+  },
+  "hashes": {
+    "evidence_sha256": "f3cd5fc3727c924bed509605cffb5b205a68d9c567aad28ade7e10f6927dbb04",
+    "benchmark_sha256": "d697607bce8b37a76a119251c90a97218ef8f8d62306d0881ab3258886356726",
+    "predictions_sha256": "5532b2c63a111e72192c101cce8f45e3fb98dcaa15ca98c6326b92f6811463ce",
+    "metrics_sha256": "3641c659a10c4b5d2a017cb1d333482b558ef865657ec1b2d459a20691bc081e",
+    "gate_sha256": "40e1de9d40871a392498f629593e45b1843b37d1ec8c1ea0a4d65749120ef349",
+    "run_manifest_sha256": "0bbb03142a7b2de6f36844a9000a8597c195fb03379a30faecd10532266f13d3"
+  },
+  "decision": "STOP. The verifier rejected counterfactuals well but missed too many supported energy claims. It is not promoted to an online guardrail or a citation-correctness claim.",
+  "boundaries": [
+    "The challenge set is author-written and non-blind, not an independent annotation study.",
+    "The evaluation measures one pinned sentence-level verifier on controlled claim-passage pairs, not end-to-end live answers.",
+    "No threshold tuning was performed after observing the result.",
+    "A failed gate may inform engineering and interviews but cannot be a positive resume metric."
+  ]
+}

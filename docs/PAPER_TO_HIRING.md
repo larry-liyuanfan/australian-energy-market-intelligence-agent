@@ -178,6 +178,10 @@ reliability, and honest business boundaries.
   official energy passages paired with 20 controlled counterfactuals spanning
   numeric, direction, temporal, entity and quantifier/negation errors. The
   threshold and paired-bootstrap gate are frozen before GPU execution.
+- Result: counterfactual rejection reached 90%, but supported-claim recall was
+  45%; balanced accuracy was 67.5% with a paired-bootstrap 95% interval of
+  57.5%–77.5%. Three of four promotion conditions failed, so the verifier stays
+  offline and no citation-correctness claim is promoted.
 - Hiring signal: separates retrieval evaluation, answer attribution and semantic
   verification, while recording model revision and keeping the verifier outside
   typed-tool planning.
@@ -215,7 +219,8 @@ semantic entailment evaluation must stay labelled as such.
 
 A failed paper-driven gate may enter the evidence ledger as an engineering stop
 result, but it cannot enter resume bullets as a positive accuracy, safety or
-economic lift. The Chronos-2 run is retained on exactly that basis.
+economic lift. The Chronos-2 and MiniCheck runs are retained on exactly that
+basis.
 
 For Slurm arrays, every task also receives a distinct `%A_%a` log. Metrics and
 manifests remain region-sharded, so concurrent stdout cannot obscure which

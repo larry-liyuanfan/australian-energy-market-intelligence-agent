@@ -106,6 +106,8 @@ The fixed suite has 80 real-window tasks plus 20 separately reported transient e
 
 An additional indirect-prompt-injection regression contains **24 attacks across eight families plus eight benign controls**, each repeated five times (160 trials; 120 attack trials). The deterministic typed plan was preserved in 120/120 attack trials, with zero unregistered tool actions, zero marker leakage and 40/40 benign-control successes. With zero observed unsafe actions, the two-sided Wilson 95% upper bound is still 3.10%; this is an architecture-bound regression because retrieved text never enters the deterministic planner, not a live-model robustness benchmark or an AgentDojo score.
 
+A pinned 770M MiniCheck verifier was then tested on 20 official AEMO/AER passages, each paired with one supported claim and one controlled counterfactual. Canonical job `29482437` at exact SHA `1620958` **failed** the fixed-threshold gate: counterfactual rejection was 90%, but supported-claim recall was only 45%, balanced accuracy was 67.5%, and the paired-bootstrap 95% interval was 57.5%–77.5%. The model is therefore not promoted to an online guardrail or a citation-correctness claim; see the [exact-SHA stop artifact](artifacts/public/minicheck_claim_support_stop_20260821.json).
+
 ## Deployment
 
 The isolated Alibaba Cloud SG Compose stack runs FastAPI, Elasticsearch 8.19, Redis 7.4 and Prometheus 3.5 with loopback-only host bindings and explicit CPU/RAM limits. Elasticsearch now holds a versioned, strict-mapping index behind the `energy-official-evidence` alias (**735/735 chunks**); the service executes a fixed `multi_match` BM25 query, source-diversifies candidates, and fuses them with local BM25/dense retrieval, RRF and deterministic reranking. Users can never submit Elasticsearch DSL. Indexing/count failures fail over to the local hybrid path and are exposed in `/healthz` instead of being reported as indexed success. On the same 20-query source-routing set, deployed ES BM25 reached MRR **0.858**/Recall@5 **1.00** while the fused path retained **0.967/1.00**; ES BM25 alone is not claimed to improve ranking quality.
@@ -141,6 +143,7 @@ python scripts/build_official_evidence.py --output artifacts/evidence
 python scripts/evaluate_retrieval.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/retrieval-eval
 python scripts/evaluate_passage_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/passage-support --fail-on-gate
 python scripts/evaluate_agent_security.py --output artifacts/security-eval --repetitions 5 --fail-on-gate
+python scripts/evaluate_claim_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/claim-support
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/seasonal-eval --seasonal-bess --degradation-costs 0,25,50,100
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
@@ -172,6 +175,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; a subsequent calibration-selected convex ensemble also failed its predeclared five-region promotion gate (2/5 positive, aggregate -3.54%), so no positive gain claim is made.
 - Zero-shot Chronos-2 also failed its five-region 28-day transport gate: MAE ratio 1.1285, raw q10–q90 coverage 74.33%, only 2/5 positive regions and a moving-block economic interval crossing zero. The experiment partly overlaps an inspected SA1 pilot and is not a prospective test.
 - A covariate+conformal Chronos-2 remediation improved SA1 development-window MAE and coverage but lost AUD 1,031.39 to same-information LightGBM on the constrained BESS proxy; its economic moving-block interval crossed zero, so the predeclared five-region expansion was not run.
+- The pinned MiniCheck verifier rejected 90% of controlled counterfactuals but recalled only 45% of supported energy claims; its balanced-accuracy bootstrap interval stayed below the frozen gate, so it is not an online guardrail or semantic-citation claim.
 
 ## Attribution
 
