@@ -72,14 +72,21 @@ reliability, and honest business boundaries.
   the moving-block 95% interval crossed zero. Weighted MAE regressed 12.85% and
   raw q10–q90 coverage was 74.33%. Four of five conditions failed, so the model
   was not promoted.
+- Failure remediation: on a frozen, earlier non-overlapping SA1 development
+  window, past market plus known calendar covariates improved Chronos-2 MAE from
+  49.67 to 47.73. Preceding-only split conformal calibration reached 84.77%
+  coverage. Same-information LightGBM still beat the candidate's BESS proxy by
+  AUD 1,031.39, and the paired moving-block interval crossed zero; the declared
+  five-region expansion therefore stopped.
 - Production evidence: five isolated A100 MIG tasks completed in 1:49–2:05;
   model evaluation used about 0.74 GiB peak CUDA memory and 25–27 seconds, while
   complete environment provisioning drove job MaxRSS to about 7.68 GiB. A
   missing-NumPy summary failure led to pinned runtime provisioning and separate
   evaluation/summary SHAs.
 - Boundary: this is a backward extension partly overlapping the inspected pilot,
-  not a prospective or untouched test. It tests univariate zero-shot forecasting,
-  not Chronos-2's multivariate/covariate advantage or fine-tuning.
+  not a prospective or untouched test. The covariate remediation moves backward
+  in market time and is development evidence only; it does not establish
+  cross-region transport, fine-tuning value or a positive foundation-model gain.
 
 ### Dependence-aware economic uncertainty
 

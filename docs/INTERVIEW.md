@@ -83,6 +83,10 @@ asset-specific degradation and investment return.
 38. What does a seven-day circular moving-block bootstrap preserve that an iid day bootstrap does not?
 39. Why is raw q10–q90 coverage of 74.33% a stop signal even when the economic total is positive?
 40. Which resource measurements separate model inference cost from reproducible environment cost?
+41. Why was the covariate remediation evaluated on an earlier non-overlapping window rather than retuned on the failed five-region window?
+42. Which covariates are genuinely known at forecast time, and which are past-only?
+43. Why did lower MAE and acceptable conformal coverage still fail the development gate?
+44. What evidence would be required before expanding covariate Chronos-2 again?
 
 ## Code evidence map
 
@@ -95,7 +99,7 @@ asset-specific degradation and investment return.
 | Rolling evaluation and metric definitions | `src/energy_agent/evaluation.py`, `src/energy_agent/metrics.py` |
 | Two-year decision transport gate | `scripts/summarize_history_transport.py`, `docs/HISTORICAL_TRANSPORT_GATE.md`, `artifacts/public/historical_transport_gate_20260821.json` |
 | Scenario-CVaR negative gate | `scripts/summarize_risk_transport.py`, `docs/RISK_TRANSPORT_GATE.md`, `artifacts/public/risk_transport_gate_20260821.json` |
-| Chronos-2 adapter and transport stop gate | `src/energy_agent/foundation_forecast.py`, `scripts/evaluate_chronos2_bess.py`, `scripts/summarize_chronos2_gate.py`, `docs/CHRONOS2_TRANSPORT_GATE.md`, `artifacts/public/chronos2_transport_gate_20260821.json` |
+| Chronos-2 adapter and stop gates | `src/energy_agent/foundation_forecast.py`, `scripts/evaluate_chronos2_bess.py`, `scripts/summarize_chronos2_gate.py`, `docs/CHRONOS2_TRANSPORT_GATE.md`, `docs/CHRONOS2_COVARIATE_DEVELOPMENT_GATE.md`, `artifacts/public/chronos2_transport_gate_20260821.json`, `artifacts/public/chronos2_covariate_development_stop_20260821.json` |
 | Official-document hybrid retrieval | `src/energy_agent/evidence.py`, `scripts/build_official_evidence.py`, `scripts/evaluate_retrieval.py` |
 | Passage support and injection gates | `benchmarks/official_passage_support.jsonl`, `benchmarks/indirect_prompt_injection.jsonl`, `scripts/evaluate_passage_support.py`, `scripts/evaluate_agent_security.py`, `artifacts/public/evidence_security_gate_20260821.json` |
 | Provider boundary and deterministic fallback | `src/energy_agent/providers.py` |
@@ -113,3 +117,4 @@ asset-specific degradation and investment return.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
 - Passage labels are author-curated rather than independent human-blind judgments; security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
 - Chronos-2 is a reproducible negative challenger: its five-region gate failed four of five conditions, the 28-day window partly overlaps the SA1 pilot, and no foundation-model lift is claimed.
+- Covariate Chronos-2 improved MAE and conformal coverage on one backward SA1 development window but lost the BESS economic comparison; no cross-region expansion or resume gain is claimed.

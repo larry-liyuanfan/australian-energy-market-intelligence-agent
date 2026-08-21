@@ -1,0 +1,86 @@
+{
+  "artifact_type": "chronos2_covariate_sa1_development_stop_gate",
+  "created_at": "2026-08-21T07:01:25.753525+00:00",
+  "scope": {
+    "region": "SA1",
+    "test_window": "2026-06-23/2026-07-20",
+    "test_days": 28,
+    "test_intervals": 8064,
+    "interval_calibration_window": "2026-06-09/2026-06-22",
+    "context_days": 14,
+    "forecast_horizon_intervals": 288,
+    "model": "amazon/chronos-2",
+    "chronos_forecasting_version": "2.3.1",
+    "cross_learning": false,
+    "candidate_covariates": {
+      "past_only": ["total_demand_mw", "available_generation_mw", "net_interchange_mw"],
+      "known_future": ["minute_sin", "minute_cos", "weekday_sin", "weekday_cos"]
+    }
+  },
+  "forecast": {
+    "persistence_mae": 105.12312069320436,
+    "lightgbm_same_information_mae": 61.24169045930508,
+    "chronos2_univariate_mae": 49.67049058313249,
+    "chronos2_covariate_mae": 47.72959242101639,
+    "covariate_vs_univariate_mae_change_fraction": -0.03907479524637891
+  },
+  "intervals": {
+    "raw_q10_q90_coverage": 0.8191964285714286,
+    "raw_mean_width_aud_per_mwh": 170.5741450904854,
+    "conformal_coverage": 0.847718253968254,
+    "conformal_mean_width_aud_per_mwh": 179.54419423111037,
+    "conformal_adjustment_aud_per_mwh": 4.485024570312504,
+    "calibration_protocol": "preceding 14 complete days only"
+  },
+  "economics": {
+    "persistence_test_net_operating_margin_proxy_aud": -1917.7486093896698,
+    "lightgbm_test_net_operating_margin_proxy_aud": 1444.6071865131987,
+    "chronos2_univariate_test_net_operating_margin_proxy_aud": 173.1941624220379,
+    "chronos2_covariate_test_net_operating_margin_proxy_aud": 413.2173115116731,
+    "oracle_test_net_operating_margin_proxy_aud": 7254.101277304533,
+    "candidate_delta_vs_best_baseline_aud": -1031.3898750015255,
+    "paired_seven_day_moving_block_mean_daily_delta_aud": -36.835352678625945,
+    "paired_seven_day_moving_block_ci_95_aud": [-151.6537765025223, 32.856606174375976]
+  },
+  "development_gate": {
+    "candidate_mae_ratio_vs_best_baseline": 0.9609245219982747,
+    "mae_condition": true,
+    "conformal_coverage_condition": true,
+    "economic_total_condition": false,
+    "economic_ci_lower_condition": false,
+    "pass": false,
+    "action": "stop before five-region expansion"
+  },
+  "provenance": {
+    "git_sha": "735d0d11fdd277a53c2753ccdb6da33401d4870f",
+    "input_sha256": "e06384b6b529c36c90be12a9b00fd7467d5321df571d177df720674fb8b60795",
+    "metrics_sha256": "78dfdc0a46cd319e4b405039f9716d80f54a717bbbcc4164bf25136350a78263",
+    "daily_sha256": "ff6d472ca9c1f25a9ddcb50bc2c6a7fd10d9a654d526e4ad8b90890acc531799",
+    "manifest_sha256": "1d7a4f913db15deaed64b5ee29d0df99c2baf18170993f30b352744b5ba415b0",
+    "slurm_job_id": "29481739"
+  },
+  "resources": {
+    "job_elapsed_seconds": 160,
+    "job_batch_max_rss_kib": 8053628,
+    "evaluation_elapsed_seconds": 56.69512052461505,
+    "evaluation_max_rss_kib": 1542636,
+    "cuda_peak_memory_bytes": 5074494464,
+    "requested_memory_gib": 16,
+    "provider_cost_usd": 0.0
+  },
+  "quality_gate": {
+    "pytest": "106 passed",
+    "ruff": "passed",
+    "mypy": "passed",
+    "github_actions_run": 32456553809,
+    "github_actions_head_sha": "735d0d11fdd277a53c2753ccdb6da33401d4870f",
+    "github_actions_conclusion": "success"
+  },
+  "boundaries": [
+    "The candidate design was selected after inspecting a later univariate Chronos window; this backward non-overlapping window is development evidence, not prospective confirmation.",
+    "The result covers one region and one 28-day regime and cannot establish cross-region transport.",
+    "Improved MAE and calibrated interval coverage did not improve the constrained BESS decision against LightGBM.",
+    "Economics are historical spot-market operating proxies at 50 AUD/MWh discharged and exclude CAPEX, fixed OPEX, FCAS, network fees, taxes, financing, asset-specific degradation and investment return.",
+    "The failed economic conditions prohibit five-region expansion and any positive resume claim."
+  ]
+}

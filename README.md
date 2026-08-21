@@ -66,6 +66,16 @@ negative foundation-model baseline, not a promoted model gain. See the
 [exact-SHA stop artifact](artifacts/public/chronos2_transport_gate_20260821.json)
 and [gate note](docs/CHRONOS2_TRANSPORT_GATE.md).
 
+A paper-aligned covariate remediation was then frozen on an earlier,
+non-overlapping SA1 development window. Past demand, available generation and
+interchange plus known calendar covariates reduced Chronos-2 MAE from **49.67 to
+47.73**; preceding-only split conformal calibration produced **84.77%** coverage
+for the nominal 80% interval. That did not transport into the decision:
+same-information LightGBM returned AUD 1,444.61 over 28 days versus AUD 413.22
+for covariate Chronos-2, a **-AUD 1,031.39** delta with seven-day moving-block
+interval **-151.65 to 32.86 AUD/day**. The development gate stopped before
+five-region expansion. See the [development stop artifact](artifacts/public/chronos2_covariate_development_stop_20260821.json).
+
 ### BESS backtest
 
 The standard battery is 1 MW / 2 MWh, 90% round-trip efficiency, 10–90% SoC, and 50% initial/terminal SoC. The MILP prevents simultaneous charge/discharge. Both the MILP and threshold baseline receive the same leakage-free LightGBM price signal; actual prices are used only for settlement, while the oracle alone receives perfect foresight.
@@ -161,6 +171,7 @@ Spartan scripts use short preflight/pilot jobs, `sbatch --test-only`, measured r
 - Nested CVaR selection did not generalise: the three non-point selections passed a 14-day calibration slice but worsened unseen realised tail margin. The implementation remains tested, while the positive risk-improvement claim is rejected.
 - Optimiser-action weighting produced a small raw SA1 mean-margin gain but worse tail performance; a subsequent calibration-selected convex ensemble also failed its predeclared five-region promotion gate (2/5 positive, aggregate -3.54%), so no positive gain claim is made.
 - Zero-shot Chronos-2 also failed its five-region 28-day transport gate: MAE ratio 1.1285, raw q10–q90 coverage 74.33%, only 2/5 positive regions and a moving-block economic interval crossing zero. The experiment partly overlaps an inspected SA1 pilot and is not a prospective test.
+- A covariate+conformal Chronos-2 remediation improved SA1 development-window MAE and coverage but lost AUD 1,031.39 to same-information LightGBM on the constrained BESS proxy; its economic moving-block interval crossed zero, so the predeclared five-region expansion was not run.
 
 ## Attribution
 

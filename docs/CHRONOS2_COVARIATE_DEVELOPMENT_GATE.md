@@ -31,3 +31,25 @@ in market time. A positive result would only justify freezing the design for a
 future, newly arrived prospective window. Raw and conformal intervals, all
 comparators, runtime, memory, code/data hashes and negative conditions must be
 retained.
+
+## Verified result
+
+Spartan job `29481739` completed at exact commit `735d0d1` over 8,064 test
+intervals. Covariate Chronos-2 improved MAE to **47.73**, versus **49.67** for
+univariate Chronos-2, **61.24** for same-information LightGBM and **105.12** for
+persistence. Raw q10–q90 coverage was 81.92%. Preceding-only split conformal
+calibration increased coverage to **84.77%** while widening the mean interval
+from 170.57 to 179.54 AUD/MWh.
+
+The downstream decision did not improve. LightGBM produced an AUD 1,444.61
+28-day net-operating proxy; covariate Chronos-2 produced AUD 413.22 and
+univariate Chronos-2 AUD 173.19. The candidate delta against the best comparator
+was **-AUD 1,031.39**. Its paired seven-day circular moving-block mean daily
+delta was -AUD 36.84 with a 95% interval of **-151.65 to 32.86**. The MAE and
+coverage conditions passed, but both economic conditions failed. Per the frozen
+protocol, the five-region expansion was not submitted.
+
+The complete job took 2:40 including isolated environment provisioning. Model
+evaluation took 56.70 seconds, used 1,542,636 KiB CPU MaxRSS and peaked at
+5,074,494,464 CUDA bytes. Exact hashes and the stop decision are in
+[`artifacts/public/chronos2_covariate_development_stop_20260821.json`](../artifacts/public/chronos2_covariate_development_stop_20260821.json).
