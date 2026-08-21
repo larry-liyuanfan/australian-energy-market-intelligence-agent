@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from scripts.summarize_chronos2_gate import REGIONS, summarize_records
+import pytest
+
+from scripts.summarize_chronos2_gate import REGIONS, paired_moving_block_bootstrap, summarize_records
 
 
 def records(*, delta: float = 10.0, coverage: float = 0.8, chronos_mae: float = 10.0) -> list[dict[str, Any]]:
@@ -57,3 +59,9 @@ def test_chronos2_gate_rejects_mae_regression() -> None:
     summary = summarize_records(records(chronos_mae=11.1))
     assert not summary["promotion_conditions"]["mae_ratio_lte_1_10"]
     assert not summary["promotion_pass"]
+
+
+def test_chronos2_gate_rejects_invalid_temporal_block() -> None:
+    deltas = {f"2026-08-{day:02d}": [1.0] * 5 for day in range(1, 8)}
+    with pytest.raises(ValueError, match="block length"):
+        paired_moving_block_bootstrap(deltas, block_length_days=8)

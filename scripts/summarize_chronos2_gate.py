@@ -20,19 +20,33 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def paired_day_bootstrap(day_deltas: dict[str, list[float]], samples: int = 5_000) -> dict[str, Any]:
+def paired_moving_block_bootstrap(
+    day_deltas: dict[str, list[float]], samples: int = 5_000, block_length_days: int = 7
+) -> dict[str, Any]:
     days = sorted(day_deltas)
     if not days or any(len(day_deltas[day]) != len(REGIONS) for day in days):
         raise ValueError("every calendar day must contain all five regional deltas")
     values = np.asarray([np.mean(day_deltas[day]) for day in days], dtype=float)
+    if block_length_days < 1 or block_length_days > len(values):
+        raise ValueError("block length must be between one and the number of calendar days")
     rng = np.random.default_rng(20260821)
-    draws = np.mean(rng.choice(values, size=(samples, len(values)), replace=True), axis=1)
+    blocks_per_draw = int(np.ceil(len(values) / block_length_days))
+    starts = rng.integers(0, len(values), size=(samples, blocks_per_draw))
+    offsets = np.arange(block_length_days)
+    indices = (starts[:, :, None] + offsets[None, None, :]) % len(values)
+    sampled = values[indices.reshape(samples, -1)[:, : len(values)]]
+    draws = np.mean(sampled, axis=1)
     return {
         "units": len(days),
+        "block_length_days": block_length_days,
+        "method": "paired circular moving-block bootstrap over cross-region mean daily deltas",
         "mean_daily_delta_aud_per_region": float(np.mean(values)),
         "ci_lower": float(np.quantile(draws, 0.025)),
         "ci_upper": float(np.quantile(draws, 0.975)),
-        "boundary": "paired calendar-day bootstrap preserves same-day cross-region dependence; serial dependence remains",
+        "boundary": (
+            "same-day cross-region dependence and within-block serial dependence are preserved; "
+            "28 days still provide limited regime coverage"
+        ),
     }
 
 
@@ -86,12 +100,12 @@ def summarize_records(records: list[dict[str, Any]]) -> dict[str, Any]:
                 float(row["chronos2_net_operating_margin_proxy_aud"])
                 - float(row[f"{baseline}_net_operating_margin_proxy_aud"])
             )
-    bootstrap = paired_day_bootstrap(day_deltas)
+    bootstrap = paired_moving_block_bootstrap(day_deltas)
     positive_regions = sum(float(row["net_delta_aud"]) > 0 for row in region_rows)
     mae_ratio = weighted_chronos_mae / weighted_best_mae
     conditions = {
         "total_net_delta_positive": total_delta > 0,
-        "paired_day_bootstrap_ci_lower_positive": bootstrap["ci_lower"] > 0,
+        "paired_moving_block_bootstrap_ci_lower_positive": bootstrap["ci_lower"] > 0,
         "positive_regions_gte_3": positive_regions >= 3,
         "mae_ratio_lte_1_10": mae_ratio <= 1.10,
         "raw_interval_coverage_between_0_75_and_0_85": 0.75 <= weighted_coverage <= 0.85,
@@ -107,7 +121,7 @@ def summarize_records(records: list[dict[str, Any]]) -> dict[str, Any]:
         "chronos2_raw_q10_q90_coverage": weighted_coverage,
         "total_net_delta_vs_region_best_baselines_aud": total_delta,
         "positive_regions": positive_regions,
-        "paired_calendar_day_bootstrap": bootstrap,
+        "paired_calendar_day_moving_block_bootstrap": bootstrap,
         "promotion_conditions": conditions,
         "promotion_pass": all(conditions.values()),
         "boundary": (
