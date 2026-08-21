@@ -167,6 +167,24 @@ reliability, and honest business boundaries.
   a separately validated entailment judge remain required before claiming
   citation correctness.
 
+### MiniCheck: sentence-level grounded fact checking
+
+- Paper: Tang, Laban and Durrett, “MiniCheck: Efficient Fact-Checking of LLMs
+  on Grounding Documents,” EMNLP 2024.
+- Paper idea: score whether a grounding document supports each generated
+  sentence with a specialised sub-1B verifier instead of treating retrieval or
+  citation presence as factuality.
+- Project translation: a pinned MiniCheck Flan-T5 verifier is evaluated on 20
+  official energy passages paired with 20 controlled counterfactuals spanning
+  numeric, direction, temporal, entity and quantifier/negation errors. The
+  threshold and paired-bootstrap gate are frozen before GPU execution.
+- Hiring signal: separates retrieval evaluation, answer attribution and semantic
+  verification, while recording model revision and keeping the verifier outside
+  typed-tool planning.
+- Boundary: the challenge set is author-written and non-blind. Even a passing
+  result is not independent annotation evidence or a guarantee of live-answer
+  factuality.
+
 ### Tool-agent reliability and untrusted evidence
 
 - Primary sources: Yao et al., [τ-bench](https://arxiv.org/abs/2406.12045), ICLR
