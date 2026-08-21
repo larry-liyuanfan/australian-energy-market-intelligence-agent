@@ -72,6 +72,32 @@ def test_hybrid_evidence_ranks_relevant_official_chunk() -> None:
     assert index.search("South Australia transmission imports", top_k=1)[0]["source_id"] == "event"
 
 
+def test_hybrid_rerank_preserves_exact_numeric_passage_evidence() -> None:
+    common = {"published_at": "2026-01-01", "retrieved_at": "2026-08-20", "sha256": "0" * 64}
+    documents = [
+        OfficialChunk(
+            "summary",
+            "qed",
+            "Quarterly Energy Dynamics Q2 2026",
+            "Wholesale spot prices averaged $74/MWh, down 47% year on year.",
+            "https://aemo.com.au/summary",
+            **common,
+        ),
+        OfficialChunk(
+            "adjacent",
+            "qed",
+            "Quarterly Energy Dynamics Q2 2026",
+            "Wholesale prices and battery output changed during the quarter.",
+            "https://aemo.com.au/adjacent",
+            **common,
+        ),
+    ]
+    index = HybridEvidenceIndex(documents, dense_dimensions=2)
+    hit = index.search("Q2 2026 wholesale spot prices $74 MWh down 47%", top_k=1)[0]
+    assert hit["chunk_id"] == "summary"
+    assert hit["numeric_coverage"] > 0
+
+
 def test_elasticsearch_bm25_is_indexed_and_fused_without_user_dsl() -> None:
     common = {"published_at": "2026-01-01", "retrieved_at": "2026-08-20", "sha256": "0" * 64}
     documents = [
