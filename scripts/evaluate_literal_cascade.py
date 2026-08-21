@@ -46,7 +46,7 @@ def main() -> None:
                 "cascade_decision": decision,
             }
         )
-    metrics = selective_cascade_metrics(
+    metrics: dict[str, Any] = selective_cascade_metrics(
         [int(row["label"]) for row in rows],
         [float(row["support_probability"]) for row in rows],
         consistencies,
@@ -56,7 +56,7 @@ def main() -> None:
     pair_ids = sorted({str(row["pair_id"]) for row in evaluated})
     pair_rows = {pair_id: [row for row in evaluated if row["pair_id"] == pair_id] for pair_id in pair_ids}
     rng = np.random.default_rng(20260822)
-    bootstrap = []
+    bootstrap: list[float] = []
     for _ in range(5_000):
         sampled = rng.choice(pair_ids, size=len(pair_ids), replace=True)
         sample = [row for pair_id in sampled for row in pair_rows[str(pair_id)]]
