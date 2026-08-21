@@ -1,0 +1,50 @@
+{
+  "artifact_type": "alibaba_cloud_sg_evidence_index_promotion",
+  "evidence_status": "verified-real-infrastructure-loopback",
+  "deployment": {
+    "scope": "isolated Alibaba Cloud Singapore Docker Compose project",
+    "service": "FastAPI + Elasticsearch + Redis + Prometheus",
+    "market_rows": 525600,
+    "market_history_boundary": "one deployed year across five NEM regions; the two-year 1,051,200-row gate remains offline",
+    "model_provider": "deterministic",
+    "public_network_sla": false
+  },
+  "evidence_index": {
+    "official_sources": 6,
+    "chunks": 905,
+    "documents_sha256": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "elasticsearch_alias": "energy-official-evidence",
+    "versioned_index": "energy-official-evidence-07ce49657a4b",
+    "indexed_documents": 905,
+    "health_status": "connected_indexed",
+    "rollback_copy_retained": true
+  },
+  "pre_deployment_gate": {
+    "evaluation_role": "source-disjoint holdout with frozen retrieval features",
+    "claims": 14,
+    "feature_rerank_mrr": 0.75,
+    "feature_rerank_recall_at_5": 1.0,
+    "mrr_bootstrap_95_interval": [0.6071428571428571, 0.8928571428571429],
+    "boundary": "Author-curated source-disjoint transport evidence, not human-blind relevance or semantic entailment."
+  },
+  "post_deployment_loopback": {
+    "requests": 100,
+    "concurrency": 4,
+    "task_mix": "five regions x coverage/event/forecast/BESS x repeats",
+    "http_success_rate": 1.0,
+    "task_success_rate": 1.0,
+    "citation_complete_rate": 1.0,
+    "raw_tool_success_rate": 1.0,
+    "latency_ms": {
+      "p50": 960.3853999869898,
+      "p95": 1306.2615999951959,
+      "max": 1700.3429000033066
+    }
+  },
+  "boundaries": [
+    "Loopback health and task contracts are not a public-network SLA or an independent answer-quality benchmark.",
+    "The deterministic planner remains active because live Model Studio credentials were not configured.",
+    "The 100-request gate has a different repeat count from the earlier 140-request gate, so latency is not presented as an A/B improvement.",
+    "Official report text remains subject to source copyright and usage terms; the public repository contains only compact metrics and hashes."
+  ]
+}

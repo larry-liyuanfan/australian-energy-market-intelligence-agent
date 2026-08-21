@@ -16,8 +16,9 @@ region/timestamp keys. An interval-ending day-boundary defect in the first build
 created five duplicate keys and one ten-minute gap per region; the validator
 failed closed, and I repaired only the affected official days from AEMO monthly
 MMSDM archives rather than interpolating. The offline official-document index
-contains 905 chunks across six reports; the SG service still has the earlier
-735-chunk index. The revised fused path retained source-routing MRR/Recall@5 at
+contains 905 chunks across six reports; after the source-disjoint gate passed,
+the SG service was promoted and health-checked at 905/905 chunks. The revised
+fused path retained source-routing MRR/Recall@5 at
 1.00/1.00 and reached passage-support MRR 0.80/Recall@5 1.00 on a separate
 20-claim author-curated development set. The dense-like channel is a
 TF-IDF/64-D TruncatedSVD LSA baseline, not a neural embedding; its passage
@@ -130,7 +131,7 @@ asset-specific degradation and investment return.
 - Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
 - The 100-task suite uses template-declared expected tools and a deterministic planner; it proves contract routing/recovery, not live-LLM reasoning quality.
 - Passage labels remain author-curated: the 20-claim development score is not generalisation evidence, while the 14-claim Q2 2025 gate is source-disjoint with frozen features but still not human-blind relevance or answer entailment. Security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
-- The SG service loaded one year/525,600 market rows; the two-year/1,051,200-row result is an offline Spartan transport gate.
+- The SG service loads one year/525,600 market rows and 905 official-report chunks; the two-year/1,051,200-row result remains an offline Spartan transport gate.
 - Chronos-2 is a reproducible negative challenger: its five-region gate failed four of five conditions, the 28-day window partly overlaps the SA1 pilot, and no foundation-model lift is claimed.
 - Covariate Chronos-2 improved MAE and conformal coverage on one backward SA1 development window but lost the BESS economic comparison; no cross-region expansion or resume gain is claimed.
 - MiniCheck rejected most controlled counterfactuals but missed most supported energy claims; it remains an offline stop result rather than a semantic verifier or resume gain.
