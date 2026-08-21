@@ -24,8 +24,19 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, required=True)
     parser.add_argument("--benchmark", type=Path, default=Path("benchmarks/official_passage_support.jsonl"))
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--evaluation-role", choices=("development", "holdout"), default="development")
+    parser.add_argument("--frozen-feature-sha")
     parser.add_argument("--fail-on-gate", action="store_true")
     args = parser.parse_args()
+    if args.evaluation_role == "holdout":
+        if not args.frozen_feature_sha:
+            parser.error("--frozen-feature-sha is required for holdout evaluation")
+        feature_diff = subprocess.run(
+            ["git", "diff", "--quiet", args.frozen_feature_sha, "--", "src/energy_agent/evidence.py"],
+            check=False,
+        )
+        if feature_diff.returncode != 0:
+            parser.error("retrieval features changed after the declared freeze SHA")
     tasks = [json.loads(line) for line in args.benchmark.read_text(encoding="utf-8").splitlines() if line]
     documents = load_official_chunks(args.evidence)
     by_id = {document.chunk_id: document for document in documents}
@@ -34,10 +45,10 @@ def main() -> None:
     rows: list[dict[str, Any]] = []
     metrics: dict[str, Any] = {
         "scope": (
-            "Twenty author-curated exact-support labels over five official reports. "
-            "This is passage retrieval plus label-consistency evaluation, not independent blind annotation "
-            "or an LLM semantic-entailment judge."
+            f"{len(tasks)} author-curated exact-support labels. This is passage retrieval plus label-consistency "
+            "evaluation, not independent human-blind annotation or an LLM semantic-entailment judge."
         ),
+        "evaluation_role": args.evaluation_role,
         "tasks": len(tasks),
     }
     label_checks = []
@@ -97,15 +108,26 @@ def main() -> None:
         "predictions_sha256": hashlib.sha256(predictions_path.read_bytes()).hexdigest(),
         "documents": len(documents),
         "tasks": len(tasks),
+        "evaluation_role": args.evaluation_role,
+        "frozen_feature_sha": args.frozen_feature_sha,
         "label_boundary": "Author-curated exact-support records; no independent human-blind or LLM entailment claim.",
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    gate_pass = metrics["gold_label_term_consistency"] == 1.0 and metrics["hybrid_rerank"]["recall_at_5"] >= 0.95
+    if args.evaluation_role == "holdout":
+        gate_pass = (
+            metrics["gold_label_term_consistency"] == 1.0
+            and metrics["hybrid_rerank"]["recall_at_5"] >= 0.80
+            and metrics["hybrid_rerank"]["mrr"] >= 0.60
+        )
+        criteria = "label consistency = 1.0, frozen-feature holdout hybrid Recall@5 >= 0.80 and MRR >= 0.60"
+    else:
+        gate_pass = metrics["gold_label_term_consistency"] == 1.0 and metrics["hybrid_rerank"]["recall_at_5"] >= 0.95
+        criteria = "label consistency = 1.0 and development hybrid Recall@5 >= 0.95"
     (args.output / "gate.json").write_text(
         json.dumps(
             {
                 "gate_pass": gate_pass,
-                "criteria": "gold label term consistency = 1.0 and hybrid passage Recall@5 >= 0.95",
+                "criteria": criteria,
             },
             indent=2,
         ),

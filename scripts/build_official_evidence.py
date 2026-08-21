@@ -39,6 +39,12 @@ SOURCES = [
         "https://www.aemo.com.au/-/media/files/major-publications/qed/2025/qed-q3-2025.pdf",
     ),
     (
+        "aemo-qed-q2-2025",
+        "Quarterly Energy Dynamics Q2 2025",
+        "2025-07-31",
+        "https://www.aemo.com.au/-/media/files/major-publications/qed/2025/qed-q2-2025.pdf",
+    ),
+    (
         "aer-significant-q1-2026",
         "Significant electricity prices January to March 2026",
         "2026-05-28",
@@ -126,7 +132,7 @@ def main() -> None:
         "chunks": len(documents),
         "documents_sha256": hashlib.sha256(docs_path.read_bytes()).hexdigest(),
         "provenance_sha256": hashlib.sha256(provenance_path.read_bytes()).hexdigest(),
-        "retrieval": "BM25 + TF-IDF/TruncatedSVD dense + RRF + deterministic rerank",
+        "retrieval": "BM25 + 64-D TF-IDF/TruncatedSVD LSA + RRF + deterministic feature rerank",
         "smoke_mrr": sum(float(row["reciprocal_rank"]) for row in outcomes) / len(outcomes),
         "smoke_queries": outcomes,
         "scope_boundary": "Smoke queries validate plumbing only; not the 100-task Agent evaluation.",
