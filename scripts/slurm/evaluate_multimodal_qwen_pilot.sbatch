@@ -22,6 +22,9 @@ MODEL_REVISION="9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda"
 MODEL_ID="Qwen/Qwen3-VL-Embedding-2B"
 git -C "${REPO_DIR}" cat-file -e "${ENERGY_GIT_COMMIT}^{commit}"
 TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+if [[ "${OUTPUT_DIR}" == "__TASK_SCRATCH__" ]]; then
+  OUTPUT_DIR="${TASK_SCRATCH}/energy-mm-output-${SLURM_JOB_ID}"
+fi
 CODE_ROOT="${TASK_SCRATCH}/energy-mm-${SLURM_JOB_ID:?}"
 QWEN_ROOT="${TASK_SCRATCH}/qwen3-vl-embedding-${SLURM_JOB_ID}"
 VENV="${TASK_SCRATCH}/energy-mm-venv-${SLURM_JOB_ID}"
@@ -63,3 +66,9 @@ python scripts/evaluate_multimodal_retrieval.py \
   --benchmark benchmarks/multimodal_page_retrieval_q4_2024.jsonl \
   --embedding-dir "${OUTPUT_DIR}" \
   --output "${OUTPUT_DIR}/evaluation.json"
+if [[ "${EMIT_RESULT_BASE64:-0}" == "1" ]]; then
+  echo "ENERGY_MM_RESULT_BASE64_BEGIN"
+  tar -C "${OUTPUT_DIR}" -czf - . | base64 -w 0
+  echo
+  echo "ENERGY_MM_RESULT_BASE64_END"
+fi
