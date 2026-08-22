@@ -1,0 +1,50 @@
+{
+  "scope": "Source-disjoint transport from the Q4 2024 PDF development report to the official AEMO Q1 2025 PDF",
+  "source": {
+    "source_id": "aemo-qed-q1-2025",
+    "pages": 85,
+    "source_sha256": "8ad4aa67ac5c5d72281371e5c658eb6866892f59d1177fa0fbf1596a3efc3534",
+    "page_records_sha256": "b1276504bde6bf1f0c527902a863376f89755cf73841806d54164c3a468c28e3",
+    "page_asset_bytes": 20553650,
+    "layout_modalities": {"chart": 40, "mixed": 45}
+  },
+  "protocol": {
+    "fusion_feature_freeze_sha": "b03156bd1be541c7ee2a26e956a3d3427ee06d42",
+    "transport_execution_sha": "a61b760e7c8933d1f686da595470aa67969a0ed4",
+    "development_source": "aemo-qed-q4-2024",
+    "transport_source": "aemo-qed-q1-2025",
+    "expected_page_overlap": 0,
+    "benchmark_examples": 14,
+    "benchmark_sha256": "74536714422d3e60e1bed234ec5253fa5a10d234c16b94466412f1a58afcd0c4"
+  },
+  "run": {
+    "slurm_test_only_forecast_id": "29504833",
+    "slurm_job_id": "29504834",
+    "job_state": "COMPLETED",
+    "job_exit_code": "0:0",
+    "job_elapsed_seconds": 219,
+    "job_total_cpu_seconds": 189.14,
+    "job_max_rss_kib": 14522808,
+    "requested_memory": "16G",
+    "device": "NVIDIA A100 80GB PCIe MIG 1g.20gb",
+    "encoder_runtime_seconds": 73.64482619427145,
+    "encoder_peak_cuda_memory_bytes": 4660713984,
+    "model_id": "Qwen/Qwen3-VL-Embedding-2B",
+    "model_revision": "9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda",
+    "model_code_revision": "393e2978d27852b0d0230d6994f37f9c15bed73c"
+  },
+  "artifacts": {
+    "page_embeddings_sha256": "4f968eb166982fe99388f8e3fe05560d6a5508410b8e54e7f0db17e07fc87739",
+    "query_embeddings_sha256": "703cf0437bd9774b4f97856a2344219df20e52f5e7d0793eae9d8e45d4dbbbea",
+    "ids_sha256": "c37ca3c8ca331f42806cf39192a2894d13ce154c7e59e53542c6b5472d07d958",
+    "evaluation_sha256": "7f80f4aa06b49c452fa6cbcc2a2f371376734d0d3487d31710d10059e7dcaf01",
+    "private_artifact_dir": "energy-artifacts/multimodal/q1-2025-transport-a61b760"
+  },
+  "evaluation": {
+    "text": {"mrr": 0.8928571428571429, "recall_at_1": 0.7857142857142857, "recall_at_5": 1.0},
+    "qwen_visual": {"mrr": 1.0, "recall_at_1": 1.0, "recall_at_5": 1.0},
+    "scale_safe_equal_weight_rrf": {"mrr": 1.0, "recall_at_1": 1.0, "recall_at_5": 1.0},
+    "fusion_minus_text_mrr_bootstrap_95_interval": [0.0, 0.21428571428571427]
+  },
+  "boundary": "This is source-disjoint relative to the Q4 2024 PDF multimodal development benchmark, not globally untouched project data: Q1 2025 had previously been used for a separate text claim-support development task. The 14 page labels were authored from captions after the fusion feature freeze, not judged blindly or independently. The result supports page-retrieval transport and the pinned offline adapter; it does not establish VLM answer correctness, OCR accuracy, state-of-the-art quality, or business impact. Private pages and embeddings remain on Spartan."
+}
