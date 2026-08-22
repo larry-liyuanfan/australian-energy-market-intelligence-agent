@@ -58,17 +58,22 @@ def main() -> None:
     parser.add_argument("--text-evidence", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--workbook", type=Path)
+    parser.add_argument("--source-id", default=SOURCE_ID)
+    parser.add_argument("--published-at", default=PUBLISHED_AT)
+    parser.add_argument("--workbook-url", default=WORKBOOK_URL)
+    parser.add_argument("--evaluation-role", default="author_curated_q2_2026_figure_routing_development")
+    parser.add_argument("--frozen-feature-sha")
     parser.add_argument("--fail-on-gate", action="store_true")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
 
-    payload = args.workbook.read_bytes() if args.workbook else _download(WORKBOOK_URL)
+    payload = args.workbook.read_bytes() if args.workbook else _download(args.workbook_url)
     retrieved_at = datetime.now(UTC).isoformat()
     figures = extract_figure_evidence(
         payload,
-        source_id=SOURCE_ID,
-        url=WORKBOOK_URL,
-        published_at=PUBLISHED_AT,
+        source_id=args.source_id,
+        url=args.workbook_url,
+        published_at=args.published_at,
         retrieved_at=retrieved_at,
     )
     figure_index = FigureEvidenceIndex(figures)
@@ -118,15 +123,20 @@ def main() -> None:
     figure_mrr = mean(figure_rr)
     figure_recall_at_5 = mean(figure_r5)
     metrics: dict[str, Any] = {
-        "evaluation_role": "author_curated_q2_2026_figure_routing_development",
+        "evaluation_role": args.evaluation_role,
         "queries": len(benchmark),
         "text_chunk_baseline": {"mrr": text_mrr, "recall_at_5": text_recall_at_5},
         "workbook_figure_router": {"mrr": figure_mrr, "recall_at_5": figure_recall_at_5},
         "paired_mrr_delta": mean(differences),
         "paired_bootstrap_mrr_delta_95": _interval(differences),
     }
+    is_holdout = "holdout" in args.evaluation_role.lower()
     gate = {
-        "criteria": "figure Recall@5 >= 0.90 and MRR >= text baseline on the author-curated development set",
+        "criteria": (
+            "figure Recall@5 >= 0.90 and MRR >= frozen text baseline on the source-disjoint holdout"
+            if is_holdout
+            else "figure Recall@5 >= 0.90 and MRR >= text baseline on the author-curated development set"
+        ),
         "promotion_pass": figure_recall_at_5 >= 0.90 and figure_mrr >= text_mrr,
     }
     figures_path = args.output / "figure_manifest.jsonl"
@@ -142,7 +152,11 @@ def main() -> None:
     metrics_path.write_text(json.dumps({"metrics": metrics, "gate": gate}, indent=2), encoding="utf-8")
     manifest = {
         "created_at": retrieved_at,
-        "workbook_source": {"source_id": SOURCE_ID, "published_at": PUBLISHED_AT, "url": WORKBOOK_URL},
+        "workbook_source": {
+            "source_id": args.source_id,
+            "published_at": args.published_at,
+            "url": args.workbook_url,
+        },
         "workbook_sha256": hashlib.sha256(payload).hexdigest(),
         "workbook_bytes": len(payload),
         "figures": len(figures),
@@ -155,9 +169,18 @@ def main() -> None:
         "predictions_sha256": hashlib.sha256(predictions_path.read_bytes()).hexdigest(),
         "metrics_sha256": hashlib.sha256(metrics_path.read_bytes()).hexdigest(),
         "retrieval": FigureEvidenceIndex.backend,
+        "frozen_feature_sha": args.frozen_feature_sha,
         "evidence_boundary": (
-            "Author-curated figure-routing development labels over one official workbook; "
-            "not blind QA, VLM reasoning, OCR accuracy or independent answer correctness."
+            (
+                "Routing features were frozen before the source-disjoint official workbook and author-curated labels "
+                "were opened; labels are still not human-blind or independent. "
+            )
+            if is_holdout
+            else "Author-curated figure-routing development labels over one official workbook; "
+        )
+        + (
+            "Image hashes and source cells prove modality provenance; no VLM reasoning, OCR accuracy or "
+            "independent answer-correctness claim is made."
         ),
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
