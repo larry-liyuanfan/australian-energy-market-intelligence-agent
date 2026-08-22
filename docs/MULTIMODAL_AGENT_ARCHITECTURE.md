@@ -35,13 +35,15 @@ The existing `search_official_evidence` input now has two bounded fields:
 
 The deterministic planner routes chart/figure/plot and table requests to multimodal fusion. A future live planner must still emit the same Pydantic schema. The tool registry checks whether a multimodal backend is configured and otherwise falls back to the existing text index; no user-supplied SQL, Elasticsearch DSL, file path or model expression is accepted.
 
+Recovery is bounded to one alternate attempt. A failed or empty visual route falls back to text; an empty text route can escalate to page retrieval. The trace records attempt number, recovery strategy, required/successful/missing tools, duplicate suppression, stall status and citation-hash checks in a progress ledger. Retrieved page text remains data and never enters the planner, so multimodal evidence cannot introduce a new tool or backend expression.
+
 ## Current verified scope
 
 - Real AEMO Q4 2024 PDF: 87 pages rendered at 144 DPI from source SHA `b900ab9a...d914`.
 - Private page assets: 19,692,032 bytes; page records and diagnostics have separate exact hashes.
 - Public author-curated benchmark: 14 chart/table page-retrieval queries with expected page IDs.
 - Full pinned Qwen3-VL-Embedding-2B run: 87 pages and 14 queries encoded into 2,048-D vectors in 75.39 seconds on an A100 1g.20GB MIG slice; peak CUDA allocation was 4.66 GB.
-- Visual retrieval reached MRR/Recall@5 `0.9286/1.00`. Caption-text retrieval was already `1.00/1.00`; repaired weighted fusion reached `0.9643/1.00`, with fusion-minus-text MRR bootstrap interval `-0.1071–0.0000`. No neural retrieval lift is claimed.
+- Visual retrieval reached MRR/Recall@5 `0.9286/1.00`. Caption-text retrieval was already `1.00/1.00`; scale-safe equal-weight fusion reached `0.9643/1.00`, with fusion-minus-text MRR bootstrap interval `-0.1071–0.0000`. No neural retrieval lift is claimed.
 - Unit/contract coverage includes MaxSim behavior, modality routing, weighted fusion, page-level provenance and prevention of private-path exposure.
 - Official Q2 2026 databook development set: 128 figure sheets, 131 image objects and 9,159 indexed preview cells. On 20 author-curated queries, workbook routing reached MRR/Recall@5 `0.9417/1.00` versus `0.6953/0.85` for the 905-chunk text baseline.
 - The routing implementation was then frozen at `f8035dd` before opening the Q1 2026 workbook and labels. That source-disjoint holdout contains 130 figure sheets, 132 image objects and 9,196 preview cells; on 20 author-curated queries, workbook routing reached `0.9667/1.00` versus text `0.7308/1.00`. The paired MRR delta was `+0.2358`, with a 5,000-sample bootstrap 95% interval of `0.0750–0.3933`.

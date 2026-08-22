@@ -9,7 +9,7 @@
   "run": {
     "slurm_job_id": "29504579",
     "encoding_code_sha": "bf44ff4",
-    "fusion_fix_sha": "2e7fbfcaa685174edd076bca11f823d77faa00f1",
+    "fusion_fix_sha": "b03156bd1be541c7ee2a26e956a3d3427ee06d42",
     "model_id": "Qwen/Qwen3-VL-Embedding-2B",
     "model_revision": "9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda",
     "model_code_revision": "393e2978d27852b0d0230d6994f37f9c15bed73c",
@@ -32,19 +32,20 @@
     "query_embeddings_bytes": 114816,
     "query_embeddings_sha256": "95738d31808b0fabc19d8820ac04b9de94374a23e99c6540b8be270c960322de",
     "ids_sha256": "ffd4ae619023416b3714f7af100adcf0db7d6ed83a97a54b9190576b6f64c030",
+    "corrected_evaluation_sha256": "77d53899b278f120c3c3bd2096429c1bfbed71eb89342941519f62168cff909a",
     "private_artifact_dir": "energy-artifacts/multimodal/q4-2024-full-bf44ff4"
   },
   "evaluation": {
     "examples": 14,
     "text": {"mrr": 1.0, "recall_at_1": 1.0, "recall_at_5": 1.0},
     "qwen_visual": {"mrr": 0.9285714285714286, "recall_at_1": 0.8571428571428571, "recall_at_5": 1.0},
-    "repaired_weighted_rrf": {"mrr": 0.9642857142857143, "recall_at_1": 0.9285714285714286, "recall_at_5": 1.0},
+    "scale_safe_equal_weight_rrf": {"mrr": 0.9642857142857143, "recall_at_1": 0.9285714285714286, "recall_at_5": 1.0},
     "fusion_minus_text_mrr_bootstrap_95_interval": [-0.10714285714285714, 0.0],
     "pre_fix_diagnostic_fusion": {
       "mrr": 0.5701628728414442,
       "recall_at_1": 0.5,
       "recall_at_5": 0.5714285714285714,
-      "root_cause": "Additive numeric/modality bonuses exceeded an RRF rank step and overrode pages ranked first by both channels. They are tie-breakers only after fusion fix 2e7fbfc."
+      "root_cause": "Additive numeric/modality bonuses exceeded an RRF rank step and overrode pages ranked first by both channels. Commit b03156b makes them tie-breakers, removes the uncalibrated visual-channel boost, and treats chart-plus-table pages as mixed."
     }
   },
   "boundary": "The 14 labels were curated by the author from captions in the same report, not collected through blind independent judgments. Text retrieval is already perfect on this caption-derived set. The run verifies full-corpus Qwen3-VL 2B encoding, visual retrieval, provenance and a non-regressing repaired fusion path; it does not prove an accuracy lift over text, VLM answer correctness, state-of-the-art quality, or business/economic impact. Full page assets and embeddings stay on Spartan."
