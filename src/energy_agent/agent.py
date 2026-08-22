@@ -77,7 +77,27 @@ class EnergyAgent:
             calls.append(("forecast_price_risk", {"region": region.value, "window": window, "horizon_intervals": 12}))
         if "event" in text or "spike" in text or "异常" in text:
             calls.append(("detect_price_events", {"region": region.value, "window": window}))
-        calls.append(("search_official_evidence", {"query": request.question, "top_k": 5}))
+        chart_terms = ("chart", "figure", "plot", "graph", "trend line", "图表", "图中", "曲线")
+        table_terms = ("table", "tabular", "表格", "表中")
+        preferred_modality = (
+            "chart"
+            if any(term in text for term in chart_terms)
+            else "table"
+            if any(term in text for term in table_terms)
+            else "auto"
+        )
+        retrieval_mode = "multimodal_fusion" if preferred_modality != "auto" else "hybrid_rerank"
+        calls.append(
+            (
+                "search_official_evidence",
+                {
+                    "query": request.question,
+                    "top_k": 5,
+                    "preferred_modality": preferred_modality,
+                    "retrieval_mode": retrieval_mode,
+                },
+            )
+        )
         return calls[: request.max_tool_calls]
 
     @staticmethod

@@ -11,10 +11,14 @@ flowchart LR
   Q[Market query] --> N[Intent and constraints]
   N --> P[Typed planner]
   P --> M[Structured market retrieval]
-  P --> E[Official evidence: BM25 + 64-D LSA + RRF + feature rerank]
+  P --> E[Official text evidence: BM25 + 64-D LSA + RRF + feature rerank]
+  P --> X[Official PDF page evidence]
+  X --> Y[Visual embedding / MaxSim late interaction]
+  E --> Z[Modality-aware weighted RRF]
+  Y --> Z
   M --> F[Price-risk forecast]
   F --> B[Constrained BESS MILP]
-  E --> V[Evidence verification]
+  Z --> V[Evidence verification]
   B --> V
   V --> A[Cited answer + durable trace]
 ```
@@ -42,6 +46,8 @@ verified evaluation and work that remains outside the evidence gate.
 The corrected headline evaluation uses eight independent 28-day region-season folds over the two contiguous years, each with a preceding 28-day calibration window and at least 30 earlier training days. No future labels enter features, calibration windows or operational schedules. Older one-year v1 artifacts remain regression diagnostics only and are not the current evidence source.
 
 ### Retrieval
+
+The evidence layer now also has a page-native multimodal path for charts and tables. Official PDFs are rendered into immutable page assets with page number, source hash, page-image hash, dimensions and a coarse layout modality. `search_official_evidence` keeps the same bounded typed-tool surface but can request `multimodal_fusion` with an explicit `chart`, `table`, `visual`, `text` or `auto` preference. A generic visual index supports both Qwen3-VL-style single-vector dual encoders and ColPali-style multi-vector page patches through MaxSim late interaction; weighted RRF combines visual and page-text ranks while numeric coverage and modality match remain inspectable in the trace. Heavy page encoding is an offline Spartan job, not part of the small SG API process. See the [multimodal architecture note](docs/MULTIMODAL_AGENT_ARCHITECTURE.md).
 
 On the original 20-query curated official-source routing benchmark, BM25 reached MRR 0.892 and Recall@5 1.00; the revised hybrid rerank reached **MRR 1.00, Recall@5 1.00** without a routing regression. The local dense-like channel is explicitly a reproducible **TF-IDF + 64-dimensional TruncatedSVD LSA baseline**, not a neural embedding model; reranking uses auditable lexical-strength, query-term and numeric-preservation features rather than a cross-encoder. A separate 20-claim exact-support set over the same five official reports exposed a different failure: LSA-only passage retrieval reached just MRR 0.214/Recall@5 0.50 and unweighted RRF reached 0.521/0.70. Feature development on that same set raised hybrid passage retrieval to **MRR 0.800, Recall@5 1.00** (bootstrap MRR 95% interval 0.70–0.90); BM25 remained the stronger top-rank baseline at MRR 0.875. This is therefore an author-curated **development gate**, not independent blind annotation or an LLM semantic-entailment judgment. See the [exact-SHA development artifact](artifacts/public/evidence_security_gate_20260821.json).
 
@@ -149,6 +155,7 @@ python scripts/evaluate_passage_support.py --evidence artifacts/evidence/evidenc
 python scripts/evaluate_passage_support.py --evidence artifacts/evidence/evidence_documents.jsonl --benchmark benchmarks/official_passage_support_holdout_q2_2025.jsonl --output artifacts/passage-holdout --evaluation-role holdout --frozen-feature-sha 1fd514fcf406f36c2848632b613bcd208e004779 --fail-on-gate
 python scripts/evaluate_agent_security.py --output artifacts/security-eval --repetitions 5 --fail-on-gate
 python scripts/evaluate_claim_support.py --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/claim-support
+python scripts/build_multimodal_pages.py --pdf data/raw/qed-q4-2024.pdf --output artifacts/private/multimodal-q4-2024 --source-id aemo-qed-q4-2024 --title "Quarterly Energy Dynamics Q4 2024" --url "https://www.aemo.com.au/-/media/files/major-publications/qed/2024/qed-q4-2024.pdf" --published-at 2025-01-30
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/real-eval
 python scripts/evaluate_real_market.py --input artifacts/run/dispatch_features_repaired.csv.gz --output artifacts/seasonal-eval --seasonal-bess --degradation-costs 0,25,50,100
 python scripts/evaluate_agent_real.py --data artifacts/run/dispatch_features_repaired.csv.gz --data-manifest artifacts/run/final_manifest.json --evidence artifacts/evidence/evidence_documents.jsonl --output artifacts/agent-eval
