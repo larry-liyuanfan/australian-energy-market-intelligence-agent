@@ -144,3 +144,24 @@ def test_agent_recovers_empty_visual_route_through_text_without_looping() -> Non
     assert trace is not None
     assert trace["progress_ledger"]["recovery_attempts"] == 1  # type: ignore[index]
     assert trace["progress_ledger"]["stalled"] is False  # type: ignore[index]
+
+
+def test_metadata_tie_breakers_cannot_override_both_retrieval_channels() -> None:
+    pages = [
+        page("joint-first", "Show the target chart evidence for the 2025 period", "mixed", 1),
+        page("metadata-match", "2025", "chart", 2),
+    ]
+    visual = LateInteractionPageIndex(
+        {
+            "joint-first": np.asarray([[1.0, 0.0]]),
+            "metadata-match": np.asarray([[0.8, 0.2]]),
+        },
+        query_encoder=lambda _query: np.asarray([[1.0, 0.0]]),
+    )
+    index = MultimodalEvidenceIndex(pages, visual, dense_dimensions=2)
+
+    hits = index.search_multimodal("Show the target chart for 2025", top_k=2, preferred_modality="chart")
+
+    assert hits[0]["chunk_id"] == "joint-first"
+    assert hits[1]["component_scores"]["numeric_coverage"] == 1.0
+    assert hits[1]["component_scores"]["modality_match"] == 1.0

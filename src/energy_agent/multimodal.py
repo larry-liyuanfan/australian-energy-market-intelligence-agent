@@ -216,7 +216,11 @@ class MultimodalEvidenceIndex:
                 or (preference == "table" and page.modality == "table")
                 or (preference == "visual" and page.modality != "text")
             )
-            score = text_rrf + visual_weight * visual_rrf + 0.02 * numeric_coverage + 0.015 * modality_match
+            # Rank evidence is the primary signal.  Numeric and modality
+            # metadata are deterministic tie-breakers only: their old additive
+            # bonuses were larger than an RRF rank step and could demote a page
+            # ranked first by both retrievers.
+            score = text_rrf + visual_weight * visual_rrf
             scored.append(
                 (
                     score,
@@ -232,7 +236,17 @@ class MultimodalEvidenceIndex:
                 )
             )
         output: list[dict[str, Any]] = []
-        for rank, (score, page_id, component_scores) in enumerate(sorted(scored, reverse=True)[:top_k], start=1):
+        ranked = sorted(
+            scored,
+            key=lambda item: (
+                item[0],
+                item[2]["numeric_coverage"],
+                item[2]["modality_match"],
+                item[1],
+            ),
+            reverse=True,
+        )
+        for rank, (score, page_id, component_scores) in enumerate(ranked[:top_k], start=1):
             page = self.pages[page_id]
             output.append(
                 {
