@@ -1,0 +1,39 @@
+{
+  "status": "verified_author_curated_development",
+  "created_at": "2026-08-22T06:29:11.254983+00:00",
+  "source": {
+    "source_id": "aemo-qed-q2-2026",
+    "published_at": "2026-07-28",
+    "workbook_sha256": "2c0baa7967e204847ed6dcc7cea561391b9bfdb3984dc1dc15483feffbfa8da3",
+    "workbook_bytes": 5251637,
+    "figures": 128,
+    "figures_with_images": 128,
+    "image_objects": 131,
+    "preview_cells": 9159
+  },
+  "benchmark": {
+    "queries": 20,
+    "text_chunk_baseline": {
+      "mrr": 0.6952777777777778,
+      "recall_at_5": 0.85
+    },
+    "workbook_figure_router": {
+      "mrr": 0.9416666666666667,
+      "recall_at_5": 1.0
+    },
+    "paired_mrr_delta": 0.24638888888888888,
+    "paired_bootstrap_mrr_delta_95": [
+      0.08888888888888889,
+      0.415
+    ],
+    "promotion_pass": true
+  },
+  "provenance": {
+    "benchmark_sha256": "d9ede4a689e81ad210e0377b91629987b35aef62a0f16643c05722b85c42dd19",
+    "text_evidence_sha256": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "figure_manifest_sha256": "d26d777f543fd8251f71fc7f0d9b972ff8e81a002954236522592a5f8ec5c696",
+    "predictions_sha256": "868b9973341e9d1126493f61ae04b139a65253ddf364088136632c60ccc88e45",
+    "metrics_sha256": "d89df035b4a6774183f3ecd2fc9bb5f524b520de3fcd533849ad19963700281c"
+  },
+  "boundary": "The same author inspected Q2 2026 and curated the 20 routing queries. This is a development gate, not source-disjoint or blind QA. Image hashes and underlying cells establish multimodal provenance; no VLM, OCR or answer-correctness claim is made."
+}
