@@ -22,7 +22,7 @@ Repository names are design references, not claimed reproductions of their publi
 3. Full page images and extracted page text stay under `artifacts/private/` locally or the fixed Spartan artifact directory.
 4. `encode_qwen3_vl_pages.py` runs only as an offline GPU batch and writes dense page/query arrays plus an exact-hash manifest.
 5. `LateInteractionPageIndex` validates finite, non-zero, dimension-aligned embeddings before retrieval.
-6. `MultimodalEvidenceIndex` fuses page-text and visual rankings with weighted RRF, numeric coverage and an explicit modality-match feature.
+6. `MultimodalEvidenceIndex` fuses page-text and visual rankings with weighted RRF. Numeric coverage and modality match are inspectable deterministic tie-breakers only; they cannot override rank evidence.
 7. `FigureEvidenceIndex` independently compiles each official QED databook sheet into an image-hashed chart record plus a bounded preview of the underlying source cells. It gives the Agent a deterministic chart-grounding route even when a VLM is unavailable.
 8. The API returns only page/source provenance, hashes, modality and score components; it never exposes private filesystem paths.
 
@@ -40,11 +40,13 @@ The deterministic planner routes chart/figure/plot and table requests to multimo
 - Real AEMO Q4 2024 PDF: 87 pages rendered at 144 DPI from source SHA `b900ab9a...d914`.
 - Private page assets: 19,692,032 bytes; page records and diagnostics have separate exact hashes.
 - Public author-curated benchmark: 14 chart/table page-retrieval queries with expected page IDs.
+- Full pinned Qwen3-VL-Embedding-2B run: 87 pages and 14 queries encoded into 2,048-D vectors in 75.39 seconds on an A100 1g.20GB MIG slice; peak CUDA allocation was 4.66 GB.
+- Visual retrieval reached MRR/Recall@5 `0.9286/1.00`. Caption-text retrieval was already `1.00/1.00`; repaired weighted fusion reached `0.9643/1.00`, with fusion-minus-text MRR bootstrap interval `-0.1071–0.0000`. No neural retrieval lift is claimed.
 - Unit/contract coverage includes MaxSim behavior, modality routing, weighted fusion, page-level provenance and prevention of private-path exposure.
 - Official Q2 2026 databook development set: 128 figure sheets, 131 image objects and 9,159 indexed preview cells. On 20 author-curated queries, workbook routing reached MRR/Recall@5 `0.9417/1.00` versus `0.6953/0.85` for the 905-chunk text baseline.
 - The routing implementation was then frozen at `f8035dd` before opening the Q1 2026 workbook and labels. That source-disjoint holdout contains 130 figure sheets, 132 image objects and 9,196 preview cells; on 20 author-curated queries, workbook routing reached `0.9667/1.00` versus text `0.7308/1.00`. The paired MRR delta was `+0.2358`, with a 5,000-sample bootstrap 95% interval of `0.0750–0.3933`.
 
-The workbook holdout demonstrates figure routing and traceable source-cell access, not VLM reasoning or answer correctness. Its labels and the 14 PDF-page labels are author-curated from official captions, not a blind human relevance set. Neural page-retrieval metrics are reported only after the pinned Spartan pilot/full run completes.
+The workbook holdout demonstrates figure routing and traceable source-cell access, not VLM reasoning or answer correctness. Its labels and the 14 PDF-page labels are author-curated from official captions, not a blind human relevance set. The completed 2B run verifies the offline model adapter and visual path, but the caption-derived set does not establish superiority to text or VLM answer correctness.
 
 ## Industrial extension points
 

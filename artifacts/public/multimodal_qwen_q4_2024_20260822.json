@@ -1,0 +1,51 @@
+{
+  "scope": "Official AEMO Quarterly Energy Dynamics Q4 2024 PDF; full 87-page offline visual retrieval run on Spartan",
+  "source": {
+    "pages": 87,
+    "layout_modalities": {"chart": 39, "table": 32, "mixed": 16},
+    "source_sha256": "b900ab9accba88aff3a5a8b8520f22ed7e5d37d350251ab6b9a7111605e5d914",
+    "page_records_sha256": "f5d2cc40146163e8707e1269377a996a30cea290a749312b5bdba113f29a78ca"
+  },
+  "run": {
+    "slurm_job_id": "29504579",
+    "encoding_code_sha": "bf44ff4",
+    "fusion_fix_sha": "2e7fbfcaa685174edd076bca11f823d77faa00f1",
+    "model_id": "Qwen/Qwen3-VL-Embedding-2B",
+    "model_revision": "9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda",
+    "model_code_revision": "393e2978d27852b0d0230d6994f37f9c15bed73c",
+    "device": "NVIDIA A100 80GB PCIe MIG 1g.20gb",
+    "embedding_dimension": 2048,
+    "page_embedding_count": 87,
+    "query_embedding_count": 14,
+    "encoder_runtime_seconds": 75.3924408191815,
+    "encoder_peak_cuda_memory_bytes": 4660713984,
+    "encoder_max_rss_kib": 5111800,
+    "job_elapsed_seconds": 216,
+    "job_total_cpu_seconds": 191.228,
+    "job_max_rss_kib": 14577232,
+    "job_exit_code": "0:0"
+  },
+  "artifacts": {
+    "benchmark_sha256": "767e7e8f47b7e3b03e2c10aecb19f95e0ec52981dca013be6fc8988a7d38657b",
+    "page_embeddings_bytes": 712832,
+    "page_embeddings_sha256": "6f6820707a0f26bf3f0607067f2e7d245442ae97bb1681f5b73c4b7bc12d86f0",
+    "query_embeddings_bytes": 114816,
+    "query_embeddings_sha256": "95738d31808b0fabc19d8820ac04b9de94374a23e99c6540b8be270c960322de",
+    "ids_sha256": "ffd4ae619023416b3714f7af100adcf0db7d6ed83a97a54b9190576b6f64c030",
+    "private_artifact_dir": "energy-artifacts/multimodal/q4-2024-full-bf44ff4"
+  },
+  "evaluation": {
+    "examples": 14,
+    "text": {"mrr": 1.0, "recall_at_1": 1.0, "recall_at_5": 1.0},
+    "qwen_visual": {"mrr": 0.9285714285714286, "recall_at_1": 0.8571428571428571, "recall_at_5": 1.0},
+    "repaired_weighted_rrf": {"mrr": 0.9642857142857143, "recall_at_1": 0.9285714285714286, "recall_at_5": 1.0},
+    "fusion_minus_text_mrr_bootstrap_95_interval": [-0.10714285714285714, 0.0],
+    "pre_fix_diagnostic_fusion": {
+      "mrr": 0.5701628728414442,
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.5714285714285714,
+      "root_cause": "Additive numeric/modality bonuses exceeded an RRF rank step and overrode pages ranked first by both channels. They are tie-breakers only after fusion fix 2e7fbfc."
+    }
+  },
+  "boundary": "The 14 labels were curated by the author from captions in the same report, not collected through blind independent judgments. Text retrieval is already perfect on this caption-derived set. The run verifies full-corpus Qwen3-VL 2B encoding, visual retrieval, provenance and a non-regressing repaired fusion path; it does not prove an accuracy lift over text, VLM answer correctness, state-of-the-art quality, or business/economic impact. Full page assets and embeddings stay on Spartan."
+}
