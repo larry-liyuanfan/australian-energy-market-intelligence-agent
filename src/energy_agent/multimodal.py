@@ -145,6 +145,8 @@ def infer_modality_preference(query: str, requested: ModalityPreference = "auto"
 
 
 def classify_page_modality(*, image_blocks: int, drawing_objects: int, table_count: int, numeric_ratio: float) -> PageModality:
+    if table_count > 0 and (drawing_objects >= 8 or image_blocks >= 2):
+        return "mixed"
     if table_count > 0:
         return "table"
     if drawing_objects >= 8 or (image_blocks >= 2 and numeric_ratio >= 0.03):
@@ -208,7 +210,6 @@ class MultimodalEvidenceIndex:
             page = self.pages[page_id]
             text_rrf = 1 / (60 + text_ranks[page_id]) if page_id in text_ranks else 0.0
             visual_rrf = 1 / (60 + visual_ranks[page_id]) if page_id in visual_ranks else 0.0
-            visual_weight = 1.35 if preference in {"visual", "chart", "table"} else 1.0
             page_terms = set(tokens(page.text))
             numeric_coverage = len(numeric_terms & page_terms) / max(1, len(numeric_terms))
             modality_match = float(
@@ -220,7 +221,11 @@ class MultimodalEvidenceIndex:
             # metadata are deterministic tie-breakers only: their old additive
             # bonuses were larger than an RRF rank step and could demote a page
             # ranked first by both retrievers.
-            score = text_rrf + visual_weight * visual_rrf
+            # Modality intent decides whether the more expensive visual channel
+            # runs; it does not grant that channel an uncalibrated score boost.
+            # Equal-weight RRF is the safe default until a source-disjoint route
+            # calibration set demonstrates a stable alternative.
+            score = text_rrf + visual_rrf
             scored.append(
                 (
                     score,

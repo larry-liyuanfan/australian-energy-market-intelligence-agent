@@ -110,6 +110,7 @@ def test_tool_and_agent_expose_multimodal_evidence_without_private_asset_paths()
 def test_page_modality_classification_and_intent_are_deterministic() -> None:
     assert classify_page_modality(image_blocks=1, drawing_objects=12, table_count=0, numeric_ratio=0.1) == "chart"
     assert classify_page_modality(image_blocks=0, drawing_objects=0, table_count=1, numeric_ratio=0.2) == "table"
+    assert classify_page_modality(image_blocks=2, drawing_objects=12, table_count=1, numeric_ratio=0.2) == "mixed"
     assert classify_page_modality(image_blocks=0, drawing_objects=0, table_count=0, numeric_ratio=0.0) == "text"
     assert infer_modality_preference("Compare the values in the table") == "table"
     assert infer_modality_preference("Explain the figure") == "chart"
