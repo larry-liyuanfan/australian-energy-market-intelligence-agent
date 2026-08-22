@@ -4,6 +4,8 @@ from openpyxl import Workbook
 from openpyxl.drawing.image import Image
 from PIL import Image as PillowImage
 
+from energy_agent.market import fixture_store
+from energy_agent.tools import ToolRegistry
 from energy_agent.workbook_evidence import FigureEvidenceIndex, extract_figure_evidence
 
 
@@ -58,6 +60,31 @@ def test_figure_router_uses_caption_and_underlying_cells() -> None:
     hit = index.search("VIC SA net flow 320.5 MW", top_k=1)[0]
     assert hit["figure_id"] == "Figure 2"
     assert hit["numeric_coverage"] > 0
+    assert hit["modality"] == "chart"
+    assert len(hit["asset_sha256"]) == 64
+
+
+def test_typed_tool_routes_workbook_chart_without_exposing_a_file_path() -> None:
+    figures = extract_figure_evidence(
+        fixture_workbook(),
+        source_id="qed",
+        url="https://aemo.example/workbook.xlsx",
+        published_at="2026-07-28",
+        retrieved_at="2026-08-22T00:00:00+00:00",
+    )
+    registry = ToolRegistry(fixture_store(), FigureEvidenceIndex(figures, dense_dimensions=2))
+    result = registry.execute(
+        "search_official_evidence",
+        {
+            "query": "Show the VIC SA net flow chart",
+            "retrieval_mode": "multimodal_fusion",
+            "preferred_modality": "chart",
+            "top_k": 1,
+        },
+    )
+    assert result.evidence[0].modality == "chart"
+    assert result.evidence[0].asset_id == "qed-figure-002-image-001"
+    assert "path" not in result.evidence[0].model_dump()
 
 
 def test_rejects_missing_contents_contract() -> None:

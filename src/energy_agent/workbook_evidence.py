@@ -5,7 +5,7 @@ import io
 import re
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from energy_agent.evidence import HybridEvidenceIndex, OfficialChunk
 
@@ -192,6 +192,18 @@ class FigureEvidenceIndex:
                     "row_count": figure.row_count,
                     "column_count": figure.column_count,
                     "preview_cell_count": figure.preview_cell_count,
+                    "modality": "chart",
+                    "asset_id": f"{figure.chunk_id}-image-001",
+                    "asset_sha256": figure.image_sha256[0] if figure.image_sha256 else figure.sha256,
                 }
             )
         return output
+
+    def search_multimodal(
+        self,
+        query: str,
+        top_k: int = 5,
+        preferred_modality: Literal["auto", "text", "visual", "chart", "table"] = "auto",
+    ) -> list[dict[str, Any]]:
+        del preferred_modality
+        return self.search(query, top_k)
