@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import numpy as np
 
@@ -14,8 +15,19 @@ from energy_agent.multimodal import (
     infer_modality_preference,
     maxsim_late_interaction,
 )
-from energy_agent.schemas import AgentQueryRequest
+from energy_agent.schemas import AgentQueryRequest, ToolResult
 from energy_agent.tools import ToolRegistry
+
+
+def test_qwen_slurm_jobs_can_return_results_without_project_writes() -> None:
+    root = Path(__file__).parents[1]
+    for name in ("evaluate_multimodal_qwen_pilot.sbatch", "evaluate_multimodal_qwen_full.sbatch"):
+        script = (root / "scripts" / "slurm" / name).read_text(encoding="utf-8")
+        assert 'if [[ "${OUTPUT_DIR}" == "__TASK_SCRATCH__" ]]' in script
+        assert 'OUTPUT_DIR="${TASK_SCRATCH}/energy-mm-output-${SLURM_JOB_ID}"' in script
+        assert 'if [[ "${EMIT_RESULT_BASE64:-0}" == "1" ]]' in script
+        assert 'echo "ENERGY_MM_RESULT_BASE64_BEGIN"' in script
+        assert 'echo "ENERGY_MM_RESULT_BASE64_END"' in script
 
 
 def page(page_id: str, text: str, modality: str, page_number: int) -> PageRecord:
@@ -101,3 +113,34 @@ def test_page_modality_classification_and_intent_are_deterministic() -> None:
     assert classify_page_modality(image_blocks=0, drawing_objects=0, table_count=0, numeric_ratio=0.0) == "text"
     assert infer_modality_preference("Compare the values in the table") == "table"
     assert infer_modality_preference("Explain the figure") == "chart"
+
+
+class EmptyVisualRegistry(ToolRegistry):
+    def execute(self, name: str, raw_args: dict[str, object]) -> ToolResult:
+        if name == "search_official_evidence" and raw_args.get("retrieval_mode") == "multimodal_fusion":
+            return ToolResult(tool_name=name)
+        return super().execute(name, raw_args)
+
+
+def test_agent_recovers_empty_visual_route_through_text_without_looping() -> None:
+    pages = [page("page-chart", "Figure: SA1 quarterly price trend", "chart", 2)]
+    visual = LateInteractionPageIndex(
+        {"page-chart": np.asarray([[1.0, 0.0]])},
+        query_encoder=lambda _query: np.asarray([[1.0, 0.0]]),
+    )
+    agent = EnergyAgent(
+        EmptyVisualRegistry(fixture_store(), MultimodalEvidenceIndex(pages, visual, dense_dimensions=2))
+    )
+
+    response = agent.run(AgentQueryRequest(question="Show the SA1 price chart"))
+
+    recovered = [call for call in response.tool_calls if call.recovered]
+    assert response.status == "completed"
+    assert len(recovered) == 1
+    assert recovered[0].attempt == 2
+    assert recovered[0].recovery_strategy == "visual_to_text_fallback"
+    assert recovered[0].arguments["retrieval_mode"] == "hybrid_rerank"
+    trace = agent.get_trace(response.trace_id)
+    assert trace is not None
+    assert trace["progress_ledger"]["recovery_attempts"] == 1  # type: ignore[index]
+    assert trace["progress_ledger"]["stalled"] is False  # type: ignore[index]

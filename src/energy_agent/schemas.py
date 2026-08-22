@@ -139,6 +139,13 @@ class ToolCall(StrictModel):
     status: Literal["ok", "error", "timeout", "skipped"] = "ok"
     duration_ms: float = 0
     recovered: bool = False
+    attempt: int = Field(default=1, ge=1, le=2)
+    recovery_strategy: Literal[
+        "none",
+        "retry_with_backoff",
+        "visual_to_text_fallback",
+        "text_to_visual_escalation",
+    ] = "none"
 
 
 class AgentQueryRequest(StrictModel):
