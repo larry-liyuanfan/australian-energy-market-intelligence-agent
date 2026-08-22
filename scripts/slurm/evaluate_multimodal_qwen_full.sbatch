@@ -16,6 +16,7 @@ set -euo pipefail
 : "${ENERGY_GIT_COMMIT:?Set exact commit}"
 : "${PAGE_RECORDS:?Set private page records}"
 : "${PAGE_IMAGE_DIR:?Set private page image directory}"
+: "${BENCHMARK_PATH:?Set repository-relative benchmark path}"
 : "${OUTPUT_DIR:?Set new output directory}"
 QWEN_CODE_REVISION="393e2978d27852b0d0230d6994f37f9c15bed73c"
 MODEL_REVISION="9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda"
@@ -51,7 +52,7 @@ export MODEL_DIR
 python -c 'from huggingface_hub import snapshot_download; import os; snapshot_download(repo_id="Qwen/Qwen3-VL-Embedding-2B", revision="9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda", local_dir=os.environ["MODEL_DIR"])'
 /usr/bin/time -v python scripts/encode_qwen3_vl_pages.py \
   --records "${PAGE_RECORDS}" \
-  --benchmark benchmarks/multimodal_page_retrieval_q4_2024.jsonl \
+  --benchmark "${BENCHMARK_PATH}" \
   --image-dir "${PAGE_IMAGE_DIR}" \
   --qwen-repo "${QWEN_ROOT}" \
   --model "${MODEL_DIR}" \
@@ -61,7 +62,7 @@ python -c 'from huggingface_hub import snapshot_download; import os; snapshot_do
   --batch-size 1
 python scripts/evaluate_multimodal_retrieval.py \
   --records "${PAGE_RECORDS}" \
-  --benchmark benchmarks/multimodal_page_retrieval_q4_2024.jsonl \
+  --benchmark "${BENCHMARK_PATH}" \
   --embedding-dir "${OUTPUT_DIR}" \
   --output "${OUTPUT_DIR}/evaluation.json"
 if [[ "${EMIT_RESULT_BASE64:-0}" == "1" ]]; then

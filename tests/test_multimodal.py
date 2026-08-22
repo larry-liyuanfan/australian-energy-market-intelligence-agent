@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -166,3 +167,21 @@ def test_metadata_tie_breakers_cannot_override_both_retrieval_channels() -> None
     assert hits[0]["chunk_id"] == "joint-first"
     assert hits[1]["component_scores"]["numeric_coverage"] == 1.0
     assert hits[1]["component_scores"]["modality_match"] == 1.0
+
+
+def test_pdf_transport_benchmark_is_source_disjoint_from_fusion_development() -> None:
+    repository = Path(__file__).parents[1]
+
+    def rows(name: str) -> list[dict[str, object]]:
+        path = repository / "benchmarks" / name
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+    development = rows("multimodal_page_retrieval_q4_2024.jsonl")
+    transport = rows("multimodal_page_retrieval_q1_2025_transport.jsonl")
+    development_pages = {page for row in development for page in row["expected_page_ids"]}  # type: ignore[union-attr]
+    transport_pages = {page for row in transport for page in row["expected_page_ids"]}  # type: ignore[union-attr]
+
+    assert len(transport) == 14
+    assert not development_pages & transport_pages
+    assert all(str(page).startswith("aemo-qed-q4-2024-") for page in development_pages)
+    assert all(str(page).startswith("aemo-qed-q1-2025-") for page in transport_pages)
