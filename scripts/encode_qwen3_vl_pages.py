@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib
+import io
 import json
 import sys
 import time
@@ -21,6 +22,14 @@ def sha256(path: Path) -> str:
 
 def batched(values: list[dict[str, Any]], size: int) -> list[list[dict[str, Any]]]:
     return [values[start : start + size] for start in range(0, len(values), size)]
+
+
+def save_numpy(path: Path, values: np.ndarray) -> None:
+    """Avoid NumPy ``tofile`` semantics, which are unreliable on some GPFS mounts."""
+
+    buffer = io.BytesIO()
+    np.save(buffer, values, allow_pickle=False)
+    path.write_bytes(buffer.getvalue())
 
 
 def main() -> None:
@@ -103,8 +112,8 @@ def main() -> None:
     args.output.mkdir(parents=True, exist_ok=True)
     page_path = args.output / "page_embeddings.npy"
     query_path = args.output / "query_embeddings.npy"
-    np.save(page_path, page_embeddings, allow_pickle=False)
-    np.save(query_path, query_embeddings, allow_pickle=False)
+    save_numpy(page_path, page_embeddings)
+    save_numpy(query_path, query_embeddings)
     ids = {
         "page_ids": [page.page_id for page in pages],
         "query_ids": [str(row["query_id"]) for row in benchmark],
