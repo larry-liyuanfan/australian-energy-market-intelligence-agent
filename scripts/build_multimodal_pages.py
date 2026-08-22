@@ -43,12 +43,14 @@ def main() -> None:
     image_dir.mkdir(exist_ok=True)
     pages: list[PageRecord] = []
     diagnostics: list[dict[str, Any]] = []
-    document: Any = pymupdf.open(stream=payload, filetype="pdf")  # type: ignore[no-untyped-call]
+    open_pdf: Any = pymupdf.open
+    matrix_factory: Any = pymupdf.Matrix
+    document: Any = open_pdf(stream=payload, filetype="pdf")
     zoom = args.dpi / 72
     for page_index in range(len(document)):
         page: Any = document[page_index]
         page_number = page_index + 1
-        matrix: Any = pymupdf.Matrix(zoom, zoom)  # type: ignore[no-untyped-call]
+        matrix: Any = matrix_factory(zoom, zoom)
         pixmap = page.get_pixmap(matrix=matrix, alpha=False)
         image_bytes = pixmap.tobytes("png")
         asset_sha256 = hashlib.sha256(image_bytes).hexdigest()
