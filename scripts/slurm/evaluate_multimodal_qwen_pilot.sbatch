@@ -17,7 +17,6 @@ set -euo pipefail
 : "${PAGE_RECORDS:?Set private page records}"
 : "${PAGE_IMAGE_DIR:?Set private page image directory}"
 : "${OUTPUT_DIR:?Set new output directory}"
-: "${MODEL_DIR:?Set immutable model snapshot directory}"
 QWEN_CODE_REVISION="393e2978d27852b0d0230d6994f37f9c15bed73c"
 MODEL_REVISION="9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda"
 MODEL_ID="Qwen/Qwen3-VL-Embedding-2B"
@@ -26,6 +25,7 @@ TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CODE_ROOT="${TASK_SCRATCH}/energy-mm-${SLURM_JOB_ID:?}"
 QWEN_ROOT="${TASK_SCRATCH}/qwen3-vl-embedding-${SLURM_JOB_ID}"
 VENV="${TASK_SCRATCH}/energy-mm-venv-${SLURM_JOB_ID}"
+MODEL_DIR="${TASK_SCRATCH}/Qwen3-VL-Embedding-2B-${MODEL_REVISION}"
 git clone --shared --no-checkout "${REPO_DIR}" "${CODE_ROOT}"
 git -C "${CODE_ROOT}" checkout --detach "${ENERGY_GIT_COMMIT}"
 git clone --filter=blob:none https://github.com/QwenLM/Qwen3-VL-Embedding.git "${QWEN_ROOT}"
@@ -37,13 +37,12 @@ module load GCCcore/11.3.0 Python/3.11.3
 python -m venv "${VENV}"
 source "${VENV}/bin/activate"
 export PIP_NO_CACHE_DIR=1
-export HF_HOME="/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/model-cache/qwen3-vl"
+export HF_HOME="${TASK_SCRATCH}/qwen3-vl-hf-${SLURM_JOB_ID}"
 export HF_HUB_CACHE="${HF_HOME}/hub"
 export HF_HUB_DISABLE_TELEMETRY=1
 python -m pip install --no-input --retries 5 --upgrade 'pip>=25.1,<26'
 python -m pip install --no-input --retries 5 -e '.[multimodal,ml]'
 python -m pip install --no-input --retries 5 -e "${QWEN_ROOT}"
-python -m pip install --no-input --retries 5 'huggingface-hub>=0.35,<1'
 mkdir -p "${HF_HOME}" "${MODEL_DIR}" "${OUTPUT_DIR}"
 export MODEL_DIR
 python -c 'from huggingface_hub import snapshot_download; import os; snapshot_download(repo_id="Qwen/Qwen3-VL-Embedding-2B", revision="9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda", local_dir=os.environ["MODEL_DIR"])'
