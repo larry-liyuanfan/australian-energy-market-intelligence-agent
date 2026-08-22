@@ -60,7 +60,11 @@ class ToolRegistry:
             return ToolResult(tool_name=name, data=data, evidence=self.store.evidence)
         if name == "search_official_evidence":
             if self.evidence_index is not None:
-                hits = self.evidence_index.search(args.query, args.top_k)
+                multimodal_search = getattr(self.evidence_index, "search_multimodal", None)
+                if args.retrieval_mode == "multimodal_fusion" and callable(multimodal_search):
+                    hits = multimodal_search(args.query, args.top_k, args.preferred_modality)
+                else:
+                    hits = self.evidence_index.search(args.query, args.top_k)
                 evidence = [
                     Evidence(
                         evidence_id=hit["chunk_id"],
@@ -72,12 +76,25 @@ class ToolRegistry:
                         snippet=hit["text"][:500],
                         evidence_type="explanatory",
                         score=hit["score"],
+                        modality=hit.get("modality", "text"),
+                        source_page=hit.get("page_number"),
+                        asset_id=hit.get("asset_id"),
+                        asset_sha256=hit.get("asset_sha256"),
+                        retrieval_scores={
+                            key: float(value)
+                            for key, value in hit.get("component_scores", {}).items()
+                        },
                     )
                     for hit in hits
                 ]
                 return ToolResult(
                     tool_name=name,
-                    data={"retrieval": self.evidence_index.backend, "hits": len(evidence)},
+                    data={
+                        "retrieval": self.evidence_index.backend,
+                        "hits": len(evidence),
+                        "modalities": sorted({item.modality for item in evidence}),
+                        "preferred_modality": args.preferred_modality,
+                    },
                     evidence=evidence,
                 )
             query = args.query.lower()

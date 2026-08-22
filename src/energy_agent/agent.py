@@ -77,7 +77,27 @@ class EnergyAgent:
             calls.append(("forecast_price_risk", {"region": region.value, "window": window, "horizon_intervals": 12}))
         if "event" in text or "spike" in text or "异常" in text:
             calls.append(("detect_price_events", {"region": region.value, "window": window}))
-        calls.append(("search_official_evidence", {"query": request.question, "top_k": 5}))
+        chart_terms = ("chart", "figure", "plot", "graph", "trend line", "图表", "图中", "曲线")
+        table_terms = ("table", "tabular", "表格", "表中")
+        preferred_modality = (
+            "chart"
+            if any(term in text for term in chart_terms)
+            else "table"
+            if any(term in text for term in table_terms)
+            else "auto"
+        )
+        retrieval_mode = "multimodal_fusion" if preferred_modality != "auto" else "hybrid_rerank"
+        calls.append(
+            (
+                "search_official_evidence",
+                {
+                    "query": request.question,
+                    "top_k": 5,
+                    "preferred_modality": preferred_modality,
+                    "retrieval_mode": retrieval_mode,
+                },
+            )
+        )
         return calls[: request.max_tool_calls]
 
     @staticmethod
@@ -116,6 +136,32 @@ class EnergyAgent:
         evidence_ids = [evidence.evidence_id for evidence in result.evidence[:2]]
         citations = " ".join(f"[@{evidence_id}]" for evidence_id in evidence_ids)
         return f"- {summary} {citations}".rstrip()
+
+    @staticmethod
+    def _recovery_call(
+        name: str, arguments: dict[str, object]
+    ) -> tuple[dict[str, object], Literal[
+        "retry_with_backoff",
+        "visual_to_text_fallback",
+        "text_to_visual_escalation",
+    ]]:
+        """Choose a bounded alternate channel for evidence failures.
+
+        Market calculations are retried unchanged after transient failures. Evidence
+        search instead changes modality once: visual failures fall back to the cheap
+        text index, while empty text retrieval escalates to the visual page index.
+        """
+
+        recovered = dict(arguments)
+        if name != "search_official_evidence":
+            return recovered, "retry_with_backoff"
+        if recovered.get("retrieval_mode") == "multimodal_fusion":
+            recovered["retrieval_mode"] = "hybrid_rerank"
+            recovered["preferred_modality"] = "text"
+            return recovered, "visual_to_text_fallback"
+        recovered["retrieval_mode"] = "multimodal_fusion"
+        recovered["preferred_modality"] = "auto"
+        return recovered, "text_to_visual_escalation"
 
     def run(self, request: AgentQueryRequest) -> AgentQueryResponse:
         trace_id = str(uuid.uuid4())
@@ -179,47 +225,56 @@ class EnergyAgent:
             # A transient timeout needs a longer bounded recovery window; retrying
             # with the identical deadline deterministically reproduces the fault.
             retry_timeout = min(30.0, max(0.25, self.timeout_seconds * 10))
+            recovery_arguments, recovery_strategy = self._recovery_call(name, arguments)
             try:
                 with ThreadPoolExecutor(max_workers=1) as pool:
-                    result = pool.submit(self.registry.execute, name, arguments).result(timeout=retry_timeout)
+                    result = pool.submit(self.registry.execute, name, recovery_arguments).result(timeout=retry_timeout)
                 if result.data or result.evidence:
                     results.append(result)
                     records.append(
                         ToolCall(
                             name=name,
-                            arguments=arguments,
+                            arguments=recovery_arguments,
                             duration_ms=(time.perf_counter() - started) * 1000,
                             recovered=True,
+                            attempt=2,
+                            recovery_strategy=recovery_strategy,
                         )
                     )
                 else:
                     records.append(
                         ToolCall(
                             name=name,
-                            arguments=arguments,
+                            arguments=recovery_arguments,
                             status="error",
                             duration_ms=(time.perf_counter() - started) * 1000,
                             recovered=True,
+                            attempt=2,
+                            recovery_strategy=recovery_strategy,
                         )
                     )
             except TimeoutError:
                 records.append(
                     ToolCall(
                         name=name,
-                        arguments=arguments,
+                        arguments=recovery_arguments,
                         status="timeout",
                         duration_ms=(time.perf_counter() - started) * 1000,
                         recovered=True,
+                        attempt=2,
+                        recovery_strategy=recovery_strategy,
                     )
                 )
             except Exception:
                 records.append(
                     ToolCall(
                         name=name,
-                        arguments=arguments,
+                        arguments=recovery_arguments,
                         status="error",
                         duration_ms=(time.perf_counter() - started) * 1000,
                         recovered=True,
+                        attempt=2,
+                        recovery_strategy=recovery_strategy,
                     )
                 )
         citations = [ev for result in results for ev in result.evidence]
@@ -245,10 +300,32 @@ class EnergyAgent:
             tool_calls=records,
             data_version=self.registry.store.data_version,
         )
-        self._store_trace(trace_id, {
-            "trace_id": trace_id,
-            "states": ["normalize", "plan", "execute", "verify", "synthesize", "done"],
-            "verified_results": [result.model_dump(mode="json") for result in results],
-            "response": response.model_dump(mode="json"),
-        })
+        self._store_trace(
+            trace_id,
+            {
+                "trace_id": trace_id,
+                "states": ["normalize", "plan", "execute", "recover", "verify", "synthesize", "done"],
+                "progress_ledger": {
+                    "planned_tools": sorted(required_tools),
+                    "successful_tools": sorted(successful_tools),
+                    "missing_tools": sorted(required_tools - successful_tools),
+                    "unique_call_signatures": len(seen),
+                    "skipped_duplicate_calls": sum(record.status == "skipped" for record in records),
+                    "recovery_attempts": sum(record.recovered for record in records),
+                    "recovery_strategies": [
+                        record.recovery_strategy for record in records if record.recovery_strategy != "none"
+                    ],
+                    "stalled": bool(required_tools - successful_tools),
+                },
+                "verification": {
+                    "citation_count": len(citations),
+                    "all_citation_hashes_well_formed": all(
+                        len(evidence.sha256) == 64 for evidence in citations
+                    ),
+                    "required_tools_satisfied": required_tools.issubset(successful_tools),
+                },
+                "verified_results": [result.model_dump(mode="json") for result in results],
+                "response": response.model_dump(mode="json"),
+            },
+        )
         return response

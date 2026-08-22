@@ -25,6 +25,10 @@ class OfficialChunk:
     retrieved_at: str
     sha256: str
     evidence_type: str = "explanatory"
+    modality: str = "text"
+    page_number: int | None = None
+    asset_id: str | None = None
+    asset_sha256: str | None = None
 
 
 class EvidenceIndex(Protocol):
@@ -214,6 +218,10 @@ class ElasticsearchHybridEvidenceIndex:
                         "retrieved_at": {"type": "keyword", "index": False},
                         "sha256": {"type": "keyword"},
                         "evidence_type": {"type": "keyword"},
+                        "modality": {"type": "keyword"},
+                        "page_number": {"type": "integer"},
+                        "asset_id": {"type": "keyword", "index": False},
+                        "asset_sha256": {"type": "keyword"},
                     },
                 },
             )

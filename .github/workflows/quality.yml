@@ -19,7 +19,7 @@ jobs:
           python-version: "3.13"
           cache: pip
       - name: Install project and quality tools
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[test,ml,search,redis]"
+        run: python -m pip install --upgrade pip && python -m pip install -e ".[test,ml,search,redis,workbook]"
       - name: Unit and contract tests
         # `python -m` keeps the checked-out repository root on sys.path so the
         # audited one-off pipeline modules under scripts/ are importable on

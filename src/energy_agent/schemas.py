@@ -60,6 +60,8 @@ class SearchOfficialEvidenceInput(StrictModel):
     query: str = Field(min_length=3, max_length=500)
     published_after: datetime | None = None
     top_k: int = Field(default=5, ge=1, le=20)
+    preferred_modality: Literal["auto", "text", "visual", "chart", "table"] = "auto"
+    retrieval_mode: Literal["hybrid_rerank", "multimodal_fusion"] = "hybrid_rerank"
 
 
 class ForecastPriceRiskInput(MarketFilter):
@@ -117,6 +119,11 @@ class Evidence(StrictModel):
     snippet: str
     evidence_type: Literal["numeric", "explanatory"]
     score: float = 0
+    modality: Literal["text", "page_image", "chart", "table", "mixed"] = "text"
+    source_page: int | None = Field(default=None, ge=1)
+    asset_id: str | None = None
+    asset_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    retrieval_scores: dict[str, float] = Field(default_factory=dict)
 
 
 class ToolResult(StrictModel):
@@ -132,6 +139,13 @@ class ToolCall(StrictModel):
     status: Literal["ok", "error", "timeout", "skipped"] = "ok"
     duration_ms: float = 0
     recovered: bool = False
+    attempt: int = Field(default=1, ge=1, le=2)
+    recovery_strategy: Literal[
+        "none",
+        "retry_with_backoff",
+        "visual_to_text_fallback",
+        "text_to_visual_escalation",
+    ] = "none"
 
 
 class AgentQueryRequest(StrictModel):

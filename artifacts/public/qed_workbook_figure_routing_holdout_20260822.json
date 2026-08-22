@@ -1,0 +1,42 @@
+{
+  "status": "verified_source_disjoint_author_curated_holdout",
+  "created_at": "2026-08-22T06:35:09.851149+00:00",
+  "source": {
+    "source_id": "aemo-qed-q1-2026",
+    "published_at": "2026-04-30",
+    "workbook_sha256": "5cf0678bddbabfea04ed0ba0b9925b1d299f6eb6a24fd041829f741f27f20176",
+    "workbook_bytes": 6791942,
+    "figures": 130,
+    "figures_with_images": 130,
+    "image_objects": 132,
+    "preview_cells": 9196
+  },
+  "benchmark": {
+    "queries": 20,
+    "text_chunk_baseline": {
+      "mrr": 0.7308333333333333,
+      "recall_at_5": 1.0
+    },
+    "workbook_figure_router": {
+      "mrr": 0.9666666666666667,
+      "recall_at_5": 1.0
+    },
+    "paired_mrr_delta": 0.23583333333333334,
+    "paired_bootstrap_mrr_delta_95": [
+      0.075,
+      0.39333333333333337
+    ],
+    "promotion_pass": true
+  },
+  "provenance": {
+    "frozen_feature_sha": "f8035ddc16df1741591647d94b9e603aa6dc4d83",
+    "execution_sha": "0096f16afd9ad80c78d531f7a5402cf5f326c0a9",
+    "benchmark_sha256": "8642f7b1f04d3e4fa28f8b39cf11ee097db0d1c7d99bba05658dec3a7f5fcd77",
+    "text_evidence_sha256": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "figure_manifest_sha256": "f7fa3310ff772fedd8c8fbc7d1420ab1763ea2413484cc10dce2882d1eebd205",
+    "predictions_sha256": "99aef40fd08ee96395baa132fe38dbbeb9c497b80c244dd7a56130c60f90a18d",
+    "metrics_sha256": "141d0308218cb08522532e8671627d848dba63c0cb231dc7f3fbeb36fc0e107c",
+    "private_artifact_dir": "energy-artifacts/multimodal/q1-2026-workbook-holdout-0096f16"
+  },
+  "boundary": "Routing features were frozen before the Q1 2026 workbook and its labels were opened. The same author curated the 20 labels, so this is source-disjoint but not human-blind or independent. Image hashes and underlying source cells establish chart provenance; no VLM, OCR or answer-correctness claim is made."
+}
