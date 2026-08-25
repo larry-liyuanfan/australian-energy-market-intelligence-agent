@@ -51,6 +51,10 @@ class ForecastSnapshotStore:
     def get(self, region: Region, start: datetime, end: datetime) -> ForecastSnapshot | None:
         return self._snapshots.get((region, start.isoformat(), end.isoformat()))
 
+    @property
+    def count(self) -> int:
+        return len(self._snapshots)
+
 
 def load_forecast_snapshots(
     path: Path, *, expected_data_sha256: str | None = None

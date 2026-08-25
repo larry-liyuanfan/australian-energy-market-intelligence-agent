@@ -135,6 +135,7 @@ def health() -> dict[str, object]:
         "text_evidence_chunks": len(text_evidence_index.documents) if text_evidence_index else 0,
         "figure_evidence_records": len(figure_index.documents) if figure_index else 0,
         "page_evidence_records": len(page_index.documents) if page_index else 0,
+        "forecast_snapshots": forecast_snapshots.count,
         "model_provider": planner_provider.name if planner_provider else "deterministic",
         "trace_cache": dict(zip(("entries", "capacity", "evictions"), agent.trace_stats(), strict=True)),
     }
