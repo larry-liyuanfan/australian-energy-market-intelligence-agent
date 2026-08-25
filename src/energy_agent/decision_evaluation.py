@@ -115,12 +115,20 @@ def bess_golden_checks(response: AgentQueryResponse) -> dict[str, bool]:
         and dispatch.get("margin_basis") == "historical_actual_settlement_after_as_of_schedule"
         and dispatch.get("realized_margin_aud") is not None
     )
+    snapshot_alignment = (
+        response.forecast.get("forecast_source") == "offline_snapshot"
+        and dispatch.get("forecast_source") == "offline_snapshot"
+        and response.forecast.get("forecast_snapshot_id") == dispatch.get("forecast_snapshot_id")
+        and response.forecast.get("data_sha256") == dispatch.get("forecast_data_sha256")
+        and response.forecast.get("model_sha256") == dispatch.get("forecast_model_sha256")
+    )
     return {
         "aligned": aligned,
         "no_simultaneous_charge_discharge": no_simultaneous,
         "soc_bounds": bounds,
         "terminal_soc": terminal,
         "settlement_basis": settlement,
+        "forecast_snapshot_alignment": snapshot_alignment,
     }
 
 

@@ -20,9 +20,9 @@ def test_exact_offline_snapshot_precedes_seasonal_fallback() -> None:
         data_sha256="a" * 64,
         model_sha256="b" * 64,
         model_name="lightgbm_quantile_v1",
-        point=[1.0] * 288,
-        lower=[0.0] * 288,
-        upper=[2.0] * 288,
+        point=[-100.0] * 144 + [1000.0] * 144,
+        lower=[-110.0] * 144 + [990.0] * 144,
+        upper=[-90.0] * 144 + [1010.0] * 144,
     )
     registry = ToolRegistry(fixture_store(), forecast_snapshots=ForecastSnapshotStore([snapshot]))
     result = registry.execute(
@@ -34,8 +34,22 @@ def test_exact_offline_snapshot_precedes_seasonal_fallback() -> None:
         },
     )
     assert result.data["forecast_source"] == "offline_snapshot"
+    assert result.data["forecast_snapshot_id"] == snapshot.snapshot_id
     assert result.data["method"] == "lightgbm_quantile_v1"
-    assert result.data["point"] == [1.0] * 12
+    assert result.data["point"] == [-100.0] * 12
+
+    dispatch = registry.execute(
+        "optimize_battery_dispatch",
+        {
+            "region": "SA1",
+            "window": {"start": start.isoformat(), "end": end.isoformat()},
+            "settlement_mode": "historical_replay",
+        },
+    )
+    assert dispatch.data["forecast_source"] == "offline_snapshot"
+    assert dispatch.data["forecast_snapshot_id"] == snapshot.snapshot_id
+    assert dispatch.data["forecast_data_sha256"] == result.data["data_sha256"]
+    assert dispatch.data["forecast_model_sha256"] == result.data["model_sha256"]
 
 
 def test_snapshot_rejects_future_training_cutoff() -> None:

@@ -183,6 +183,7 @@ class ToolRegistry:
                     "upper": snapshot.upper[: args.horizon_intervals],
                     "method": snapshot.model_name,
                     "forecast_source": "offline_snapshot",
+                    "forecast_snapshot_id": snapshot.snapshot_id,
                     "training_cutoff": snapshot.training_cutoff.isoformat(),
                     "data_sha256": snapshot.data_sha256,
                     "model_sha256": snapshot.model_sha256,

@@ -23,4 +23,6 @@ def test_bess_golden_checks_cover_physics_and_settlement() -> None:
     response = EnergyAgent(ToolRegistry(fixture_store())).run(
         AgentQueryRequest(question="Replay BESS dispatch for SA1 on 2025-01-03", max_tool_calls=8)
     )
-    assert all(bess_golden_checks(response).values())
+    checks = bess_golden_checks(response)
+    assert all(value for name, value in checks.items() if name != "forecast_snapshot_alignment")
+    assert checks["forecast_snapshot_alignment"] is False

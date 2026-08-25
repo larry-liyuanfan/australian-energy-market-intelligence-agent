@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import os
 import re
 import threading
 import time
 import uuid
 from collections import OrderedDict
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError
 from datetime import UTC, datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Literal
 
@@ -258,14 +259,31 @@ class EnergyAgent:
                 return
             case.states.append(state)
             failed: list[tuple[str, dict[str, object]]] = []
-            with ThreadPoolExecutor(max_workers=min(4, len(calls))) as pool:
+            # SciPy/HiGHS has an upstream Windows access-violation history when
+            # native solves run in short-lived Python worker threads.  The
+            # production Linux path retains hard timeouts; Windows clean-room
+            # runs serialize the one native MILP call on the caller thread.
+            windows_native_dispatch = (
+                os.name == "nt" and len(calls) == 1 and calls[0][0] == "optimize_battery_dispatch"
+            )
+            pool: ThreadPoolExecutor | None = None
+            pending: list[tuple[str, dict[str, object], float, Future[ToolResult] | None]]
+            if windows_native_dispatch:
+                pending = [(calls[0][0], calls[0][1], time.perf_counter(), None)]
+            else:
+                pool = ThreadPoolExecutor(max_workers=min(4, len(calls)))
                 pending = [
                     (name, arguments, time.perf_counter(), pool.submit(self.registry.execute, name, arguments))
                     for name, arguments in calls
                 ]
+            try:
                 for name, arguments, started, future in pending:
                     try:
-                        result = future.result(timeout=self.timeout_seconds)
+                        if windows_native_dispatch:
+                            result = self.registry.execute(name, arguments)
+                        else:
+                            assert future is not None
+                            result = future.result(timeout=self.timeout_seconds)
                         if result.data or result.evidence:
                             results.append(result)
                             records.append(
@@ -305,6 +323,10 @@ class EnergyAgent:
                                 duration_ms=(time.perf_counter() - started) * 1000,
                             )
                         )
+            finally:
+                if not windows_native_dispatch:
+                    assert pool is not None
+                    pool.shutdown(wait=True)
             for name, arguments in failed:
                 started = time.perf_counter()
                 retry_timeout = min(30.0, max(0.25, self.timeout_seconds * 10))

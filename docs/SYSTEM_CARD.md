@@ -31,6 +31,9 @@
 - Empty visual evidence gets one text fallback; empty text evidence may get one figure/page escalation.
 - Missing required tools produce `insufficient_evidence`.
 - Citation hashes and the economic boundary are explicit verification fields.
+- Linux service and Slurm runs keep per-tool thread timeouts. Windows clean-room
+  runs serialize the native SciPy/HiGHS MILP call on the caller thread because
+  upstream Windows builds have shown access violations in short-lived worker threads.
 
 ## Known limitations
 
