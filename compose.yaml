@@ -8,6 +8,9 @@ services:
       ENERGY_DATA_PATH: /data/dispatch_features_repaired.csv.gz
       ENERGY_DATA_MANIFEST: /data/final_manifest.json
       ENERGY_EVIDENCE_PATH: /data/evidence_documents.jsonl
+      ENERGY_FIGURE_EVIDENCE_PATH: /data/figure_evidence.jsonl
+      ENERGY_PAGE_EVIDENCE_PATH: /data/page_records.jsonl
+      ENERGY_FORECAST_SNAPSHOTS_PATH: /data/forecast_snapshots.jsonl
       ENERGY_REDIS_URL: redis://redis:6379/0
       ENERGY_ELASTICSEARCH_URL: http://elasticsearch:9200
       ENERGY_TRACE_CACHE_SIZE: "128"

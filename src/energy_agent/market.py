@@ -63,7 +63,7 @@ def fixture_store() -> MarketStore:
     start = datetime(2025, 1, 1, tzinfo=UTC)
     rows: list[MarketRow] = []
     for r_idx, region in enumerate(Region):
-        for i in range(576):
+        for i in range(864):
             price = 55 + 25 * __import__("math").sin(2 * __import__("math").pi * i / 288) + r_idx * 4
             if i in {140, 141} and region == Region.SA1:
                 price = 6000 + 500 * (i - 140)

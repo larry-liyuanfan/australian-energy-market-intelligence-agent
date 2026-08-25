@@ -286,7 +286,7 @@ def test_health_is_degraded_when_configured_dependency_is_unavailable(monkeypatc
 
 def test_agent_recovers_from_transient_timeout_with_bounded_backoff() -> None:
     response = EnergyAgent(TransientSlowRegistry(), timeout_seconds=0.01).run(
-        AgentQueryRequest(question="Detect SA1 price events 2025-01-01")
+        AgentQueryRequest(question="Detect SA1 price events 2025-01-02")
     )
     assert response.status == "completed"
     assert any(call.recovered and call.status == "ok" for call in response.tool_calls)
