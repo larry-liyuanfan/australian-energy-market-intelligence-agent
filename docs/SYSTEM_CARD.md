@@ -39,5 +39,5 @@
 
 - Current report relevance labels are small and author-curated.
 - Model Studio live planning and provider cost require credentials and a separate evaluation.
-- The published SG evidence proves a text-index deployment; the composite figure/snapshot release needs a new deployment artifact.
+- The promoted SG loopback release serves the 905-chunk text index, 130 private-mounted workbook figures and 15 hash-aligned forecast snapshots; optional PDF/Qwen page reranking remains offline.
 - Historical market operating proxies exclude material costs and market products described in the README boundary.

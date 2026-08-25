@@ -10,6 +10,7 @@ This catalogue preserves negative and superseded results without allowing them t
 | `qed_workbook_figure_routing_holdout_20260822.json` | Source-disjoint workbook figure routing |
 | `passage_holdout_q2_2025_20260821.json` | Frozen-feature text passage transport |
 | `sg_evidence_905_deployment_20260821.json` | Versioned 905-chunk SG text deployment |
+| `decision_replay_gate_20260825.json` | Unified 60 real-window + 20 fault gate and composite SG loopback deployment |
 | `production_observability_20260820.json` | Service/metrics evidence |
 | `trace_retention_alerting_20260820.json` | Trace capacity and alert-rule evidence |
 | `degradation_sensitivity_20260820.json` | User-supplied discharged-energy-cost sensitivity |

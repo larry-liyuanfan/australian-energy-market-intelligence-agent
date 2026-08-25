@@ -8,7 +8,7 @@ It is not a live trading, automatic bidding or investment-return system.
 
 ## One flagship question
 
-> What happened in SA1 on 15 December 2025, what official evidence supports the explanation, and how would a 1 MW / 2 MWh BESS have dispatched using only information available beforehand?
+> What happened in SA1 on 15 December 2025, what official report and chart evidence supports the explanation, and how would a 1 MW / 2 MWh BESS have dispatched using only information available beforehand?
 
 The answer separates five things that are often blurred in portfolio projects:
 
@@ -55,7 +55,7 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 
 1. **Decision-aware release gate.** In the corrected two-year evaluation, LightGBM won MAE in only **15/40** region-season folds but its forecast-driven BESS schedule beat the threshold rule in **39/40** folds. This is why model promotion uses realised decision value as well as prediction error.
 2. **Bounded historical value.** At a fixed user-supplied 50 AUD/MWh discharged-energy cost, the five-region historical operating proxy averaged **AUD 84,792 versus 23,279/MW-year** for the threshold rule. The paired-fold mean-delta interval was AUD 3,079.62–6,912.10. These are five separate hypothetical batteries and not investment returns.
-3. **Real infrastructure.** The isolated Alibaba Cloud Singapore stack runs FastAPI, Elasticsearch, Redis and Prometheus with CPU/RAM limits and loopback bindings. The verified text deployment held **905/905** chunks and completed a 100-request loopback gate at P95 1.306 s. Figure/snapshot deployment must be revalidated before it is described as promoted infrastructure.
+3. **Unified Agent gate and deployment.** Exact-commit Spartan evaluation passed **60/60 real-window cases and 20/20 fault cases**; tool, citation, figure and BESS golden rates were 100%, with P95 512 ms. The loopback-only Alibaba Cloud Singapore stack then loaded 905 text chunks, 130 workbook figures and 15 versioned forecast snapshots and passed **100/100** HTTP/trace/figure/snapshot/settlement checks at P95 789 ms.
 
 ## Local demo
 
@@ -81,7 +81,7 @@ The API remains stable: `POST /api/agent/query`, `GET /api/agent/traces/{trace_i
 .venv\Scripts\python -m mypy src scripts
 ```
 
-The unified evaluation declares **60 real-window decision tasks**—15 each for event diagnosis, region comparison, figure grounding and BESS replay—plus **20 separately scored fault tasks**. The release gate requires schema and BESS golden checks, citation provenance, figure grounding, tool/task success, fault handling and sub-2-second deterministic/figure P95. Real data, report-derived records and row-level predictions stay outside GitHub; the runner emits compact metrics and exact-hash manifests.
+The unified evaluation declares **60 real-window decision tasks**—15 each for event diagnosis, region comparison, figure grounding and BESS replay—plus **20 separately scored fault tasks**. All 80 passed on the final 905-chunk exact-commit run; schema and BESS golden checks, citation provenance, figure grounding, tool/task success and fault handling were 100%, at P95 512 ms. Real data, report-derived records and row-level predictions stay outside GitHub; the compact [public gate](artifacts/public/decision_replay_gate_20260825.json) retains metrics, job IDs and exact hashes.
 
 Heavy backfills and evaluation run on Spartan through short preflight/test-only jobs and exact-commit Slurm execution. The SG service consumes only versioned published artifacts; it does not train LightGBM or run a 2B visual encoder inside an API request.
 

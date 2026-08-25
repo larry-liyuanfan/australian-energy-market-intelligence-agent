@@ -466,10 +466,12 @@ class EnergyAgent:
             "economic_boundary_present": bool(economic_boundary) if case.dispatch else True,
         }
         if case.historical_settlement:
+            planned_margin = float(case.dispatch.get("planned_margin_aud", 0.0))
+            realised_margin = float(case.dispatch.get("realized_margin_aud", 0.0))
             decision_summary = (
                 f"Historical decision replay completed for {case.region.value}: "
-                f"planned margin {case.dispatch.get('planned_margin_aud')}, realised margin "
-                f"{case.dispatch.get('realized_margin_aud')} AUD under the declared operating-proxy boundary."
+                f"planned margin {planned_margin:.2f}, realised margin "
+                f"{realised_margin:.2f} AUD under the declared operating-proxy boundary."
             )
         else:
             decision_summary = f"{case.workflow_type.replace('_', ' ').title()} completed with {len(results)} verified tool outputs."

@@ -2,7 +2,7 @@
 
 ## Decision question
 
-For a completed SA1 market day, explain observed price events, retrieve the most relevant AEMO text or figure, create a forecast using only earlier information, schedule a standard battery, and report how that fixed schedule would have settled historically.
+For 15 December 2025 in SA1, explain observed price events, retrieve the most relevant AEMO report and chart evidence, create a forecast using only earlier information, schedule a standard battery, and report how that fixed schedule would have settled historically.
 
 The intended user is an energy analyst or BESS strategy engineer reviewing a past operating decision. The output is not an instruction for a live asset.
 
