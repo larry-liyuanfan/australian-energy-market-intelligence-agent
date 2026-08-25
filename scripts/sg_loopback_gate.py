@@ -6,7 +6,7 @@ import math
 import time
 import urllib.request
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 CASES = (
     ("event", "Detect and explain price events in SA1 on 2025-12-15"),
@@ -24,7 +24,7 @@ def request_json(url: str, payload: dict[str, object] | None = None) -> dict[str
         method="POST" if body else "GET",
     )
     with urllib.request.urlopen(request, timeout=20) as response:
-        return json.load(response)
+        return cast(dict[str, Any], json.load(response))
 
 
 def percentile(values: list[float], quantile: float) -> float:
