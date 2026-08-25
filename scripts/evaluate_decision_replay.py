@@ -39,7 +39,12 @@ class FaultRegistry(ToolRegistry):
             self.injected = True
             return ToolResult(tool_name=name)
         result = super().execute(name, arguments)
-        if self.fault == "citation_hash" and result.evidence and not self.injected:
+        if (
+            self.fault == "citation_hash"
+            and name == "search_official_evidence"
+            and result.evidence
+            and not self.injected
+        ):
             self.injected = True
             evidence = result.evidence[0].model_copy(update={"sha256": "invalid"})
             return result.model_copy(update={"evidence": [evidence, *result.evidence[1:]]})
