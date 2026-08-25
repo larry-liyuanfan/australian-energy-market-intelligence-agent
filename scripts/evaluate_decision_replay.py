@@ -76,7 +76,10 @@ def main() -> None:
     figure_index = FigureEvidenceIndex(load_figure_evidence_records(args.figures))
     evidence_index = CompositeEvidenceIndex(text_index, figure_index)
     snapshots = (
-        load_forecast_snapshots(args.forecast_snapshots)
+        load_forecast_snapshots(
+            args.forecast_snapshots,
+            expected_data_sha256=store.evidence[0].sha256 if store.evidence else None,
+        )
         if args.forecast_snapshots and args.forecast_snapshots.is_file()
         else ForecastSnapshotStore()
     )

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 from energy_agent.market import fixture_store
 from energy_agent.schemas import Region
-from energy_agent.snapshots import ForecastSnapshot, ForecastSnapshotStore
+from energy_agent.snapshots import ForecastSnapshot, ForecastSnapshotStore, load_forecast_snapshots
 from energy_agent.tools import ToolRegistry
 
 
@@ -72,3 +74,28 @@ def test_snapshot_rejects_future_training_cutoff() -> None:
         assert "as-of contract" in str(exc)
     else:  # pragma: no cover
         raise AssertionError("future training cutoff was accepted")
+
+
+def test_snapshot_file_rejects_market_data_hash_mismatch(tmp_path: Path) -> None:
+    start = datetime(2025, 1, 2, tzinfo=UTC)
+    row = {
+        "region": "SA1",
+        "start": start.isoformat(),
+        "end": (start + timedelta(days=1)).isoformat(),
+        "training_cutoff": start.isoformat(),
+        "created_at": start.isoformat(),
+        "data_sha256": "a" * 64,
+        "model_sha256": "b" * 64,
+        "model_name": "test",
+        "point": [1.0],
+        "lower": [0.0],
+        "upper": [2.0],
+    }
+    path = tmp_path / "snapshots.jsonl"
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    try:
+        load_forecast_snapshots(path, expected_data_sha256="c" * 64)
+    except ValueError as exc:
+        assert "data hash" in str(exc)
+    else:  # pragma: no cover
+        raise AssertionError("mismatched snapshot data hash was accepted")

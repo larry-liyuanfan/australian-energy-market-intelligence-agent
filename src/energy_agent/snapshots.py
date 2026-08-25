@@ -52,14 +52,15 @@ class ForecastSnapshotStore:
         return self._snapshots.get((region, start.isoformat(), end.isoformat()))
 
 
-def load_forecast_snapshots(path: Path) -> ForecastSnapshotStore:
+def load_forecast_snapshots(
+    path: Path, *, expected_data_sha256: str | None = None
+) -> ForecastSnapshotStore:
     snapshots: list[ForecastSnapshot] = []
     for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         row = json.loads(line)
-        snapshots.append(
-            ForecastSnapshot(
+        snapshot = ForecastSnapshot(
                 region=Region(row["region"]),
                 start=datetime.fromisoformat(row["start"]),
                 end=datetime.fromisoformat(row["end"]),
@@ -72,5 +73,7 @@ def load_forecast_snapshots(path: Path) -> ForecastSnapshotStore:
                 lower=[float(value) for value in row["lower"]],
                 upper=[float(value) for value in row["upper"]],
             )
-        )
+        if expected_data_sha256 is not None and snapshot.data_sha256 != expected_data_sha256:
+            raise ValueError("forecast snapshot data hash does not match the loaded market store")
+        snapshots.append(snapshot)
     return ForecastSnapshotStore(snapshots)

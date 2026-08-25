@@ -45,7 +45,10 @@ if page_evidence_path and Path(page_evidence_path).is_file():
 elif page_evidence_path:
     logger.warning("Page evidence file is unavailable; text/figure retrieval remains active")
 if forecast_snapshots_path and Path(forecast_snapshots_path).is_file():
-    forecast_snapshots = load_forecast_snapshots(Path(forecast_snapshots_path))
+    forecast_snapshots = load_forecast_snapshots(
+        Path(forecast_snapshots_path),
+        expected_data_sha256=store.evidence[0].sha256 if store.evidence else None,
+    )
 elif forecast_snapshots_path:
     logger.warning("Forecast snapshot file is unavailable; as-of seasonal fallback remains active")
 planner_provider = ModelStudioPlanner.from_environment()
