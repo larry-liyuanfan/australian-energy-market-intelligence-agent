@@ -26,7 +26,8 @@ from energy_agent.workbook_evidence import FigureEvidenceIndex, load_figure_evid
 
 class FaultRegistry(ToolRegistry):
     def __init__(self, base: ToolRegistry, fault: str) -> None:
-        super().__init__(base.store, base.evidence_index, base.forecast_snapshots)
+        snapshots = ForecastSnapshotStore() if fault == "stale_snapshot" else base.forecast_snapshots
+        super().__init__(base.store, base.evidence_index, snapshots)
         self.fault = fault
         self.injected = False
 
