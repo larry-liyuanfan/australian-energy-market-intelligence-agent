@@ -90,6 +90,7 @@ class BatterySpec(StrictModel):
 class OptimizeBatteryDispatchInput(MarketFilter):
     battery: BatterySpec = Field(default_factory=BatterySpec)
     objective: Literal["forecast", "perfect_foresight", "threshold_rule"] = "forecast"
+    settlement_mode: Literal["plan", "historical_replay"] = "plan"
     variable_degradation_cost_aud_per_mwh_discharged: float = Field(default=0.0, ge=0, le=10_000)
 
 
@@ -160,3 +161,41 @@ class AgentQueryResponse(StrictModel):
     citations: list[Evidence] = Field(default_factory=list)
     tool_calls: list[ToolCall] = Field(default_factory=list)
     data_version: str
+    workflow_type: Literal[
+        "decision_replay",
+        "event_diagnosis",
+        "region_comparison",
+        "forecast_risk",
+        "coverage",
+        "general_market_query",
+    ] = "general_market_query"
+    decision_summary: str = ""
+    market_context: dict[str, Any] = Field(default_factory=dict)
+    forecast: dict[str, Any] = Field(default_factory=dict)
+    dispatch: dict[str, Any] = Field(default_factory=dict)
+    historical_settlement: dict[str, Any] = Field(default_factory=dict)
+    verification: dict[str, Any] = Field(default_factory=dict)
+    limitations: list[str] = Field(default_factory=list)
+
+
+class DecisionCase(StrictModel):
+    """Versioned state carried through the historical decision-replay DAG."""
+
+    schema_version: Literal["decision-case-v1"] = "decision-case-v1"
+    workflow_type: Literal[
+        "decision_replay",
+        "event_diagnosis",
+        "region_comparison",
+        "forecast_risk",
+        "coverage",
+        "general_market_query",
+    ]
+    region: Region
+    window: Window
+    requested_regions: list[Region] = Field(default_factory=list)
+    states: list[str] = Field(default_factory=list)
+    market_context: dict[str, Any] = Field(default_factory=dict)
+    forecast: dict[str, Any] = Field(default_factory=dict)
+    dispatch: dict[str, Any] = Field(default_factory=dict)
+    historical_settlement: dict[str, Any] = Field(default_factory=dict)
+    limitations: list[str] = Field(default_factory=list)

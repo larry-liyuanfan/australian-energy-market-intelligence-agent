@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import io
+import json
 import re
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any, Literal
 
 from energy_agent.evidence import HybridEvidenceIndex, OfficialChunk
@@ -175,9 +177,15 @@ class FigureEvidenceIndex:
             [figure.to_official_chunk() for figure in figures],
             dense_dimensions=dense_dimensions,
         )
+        self.documents = self._index.documents
 
-    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
-        hits = self._index.search(query, top_k=top_k, mode="hybrid_rerank")
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
+    ) -> list[dict[str, Any]]:
+        hits = self._index.search(query, top_k=top_k, mode=mode)
         output: list[dict[str, Any]] = []
         for hit in hits:
             figure = self._by_chunk[str(hit["chunk_id"])]
@@ -207,3 +215,16 @@ class FigureEvidenceIndex:
     ) -> list[dict[str, Any]]:
         del preferred_modality
         return self.search(query, top_k)
+
+
+def load_figure_evidence_records(path: Path) -> list[FigureEvidence]:
+    """Load private, precompiled figure records without reopening source workbooks."""
+
+    figures: list[FigureEvidence] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        row["image_sha256"] = tuple(row.get("image_sha256", []))
+        figures.append(FigureEvidence(**row))
+    return figures

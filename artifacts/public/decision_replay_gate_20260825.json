@@ -1,0 +1,84 @@
+{
+  "schema_version": "decision-replay-public-gate-v1",
+  "created_at": "2026-08-25T07:57:34.573909+00:00",
+  "git_sha": "14e2e67c8f99f29af323f5d1940ad967346f9ab4",
+  "data_scope": {
+    "source": "AEMO NEMWeb DispatchIS",
+    "window": "2025-08-18 through 2026-08-17",
+    "regions": ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"],
+    "data_sha256": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "data_manifest_sha256": "4d18a4f86e3daa13b5b7144b9f0939cb5bf5eba46a8d3ddbd0c442e8065dcc19"
+  },
+  "forecast_snapshots": {
+    "count": 15,
+    "model_contract_sha256": "47e13c0b2a3ff4675e290125e17e557874ce46c40ddf04fe0a60331fe0a43818",
+    "snapshot_file_sha256": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d",
+    "slurm_job_id": 29585616,
+    "state": "COMPLETED"
+  },
+  "decision_evaluation": {
+    "real_tasks": 60,
+    "fault_tasks": 20,
+    "task_success_rate": 1.0,
+    "tool_execution_success_rate": 1.0,
+    "citation_validity_rate": 1.0,
+    "figure_grounding_rate": 1.0,
+    "bess_golden_rate": 1.0,
+    "fault_handling_rate": 1.0,
+    "p95_latency_ms": 512.3900668695569,
+    "promotion_pass": true,
+    "slurm_job_id": 29585975,
+    "state": "COMPLETED",
+    "elapsed_seconds": 45,
+    "max_rss_kib": 843408
+  },
+  "artifact_hashes": {
+    "evidence_records_sha256": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "figure_records_sha256": "f7fa3310ff772fedd8c8fbc7d1420ab1763ea2413484cc10dce2882d1eebd205",
+    "metrics_sha256": "ea8d6b730988eb9f1f7a06fe445bafa695f49055a56e1327e68e8ae6c2f2916c",
+    "predictions_sha256": "c2959553d18827fbe7ac89ae68d100320cc30a351ad0a6a6df37e31c80ee8c3e",
+    "run_manifest_sha256": "6a3c47c60d57c4a3f3ed4a5e9469978948f11c862a0fc9b994ca5eaef4b90f8f"
+  },
+  "sg_deployment": {
+    "git_sha": "0576f40d10acb2966e2b11950f030ac89368ca5c",
+    "image_id": "sha256:dec99ca43c589b335de1910ce644b5971fe345f35d179347a15db225ed1df71c",
+    "binding": "127.0.0.1:8091",
+    "health_status": "ok",
+    "data_rows": 525600,
+    "text_evidence_chunks": 905,
+    "figure_evidence_records": 130,
+    "forecast_snapshots": 15,
+    "loopback_requests": 100,
+    "loopback_success_rate": 1.0,
+    "loopback_p50_latency_ms": 507.0173148997128,
+    "loopback_p95_latency_ms": 789.3787228967994,
+    "loopback_max_latency_ms": 853.9089020341635,
+    "trace_cache_after_gate": {
+      "entries": 100,
+      "capacity": 128,
+      "evictions": 0
+    },
+    "limits": {
+      "api_memory_bytes": 1342177280,
+      "api_nano_cpus": 1000000000
+    },
+    "promotion_pass": true
+  },
+  "development_failures": [
+    {
+      "job_id": 29585617,
+      "fault_handling_rate": 0.8,
+      "resolution": "made stale-snapshot fault injection real instead of silently retaining the matching snapshot"
+    },
+    {
+      "job_id": 29585736,
+      "fault_handling_rate": 0.9,
+      "resolution": "removed a citation-corruption race by injecting only at the final evidence-search stage"
+    }
+  ],
+  "boundaries": [
+    "Historical decision replay, not live trading, automatic bidding or investment advice.",
+    "Figure relevance labels are author-curated; source-cell provenance does not prove answer entailment.",
+    "Economic values are historical operating proxies and exclude CAPEX, fixed O&M, network fees and FCAS."
+  ]
+}

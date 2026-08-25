@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NEM Decision Replay Agent</title>
+  <style>
+    :root { color-scheme: dark; --bg:#07111f; --panel:#0e1b2c; --line:#263b54; --text:#e8f0f7; --muted:#91a4b7; --aqua:#43d3b4; --amber:#f5b84b; --blue:#68a9ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:15px/1.5 Inter,Segoe UI,sans-serif; background:radial-gradient(circle at 15% -5%,#15324a 0,transparent 35%),var(--bg); color:var(--text); }
+    main { max-width:1180px; margin:auto; padding:34px 24px 60px; }
+    h1 { margin:0 0 6px; font-size:34px; letter-spacing:-.03em; }
+    h2 { font-size:17px; margin:0 0 13px; }
+    .lead { color:var(--muted); max-width:850px; margin:0 0 24px; }
+    .cases,.grid { display:grid; gap:14px; }
+    .cases { grid-template-columns:repeat(3,1fr); margin-bottom:16px; }
+    .grid { grid-template-columns:1.1fr .9fr; }
+    button,.panel { border:1px solid var(--line); border-radius:12px; background:rgba(14,27,44,.92); color:var(--text); }
+    button { text-align:left; padding:14px; cursor:pointer; font:inherit; transition:.15s; }
+    button:hover,button.active { border-color:var(--aqua); transform:translateY(-1px); }
+    button small { display:block; color:var(--muted); margin-top:5px; }
+    .panel { padding:18px; min-height:150px; }
+    .wide { grid-column:1/-1; }
+    textarea { width:100%; min-height:76px; resize:vertical; border:1px solid var(--line); border-radius:9px; padding:11px; background:#081522; color:var(--text); font:inherit; }
+    #run { margin-top:10px; padding:9px 16px; background:var(--aqua); color:#05251e; font-weight:700; border:0; width:auto; }
+    .status { color:var(--aqua); font-weight:700; }
+    .muted { color:var(--muted); }
+    .metric { display:inline-block; margin:5px 8px 5px 0; padding:6px 9px; border:1px solid var(--line); border-radius:7px; }
+    .metric b { color:var(--amber); }
+    .steps { display:flex; flex-wrap:wrap; gap:7px; }
+    .step { padding:5px 8px; border-radius:6px; background:#15263a; color:var(--blue); }
+    .citation { padding:9px 0; border-top:1px solid var(--line); }
+    .citation a { color:var(--aqua); }
+    svg { width:100%; height:170px; background:#081522; border-radius:8px; }
+    pre { white-space:pre-wrap; word-break:break-word; color:#b9c8d6; max-height:320px; overflow:auto; }
+    @media(max-width:820px){ .cases,.grid{grid-template-columns:1fr}.wide{grid-column:auto} }
+  </style>
+</head>
+<body><main>
+  <h1>NEM Decision Replay Agent</h1>
+  <p class="lead">Evidence-first historical analysis for Australian energy analysts and BESS strategy teams. Every schedule separates forecast-signal planning from realised historical settlement and retains official-source provenance.</p>
+  <section class="cases" id="cases"></section>
+  <section class="panel wide">
+    <h2>Ask a bounded market question</h2>
+    <textarea id="question"></textarea><br><button id="run">Run decision replay</button>
+    <p id="status" class="muted">Select a case or edit the question.</p>
+  </section>
+  <section class="grid">
+    <article class="panel"><h2>Decision summary</h2><div id="summary" class="muted">No run yet.</div><div id="metrics"></div></article>
+    <article class="panel"><h2>Workflow trace</h2><div id="steps" class="steps"></div><p id="verification" class="muted"></p></article>
+    <article class="panel"><h2>Forecast interval</h2><svg id="forecast" viewBox="0 0 600 170" role="img" aria-label="Forecast interval chart"></svg></article>
+    <article class="panel"><h2>Battery state of charge</h2><svg id="soc" viewBox="0 0 600 170" role="img" aria-label="Battery state of charge chart"></svg></article>
+    <article class="panel wide"><h2>Official evidence</h2><div id="citations" class="muted">No evidence yet.</div></article>
+    <details class="panel wide"><summary>Auditable response</summary><pre id="raw"></pre></details>
+  </section>
+</main><script>
+const cases=[
+  ['SA1 BESS replay','Explain what happened in SA1 on 2025-12-15 using official report and chart evidence, then replay a 1 MW / 2 MWh BESS dispatch using only information available beforehand.','Flagship: event + text/figure evidence + forecast + settlement'],
+  ['QLD1 event diagnosis','Detect and explain price events in QLD1 on 2026-03-15, including official chart evidence.','Structured context + multimodal recovery'],
+  ['Regional comparison','Compare NSW1 and VIC1 on 2026-06-15 and explain the difference using official evidence.','Typed comparison + cited explanation']
+];
+const q=document.querySelector('#question');
+const casesNode=document.querySelector('#cases');
+cases.forEach((item,index)=>{const b=document.createElement('button');b.innerHTML=`<b>${item[0]}</b><small>${item[2]}</small>`;b.onclick=()=>{document.querySelectorAll('#cases button').forEach(x=>x.classList.remove('active'));b.classList.add('active');q.value=item[1]};casesNode.appendChild(b);if(!index)b.click()});
+function line(svg,values,color){svg.textContent='';if(!values?.length)return;const nums=values.map(Number),min=Math.min(...nums),max=Math.max(...nums),range=max-min||1;const points=nums.map((v,i)=>`${20+i*560/Math.max(1,nums.length-1)},${150-(v-min)*125/range}`).join(' ');const axis=document.createElementNS('http://www.w3.org/2000/svg','path');axis.setAttribute('d','M20 150H580');axis.setAttribute('stroke','#263b54');svg.appendChild(axis);const p=document.createElementNS('http://www.w3.org/2000/svg','polyline');p.setAttribute('points',points);p.setAttribute('fill','none');p.setAttribute('stroke',color);p.setAttribute('stroke-width','3');svg.appendChild(p);}
+function interval(svg,data){svg.textContent='';const point=(data?.point||[]).map(Number),lower=(data?.lower||[]).map(Number),upper=(data?.upper||[]).map(Number);if(!point.length)return;const all=[...point,...lower,...upper],min=Math.min(...all),max=Math.max(...all),range=max-min||1,x=(i,n)=>20+i*560/Math.max(1,n-1),y=v=>150-(v-min)*125/range;const axis=document.createElementNS('http://www.w3.org/2000/svg','path');axis.setAttribute('d','M20 150H580');axis.setAttribute('stroke','#263b54');svg.appendChild(axis);if(lower.length===point.length&&upper.length===point.length){const polygon=document.createElementNS('http://www.w3.org/2000/svg','polygon');polygon.setAttribute('points',[...upper.map((v,i)=>`${x(i,upper.length)},${y(v)}`),...lower.map((v,i)=>`${x(lower.length-1-i,lower.length)},${y(lower[lower.length-1-i])}`)].join(' '));polygon.setAttribute('fill','#68a9ff');polygon.setAttribute('fill-opacity','0.18');svg.appendChild(polygon)}const p=document.createElementNS('http://www.w3.org/2000/svg','polyline');p.setAttribute('points',point.map((v,i)=>`${x(i,point.length)},${y(v)}`).join(' '));p.setAttribute('fill','none');p.setAttribute('stroke','#68a9ff');p.setAttribute('stroke-width','3');svg.appendChild(p);}
+function metric(label,value){const span=document.createElement('span');span.className='metric';const name=document.createTextNode(label+' ');const b=document.createElement('b');b.textContent=typeof value==='number'?value.toFixed(2):value??'n/a';span.append(name,b);return span}
+document.querySelector('#run').onclick=async()=>{const status=document.querySelector('#status');status.textContent='Running typed workflow…';status.className='status';try{const response=await fetch('/api/agent/query',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q.value,max_tool_calls:8})});if(!response.ok)throw new Error(await response.text());const data=await response.json();const trace=await (await fetch(`/api/agent/traces/${data.trace_id}`)).json();document.querySelector('#summary').textContent=data.decision_summary;const metrics=document.querySelector('#metrics');metrics.textContent='';metrics.append(metric('Workflow',data.workflow_type),metric('Planned AUD',data.dispatch?.planned_margin_aud),metric('Realised AUD',data.dispatch?.realized_margin_aud),metric('Oracle regret',data.dispatch?.oracle_regret_aud));const steps=document.querySelector('#steps');steps.textContent='';(trace.states||[]).forEach(value=>{const s=document.createElement('span');s.className='step';s.textContent=value;steps.appendChild(s)});document.querySelector('#verification').textContent=`Citations ${data.verification?.citation_count||0}; required tools satisfied: ${Boolean(data.verification?.required_tools_satisfied)}`;interval(document.querySelector('#forecast'),data.forecast);line(document.querySelector('#soc'),data.dispatch?.soc_mwh,'#43d3b4');const citations=document.querySelector('#citations');citations.textContent='';(data.citations||[]).forEach(c=>{const d=document.createElement('div');d.className='citation';const a=document.createElement('a');a.href=c.url;a.target='_blank';a.rel='noopener';a.textContent=`${c.title}${c.source_page?' — page '+c.source_page:''}`;const p=document.createElement('div');p.className='muted';p.textContent=`${c.modality} · ${c.evidence_id} · SHA ${c.sha256.slice(0,12)}…`;d.append(a,p);citations.appendChild(d)});document.querySelector('#raw').textContent=JSON.stringify(data,null,2);status.textContent=`${data.status} · trace ${data.trace_id}`;}catch(error){status.textContent='Run failed: '+error.message;status.className='muted'}};
+</script></body></html>
