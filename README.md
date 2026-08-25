@@ -61,6 +61,8 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 
+![Historical decision replay demo](docs/assets/decision-replay-demo.png)
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -e ".[test,ml,search,redis,workbook]"

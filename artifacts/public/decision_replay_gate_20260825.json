@@ -40,8 +40,8 @@
     "run_manifest_sha256": "6a3c47c60d57c4a3f3ed4a5e9469978948f11c862a0fc9b994ca5eaef4b90f8f"
   },
   "sg_deployment": {
-    "git_sha": "41b801855899973f471bb0c727a881749d0b8f69",
-    "image_id": "sha256:096eb4370e6308a76cc664e7ab64723e4a52868b8778c9f6d41995e56b423ce7",
+    "git_sha": "0576f40d10acb2966e2b11950f030ac89368ca5c",
+    "image_id": "sha256:dec99ca43c589b335de1910ce644b5971fe345f35d179347a15db225ed1df71c",
     "binding": "127.0.0.1:8091",
     "health_status": "ok",
     "data_rows": 525600,
