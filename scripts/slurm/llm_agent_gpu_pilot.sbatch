@@ -89,6 +89,7 @@ cd "$REPO"
   --provider llama_cpp \
   --provider-url "http://127.0.0.1:$PORT/v1" \
   --model Qwen3-8B-Q4_K_M.gguf \
+  --temperature 0.2 \
   --paths pure_llm constrained_hybrid \
   --memory-modes structured_state \
   --seeds 17 29

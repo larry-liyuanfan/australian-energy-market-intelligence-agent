@@ -3,6 +3,7 @@
   "preregistered_before_holdout_execution": true,
   "holdout": "benchmarks/llm_agent_holdout_v1.jsonl",
   "seeds": [17, 29, 43],
+  "sampling_temperature": 0.2,
   "thresholds": {
     "task_success_rate": 0.85,
     "correct_tool_path_rate": 0.90,

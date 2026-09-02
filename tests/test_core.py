@@ -391,6 +391,7 @@ def test_llama_cpp_adapter_uses_openai_tool_protocol_and_canonical_validation() 
     outcome = LlamaCppPlanner(
         model="Qwen3-8B-Q4_K_M.gguf",
         base_url="http://127.0.0.1:11571/v1",
+        temperature=0.2,
         transport=transport,
     ).plan_turn(
         [{"role": "user", "content": "Explain SA1 coverage"}],
@@ -400,6 +401,8 @@ def test_llama_cpp_adapter_uses_openai_tool_protocol_and_canonical_validation() 
     )
     assert captured["url"] == "http://127.0.0.1:11571/v1/chat/completions"
     assert len(captured["payload"]["tools"]) == 8  # type: ignore[index]
+    assert captured["payload"]["temperature"] == 0.2  # type: ignore[index]
+    assert captured["payload"]["seed"] == 17  # type: ignore[index]
     assert outcome.calls == [("explain_data_coverage", {"region": "SA1"})]
     assert outcome.usage.prompt_tokens == 101
     assert outcome.provider == "llama_cpp_local"

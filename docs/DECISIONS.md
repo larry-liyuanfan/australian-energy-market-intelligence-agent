@@ -28,7 +28,9 @@ The four evaluated modes are no memory, complete history, sliding window and str
 
 Status: accepted.
 
-The model-development cases and holdout live in separate files. The holdout uses dates and prompts absent from the original 60-case Decision Replay suite. Thresholds, seeds and the rule requiring hybrid to exceed the deterministic memory subset were recorded in `benchmarks/llm_agent_promotion_gate_v1.json` before holdout execution.
+The model-development cases and holdout live in separate files. The holdout uses dates and prompts absent from the original 60-case Decision Replay suite. Thresholds, a non-zero sampling temperature, seeds and the rule requiring hybrid to exceed the deterministic memory subset were recorded in `benchmarks/llm_agent_promotion_gate_v1.json` before the valid holdout execution.
+
+The first holdout submission was cancelled before metrics were written when a code review found that the llama.cpp adapter still used greedy temperature zero. Repeating seed labels under greedy decoding would not test sampling stability. The cancelled job and resource usage remain in the report; only the subsequent non-zero-temperature run can make pass@1/pass-all-k claims.
 
 ## ADR-005 — Real runtime first, negative result allowed
 

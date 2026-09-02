@@ -94,6 +94,7 @@ def main() -> None:
     parser.add_argument("--provider", choices=("ollama", "llama_cpp"), default="ollama")
     parser.add_argument("--provider-url", default="http://127.0.0.1:11434")
     parser.add_argument("--model", default="qwen3:4b-instruct")
+    parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument(
         "--paths", nargs="+", choices=[item.value for item in AgentPath], default=[item.value for item in AgentPath]
     )
@@ -106,6 +107,8 @@ def main() -> None:
     parser.add_argument("--seeds", nargs="+", type=int)
     parser.add_argument("--max-episodes", type=int)
     args = parser.parse_args()
+    if not 0.0 < args.temperature <= 2.0:
+        parser.error("--temperature must be in (0, 2] so multi-seed evaluation performs real sampling")
     gate = json.loads(args.gate.read_text(encoding="utf-8"))
     seeds = args.seeds or [int(seed) for seed in gate["seeds"]]
     episodes = load_episodes(args.benchmark)
@@ -113,9 +116,9 @@ def main() -> None:
         episodes = episodes[: args.max_episodes]
     base_registry = build_registry(args)
     planner = (
-        OllamaPlanner(model=args.model, base_url=args.provider_url)
+        OllamaPlanner(model=args.model, base_url=args.provider_url, temperature=args.temperature)
         if args.provider == "ollama"
-        else LlamaCppPlanner(model=args.model, base_url=args.provider_url)
+        else LlamaCppPlanner(model=args.model, base_url=args.provider_url, temperature=args.temperature)
     )
     rows: list[dict[str, Any]] = []
     for path_name in args.paths:
@@ -243,6 +246,7 @@ def main() -> None:
         "python": platform.python_version(),
         "provider": planner.name,
         "model": args.model,
+        "sampling_temperature": args.temperature,
         "model_runtime_is_real": True,
         "benchmark_sha256": sha256(args.benchmark),
         "gate_sha256": sha256(args.gate),
