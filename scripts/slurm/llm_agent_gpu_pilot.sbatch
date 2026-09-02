@@ -6,6 +6,7 @@
 #SBATCH --time=00:35:00
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=16G
+#SBATCH --tmp=10000
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/llm-agent-eval-20260903/logs/pilot-%j.out
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/llm-agent-eval-20260903/logs/pilot-%j.err
 
@@ -21,7 +22,8 @@ SNAPSHOTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/fore
 LLAMA_COMMIT=7798007a29a90e3053e799394da48cf53a2f8e0f
 LLAMA_ROOT="$ENV_ROOT/llama.cpp-$LLAMA_COMMIT"
 SERVER="$LLAMA_ROOT/build/bin/llama-server"
-MODEL_DIR="$ENV_ROOT/models/qwen3-8b-gguf-1d54a16"
+TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+MODEL_DIR="$TASK_SCRATCH/qwen3-8b-gguf-1d54a16-$SLURM_JOB_ID"
 MODEL="$MODEL_DIR/Qwen3-8B-Q4_K_M.gguf"
 MODEL_SHA256=d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785
 MODEL_URL='https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/1d54a16a18cba0d8fbad4a16db801decc729e099/Qwen3-8B-Q4_K_M.gguf?download=true'
@@ -51,10 +53,8 @@ if [ ! -x "$SERVER" ]; then
   cmake --build "$LLAMA_ROOT/build" --target llama-server --parallel "$SLURM_CPUS_PER_TASK"
 fi
 
-if [ ! -s "$MODEL" ]; then
-  curl -fL --retry 3 --retry-delay 5 -o "$MODEL.partial" "$MODEL_URL"
-  mv "$MODEL.partial" "$MODEL"
-fi
+curl -fL --retry 3 --retry-delay 5 -o "$MODEL.partial" "$MODEL_URL"
+mv "$MODEL.partial" "$MODEL"
 echo "$MODEL_SHA256  $MODEL" | sha256sum --check
 sha256sum "$SERVER" "$MODEL" >"$RUN_DIR/runtime_sha256.txt"
 
@@ -62,7 +62,7 @@ sha256sum "$SERVER" "$MODEL" >"$RUN_DIR/runtime_sha256.txt"
   --ctx-size 12288 --n-gpu-layers 99 --parallel 1 --jinja --reasoning-format none --no-webui \
   >"$PROJECT/logs/llama-cpp-pilot-$SLURM_JOB_ID.log" 2>&1 &
 server_pid=$!
-trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+trap 'kill "$server_pid" 2>/dev/null || true; rm -rf -- "$MODEL_DIR"' EXIT
 for _ in $(seq 1 90); do
   curl -fsS "http://127.0.0.1:$PORT/health" >/dev/null && break
   sleep 1
