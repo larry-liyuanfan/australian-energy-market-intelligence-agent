@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from energy_agent.api import app
 from energy_agent.market import fixture_store
 from energy_agent.model_agent import (
+    SYSTEM_PROMPT,
     AgentPath,
     ConversationMemory,
     MemoryMode,
@@ -17,6 +18,13 @@ from energy_agent.model_agent import (
 from energy_agent.providers import PlannerOutcome, PlannerUsage, _planner_specs
 from energy_agent.schemas import ToolResult
 from energy_agent.tools import ToolRegistry
+
+
+def test_model_prompt_requires_complete_half_open_workflow_without_premature_diagnosis() -> None:
+    assert "complete ordered set" in SYSTEM_PROMPT
+    assert "next calendar date" in SYSTEM_PROMPT
+    assert "Do not emit diagnose_price_event" in SYSTEM_PROMPT
+    assert "constraint-only follow-up" in SYSTEM_PROMPT
 
 
 @dataclass

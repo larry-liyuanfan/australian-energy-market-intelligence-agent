@@ -159,6 +159,25 @@ def main() -> None:
                                 **run.metrics.model_dump(mode="json"),
                                 "status": run.status,
                                 "trace_id": run.trace_id,
+                                "expected_tools": [str(name) for name in turn_spec.get("expected_tools", [])],
+                                "expected_parameters": turn_spec.get("expected", {}),
+                                "model_proposed_tools": [call.name for call in run.model_proposed_calls],
+                                "model_proposed_arguments": [call.arguments for call in run.model_proposed_calls],
+                                "executed_arguments": [
+                                    call.arguments for call in run.tool_calls if call.status == "ok"
+                                ],
+                                "failed_attempts": [
+                                    {
+                                        "tool": call.name,
+                                        "status": call.status,
+                                        "attempt": call.attempt,
+                                        "recovered": call.recovered,
+                                    }
+                                    for call in run.tool_calls
+                                    if call.status != "ok"
+                                ],
+                                "planner_validation_errors": run.planner_validation_errors,
+                                "verification": run.verification,
                             }
                         )
     metrics = aggregate_rows(rows)
