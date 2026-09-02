@@ -24,6 +24,8 @@ export OLLAMA_HOST="127.0.0.1:$PORT"
 export OLLAMA_CONTEXT_LENGTH=8192
 export OLLAMA_KEEP_ALIVE=30m
 export OLLAMA_TMPDIR="$ENV_ROOT/ollama-tmp"
+export OLLAMA_NO_CLOUD=1
+export OLLAMA_NOHISTORY=1
 mkdir -p "$OLLAMA_MODELS" "$OLLAMA_TMPDIR" "$ARTIFACTS/private/pilot-$SLURM_JOB_ID"
 
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader

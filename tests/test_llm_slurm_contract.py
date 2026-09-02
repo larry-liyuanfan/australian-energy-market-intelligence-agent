@@ -25,6 +25,7 @@ def test_holdout_job_binds_real_aemo_inputs_and_real_model_server() -> None:
     assert "evidence_documents.jsonl" in text
     assert "forecast-snapshots-c66e415.jsonl" in text
     assert "ollama" in text
+    assert "OLLAMA_NO_CLOUD=1" in text
     assert "llm_agent_holdout_v1.jsonl" in text
 
 
