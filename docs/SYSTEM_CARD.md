@@ -18,7 +18,7 @@
 
 | Capability | Verified default | Optional |
 |---|---|---|
-| Planning | Deterministic typed DAG | Model Studio registered-tool planner |
+| Planning | Deterministic typed DAG | Evaluated local Qwen3-8B/llama.cpp planner; Model Studio adapter |
 | Forecast | Versioned offline snapshot; seasonal fallback | Other snapshot producers with hashes |
 | Text evidence | ES BM25 + local hybrid | Local-only fallback |
 | Figure evidence | Precompiled workbook records | PDF page / hosted visual reranker |
@@ -38,6 +38,6 @@
 ## Known limitations
 
 - Current report relevance labels are small and author-curated.
-- Model Studio live planning and provider cost require credentials and a separate evaluation.
+- Model Studio live planning and provider cost remain unverified. The local Qwen3-8B planner is evaluated as a research runtime on Spartan, not served by the SG API.
 - The promoted SG loopback release serves the 905-chunk text index, 130 private-mounted workbook figures and 15 hash-aligned forecast snapshots; optional PDF/Qwen page reranking remains offline.
 - Historical market operating proxies exclude material costs and market products described in the README boundary.

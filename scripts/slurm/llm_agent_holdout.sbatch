@@ -37,6 +37,7 @@ done
 curl -fL --retry 3 --retry-delay 5 -o "$MODEL.partial" "$MODEL_URL"
 mv "$MODEL.partial" "$MODEL"
 echo "$MODEL_SHA256  $MODEL" | sha256sum --check
+sha256sum "$SERVER" "$MODEL" >"$RUN_DIR/runtime_sha256.txt"
 
 module purge
 module load GCC/13.3.0

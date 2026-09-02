@@ -27,6 +27,7 @@ def test_holdout_job_binds_real_aemo_inputs_and_real_model_server() -> None:
     assert "llama-server" in text
     assert "Qwen3-8B-Q4_K_M.gguf" in text
     assert "MODEL_SHA256=" in text
+    assert 'runtime_sha256.txt' in text
     assert "--host 127.0.0.1" in text
     assert "llm_agent_holdout_v1.jsonl" in text
 

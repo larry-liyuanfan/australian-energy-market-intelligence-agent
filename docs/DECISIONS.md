@@ -34,4 +34,6 @@ The model-development cases and holdout live in separate files. The holdout uses
 
 Status: accepted.
 
-The first provider is a real local `qwen3:4b-instruct` runtime through Ollama, with an OpenAI-compatible Model Studio adapter retained when credentials exist. Mock planners are used only in unit tests. The LLM path is promoted only if every preregistered threshold passes; otherwise it remains a reproducible negative experiment.
+The verified provider is a real local Qwen3-8B Q4_K_M GGUF runtime through a pinned llama.cpp server on a Spartan A100 MIG allocation. The server is loopback-only, the model is staged in job scratch, and both runtime binaries and inputs are hash checked. The OpenAI-compatible Model Studio adapter remains available when credentials exist; mock planners are used only in unit tests. The LLM path is promoted only if every preregistered threshold passes; otherwise it remains a reproducible negative experiment.
+
+The initial Ollama route was rejected after the Iris home quota prevented its first-run state from being created. No existing SSH material or home-directory configuration was changed to force it through. A project-scoped llama.cpp build and Slurm scratch model resolved that infrastructure problem without weakening isolation.
