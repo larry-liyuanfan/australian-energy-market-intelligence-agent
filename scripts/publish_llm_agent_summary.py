@@ -54,6 +54,7 @@ def build_summary(
             "provider": manifest["provider"],
             "model": manifest["model"],
             "real_model_runtime": manifest["model_runtime_is_real"],
+            "sampling_temperature": manifest["sampling_temperature"],
             "job_id": job_id,
             "sha256": _runtime_hashes(runtime_hashes_path),
         },
@@ -65,6 +66,8 @@ def build_summary(
                 "data_manifest_sha256",
                 "evidence_sha256",
                 "forecast_snapshots_sha256",
+                "metrics_sha256",
+                "predictions_sha256",
             )
         },
         "metrics": group_metrics,

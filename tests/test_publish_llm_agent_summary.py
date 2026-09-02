@@ -31,12 +31,15 @@ def test_public_summary_keeps_hashes_and_removes_private_paths(tmp_path: Path) -
                 "provider": "llama_cpp_local",
                 "model": "Qwen3-8B-Q4_K_M.gguf",
                 "model_runtime_is_real": True,
+                "sampling_temperature": 0.2,
                 "environment": {"SLURM_JOB_ID": "123"},
                 "benchmark_sha256": "a" * 64,
                 "gate_sha256": "b" * 64,
                 "data_manifest_sha256": "c" * 64,
                 "evidence_sha256": "d" * 64,
                 "forecast_snapshots_sha256": "e" * 64,
+                "metrics_sha256": "2" * 64,
+                "predictions_sha256": "3" * 64,
                 "boundaries": ["historical only"],
             }
         ),
@@ -55,6 +58,7 @@ def test_public_summary_keeps_hashes_and_removes_private_paths(tmp_path: Path) -
 
     serialized = json.dumps(summary)
     assert summary["runtime"]["real_model_runtime"] is True
+    assert summary["runtime"]["sampling_temperature"] == 0.2
     assert summary["runtime"]["sha256"]["model_gguf"] == "1" * 64
     assert summary["resource_usage"]["state"] == "COMPLETED"
     assert "/private/" not in serialized
