@@ -34,5 +34,5 @@ def test_runtime_progression_is_short_preflight_then_gpu_pilot_then_holdout() ->
     holdout = (ROOT / "scripts" / "slurm" / "llm_agent_holdout.sbatch").read_text(encoding="utf-8")
     assert "--time=00:15:00" in preflight and "--partition=cascade" in preflight
     assert "module load GCCcore/11.3.0" in preflight
-    assert "--time=00:12:00" in pilot and "--partition=gpu-l40s" in pilot
+    assert "--time=00:25:00" in pilot and "--partition=gpu-l40s" in pilot
     assert "--time=00:50:00" in holdout and "--partition=gpu-l40s" in holdout

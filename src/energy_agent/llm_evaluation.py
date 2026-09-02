@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 from collections import defaultdict
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,10 @@ def score_turn(run: ModelAgentRun, turn_spec: dict[str, Any]) -> dict[str, Any]:
     observed = [call.name for call in run.tool_calls if call.status == "ok"]
     expected_tools = [str(name) for name in turn_spec.get("expected_tools", [])]
     tool_path_correct = ordered_subsequence(expected_tools, observed)
+    proposed = [call.name for call in run.model_proposed_calls]
+    model_tool_path_correct = (
+        tool_path_correct if run.path.value == "deterministic" else ordered_subsequence(expected_tools, proposed)
+    )
     serialized_calls = json.dumps([call.arguments for call in run.tool_calls if call.status == "ok"], sort_keys=True)
     expected = turn_spec.get("expected", {})
 
@@ -42,7 +47,16 @@ def score_turn(run: ModelAgentRun, turn_spec: dict[str, Any]) -> dict[str, Any]:
         checks: list[bool] = []
         for key, value in expected.items():
             if key == "date":
+                requested = date.fromisoformat(str(value))
                 checks.append(str(value) in serialized)
+                window_tools = {
+                    "compare_region_period",
+                    "detect_price_events",
+                    "forecast_price_risk",
+                    "optimize_battery_dispatch",
+                }
+                if window_tools.intersection(expected_tools):
+                    checks.append((requested + timedelta(days=1)).isoformat() in serialized)
             elif key == "region":
                 checks.append(f'"region": "{value}"' in serialized)
             elif key == "regions":
@@ -90,6 +104,7 @@ def score_turn(run: ModelAgentRun, turn_spec: dict[str, Any]) -> dict[str, Any]:
     return {
         "task_success": task_success,
         "tool_path_correct": tool_path_correct,
+        "model_tool_path_correct": model_tool_path_correct,
         "parameter_accuracy": parameter_accuracy,
         "model_parameter_accuracy": model_parameter_accuracy,
         "citation_correct": citation_correct,
@@ -135,6 +150,7 @@ def aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "task_success_rate": successes / n,
             "task_success_wilson_95": wilson_interval(successes, n),
             "correct_tool_path_rate": sum(bool(item["tool_path_correct"]) for item in items) / n,
+            "model_correct_tool_path_rate": sum(bool(item.get("model_tool_path_correct", False)) for item in items) / n,
             "parameter_accuracy": sum(float(item["parameter_accuracy"]) for item in items) / n,
             "model_parameter_accuracy": sum(float(item.get("model_parameter_accuracy", 0.0)) for item in items) / n,
             "citation_correctness": sum(bool(item["citation_correct"]) for item in items) / n,

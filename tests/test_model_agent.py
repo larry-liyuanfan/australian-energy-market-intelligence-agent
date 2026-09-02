@@ -14,7 +14,7 @@ from energy_agent.model_agent import (
     MemoryMode,
     ModelDrivenAgent,
 )
-from energy_agent.providers import PlannerOutcome, PlannerUsage
+from energy_agent.providers import PlannerOutcome, PlannerUsage, _planner_specs
 from energy_agent.schemas import ToolResult
 from energy_agent.tools import ToolRegistry
 
@@ -72,6 +72,15 @@ def test_structured_memory_keeps_only_sourced_constraints() -> None:
     assert state.constraints["round_trip_efficiency"].value == 0.88
     assert all(item.source_type == "user" for item in state.constraints.values())
     assert "SOURCED USER CONSTRAINTS" in str(messages)
+
+
+def test_model_facing_schemas_inline_refs_without_adding_tools() -> None:
+    specs = _planner_specs(ToolRegistry(fixture_store()))
+    assert len(specs) == 8
+    serialized = str(specs)
+    assert "$ref" not in serialized
+    assert "$defs" not in serialized
+    assert all(spec.get("description") for spec in specs)
 
 
 def test_user_correction_overwrites_value_and_preserves_source_turn() -> None:

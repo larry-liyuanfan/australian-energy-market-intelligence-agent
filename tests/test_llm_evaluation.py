@@ -34,6 +34,7 @@ def test_aggregate_preserves_retries_tokens_latency_and_unsafe_counts() -> None:
         "turn_index": 1,
         "task_success": True,
         "tool_path_correct": True,
+        "model_tool_path_correct": False,
         "parameter_accuracy": 1.0,
         "model_parameter_accuracy": 0.8,
         "citation_correct": True,
@@ -56,5 +57,6 @@ def test_aggregate_preserves_retries_tokens_latency_and_unsafe_counts() -> None:
     assert metrics["total_retries"] == 1
     assert metrics["average_prompt_tokens"] == 100
     assert metrics["model_parameter_accuracy"] == 0.8
+    assert metrics["model_correct_tool_path_rate"] == 0.0
     assert metrics["p95_latency_ms"] == 50.0
     assert metrics["total_rejected_model_calls"] == 2

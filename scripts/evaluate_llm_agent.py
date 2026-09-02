@@ -162,7 +162,7 @@ def main() -> None:
     deterministic = metrics.get("deterministic|structured_state", {})
     promotion_checks = {
         "task_success_rate": hybrid.get("task_success_rate", 0) >= thresholds["task_success_rate"],
-        "correct_tool_path_rate": hybrid.get("correct_tool_path_rate", 0) >= thresholds["correct_tool_path_rate"],
+        "correct_tool_path_rate": hybrid.get("model_correct_tool_path_rate", 0) >= thresholds["correct_tool_path_rate"],
         "parameter_accuracy": hybrid.get("model_parameter_accuracy", 0) >= thresholds["parameter_accuracy"],
         "citation_correctness": hybrid.get("citation_correctness", 0) >= thresholds["citation_correctness"],
         "settlement_consistency": hybrid.get("settlement_consistency", 0) >= thresholds["settlement_consistency"],
