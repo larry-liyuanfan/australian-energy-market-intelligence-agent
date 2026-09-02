@@ -57,6 +57,10 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 2. **Bounded historical value.** At a fixed user-supplied 50 AUD/MWh discharged-energy cost, the five-region historical operating proxy averaged **AUD 84,792 versus 23,279/MW-year** for the threshold rule. The paired-fold mean-delta interval was AUD 3,079.62–6,912.10. These are five separate hypothetical batteries and not investment returns.
 3. **Unified Agent gate and deployment.** Exact-commit Spartan evaluation passed **60/60 real-window cases and 20/20 fault cases**; tool, citation, figure and BESS golden rates were 100%, with P95 512 ms. The loopback-only Alibaba Cloud Singapore stack then loaded 905 text chunks, 130 workbook figures and 15 versioned forecast snapshots and passed **100/100** HTTP/trace/figure/snapshot/settlement checks at P95 789 ms.
 
+### Real-model planner experiment — not promoted
+
+A hash-pinned Qwen3-8B/llama.cpp planner was evaluated on Spartan across 24 holdout turns, four memory policies and three sampled seeds. Structured-state constrained hybrid reached **57/72 (79.2%)** task success, versus **28/72 (38.9%)** for pure LLM, with zero unsafe tool/DSL calls and 100% citation, settlement and bounded-replan checks. The model itself produced the complete required tool path on only **25/72 (34.7%)** attempts, so the preregistered gate failed and the deterministic DAG remains the serving path. See the [planner/memory report](docs/LLM_AGENT_PLANNER_MEMORY_EVALUATION.md) and [public aggregate](artifacts/public/llm_agent_holdout_20260903.json).
+
 ## Local demo
 
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
@@ -94,6 +98,7 @@ Heavy backfills and evaluation run on Spartan through short preflight/test-only 
 - The BESS value is a historical spot-market operating proxy. It excludes CAPEX, fixed O&M, network charges, FCAS, taxes, financing, full degradation modelling and investment return.
 - Official-report labels are author-curated unless explicitly stated; citation structure and retrieval relevance do not prove semantic entailment.
 - The deterministic planner evaluation proves tool contracts and recovery, not open-ended LLM reasoning accuracy.
+- The local Qwen3-8B experiment proves one bounded holdout result, not general Agent reasoning or a production SLA; its planner was explicitly not promoted.
 - Negative and superseded experiments remain public and are classified rather than deleted.
 
 See the [decision-replay case study](docs/CASE_STUDY.md), [system card](docs/SYSTEM_CARD.md), [experiment catalogue](docs/EXPERIMENT_CATALOG.md), and [interview defence map](docs/INTERVIEW.md).

@@ -39,5 +39,6 @@
 
 - Current report relevance labels are small and author-curated.
 - Model Studio live planning and provider cost remain unverified. The local Qwen3-8B planner is evaluated as a research runtime on Spartan, not served by the SG API.
+- The Qwen3-8B structured-hybrid holdout failed the task-success and raw tool-path thresholds; deterministic planning remains the verified SG default.
 - The promoted SG loopback release serves the 905-chunk text index, 130 private-mounted workbook figures and 15 hash-aligned forecast snapshots; optional PDF/Qwen page reranking remains offline.
 - Historical market operating proxies exclude material costs and market products described in the README boundary.
