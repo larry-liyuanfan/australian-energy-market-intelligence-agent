@@ -129,7 +129,7 @@ class EnergyAgent:
         requested_regions = [
             region
             for region in Region
-            if region.value.lower() in text or region.value[:-1].lower() in text
+            if re.search(rf"\b{re.escape(region.value[:-1].lower())}1?\b", text)
         ]
         region = requested_regions[0] if requested_regions else Region.NSW1
         end = datetime.now(UTC)

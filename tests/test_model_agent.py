@@ -82,6 +82,24 @@ def test_user_correction_overwrites_value_and_preserves_source_turn() -> None:
     assert state.constraints["region"].source_turn == 2
 
 
+def test_region_parser_does_not_mistake_same_for_sa() -> None:
+    agent = ModelDrivenAgent(ToolRegistry(fixture_store()), None)
+    agent.run_turn(
+        "Diagnose the SA1 event on 2025-01-02",
+        conversation_id="region-boundary",
+        path=AgentPath.deterministic,
+        memory_mode=MemoryMode.structured_state,
+    )
+    run = agent.run_turn(
+        "Use VIC1 instead, keeping the same date",
+        conversation_id="region-boundary",
+        path=AgentPath.deterministic,
+        memory_mode=MemoryMode.structured_state,
+    )
+    assert all(call.arguments.get("region") != "SA1" for call in run.tool_calls)
+    assert any(call.arguments.get("region") == "VIC1" for call in run.tool_calls)
+
+
 def test_conversation_state_does_not_cross_contaminate() -> None:
     memory = ConversationMemory()
     memory.begin_turn("case-a", "Use SA1", MemoryMode.structured_state)
