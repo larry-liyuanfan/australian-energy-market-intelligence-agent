@@ -41,6 +41,9 @@ echo "$MODEL_SHA256  $MODEL" | sha256sum --check
 module purge
 module load GCC/13.3.0
 module load CUDA/12.4.1
+PYTHON_ROOT=/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.11.3
+test -s "$PYTHON_ROOT/lib/libpython3.11.so.1.0"
+export LD_LIBRARY_PATH="$PYTHON_ROOT/lib:${LD_LIBRARY_PATH:-}"
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 "$SERVER" --model "$MODEL" --host 127.0.0.1 --port "$PORT" \
   --ctx-size 12288 --n-gpu-layers 99 --parallel 1 --jinja --reasoning-format none --no-webui \

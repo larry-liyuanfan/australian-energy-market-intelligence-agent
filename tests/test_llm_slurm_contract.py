@@ -42,4 +42,6 @@ def test_runtime_progression_is_short_preflight_then_gpu_pilot_then_holdout() ->
     assert "--gres=gpu:1g.20gb:1" in pilot
     assert "--tmp=10000" in pilot and "SLURM_TMPDIR" in pilot
     assert "--tmp=10000" in holdout and "SLURM_TMPDIR" in holdout
+    assert "libpython3.11.so.1.0" in pilot and "LD_LIBRARY_PATH" in pilot
+    assert "libpython3.11.so.1.0" in holdout and "LD_LIBRARY_PATH" in holdout
     assert "llama.cpp-$LLAMA_COMMIT" in pilot
