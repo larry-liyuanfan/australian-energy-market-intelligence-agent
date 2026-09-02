@@ -60,3 +60,13 @@ def test_aggregate_preserves_retries_tokens_latency_and_unsafe_counts() -> None:
     assert metrics["model_correct_tool_path_rate"] == 0.0
     assert metrics["p95_latency_ms"] == 50.0
     assert metrics["total_rejected_model_calls"] == 2
+    assert metrics["total_prompt_tokens"] == 100
+    assert metrics["total_completion_tokens"] == 10
+    assert metrics["total_provider_cost_aud"] == 0.0
+    assert metrics["stability"] == {
+        "groups": 1,
+        "pass_at_1": 1.0,
+        "pass_all_k": 1.0,
+        "k_min": 1,
+        "k_max": 1,
+    }

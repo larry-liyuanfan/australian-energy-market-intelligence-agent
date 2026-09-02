@@ -145,6 +145,13 @@ def aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
         replan_items = [item for item in items if item["requires_replan"]]
         memory_items = [item for item in items if item["requires_memory"]]
         latencies = [float(item["end_to_end_latency_ms"]) for item in items]
+        stability_groups: dict[str, list[bool]] = defaultdict(list)
+        for item in items:
+            stability_key = f"{item['case_id']}|{item['turn_index']}"
+            stability_groups[stability_key].append(bool(item["task_success"]))
+        total_prompt_tokens = sum(int(item["prompt_tokens"]) for item in items)
+        total_completion_tokens = sum(int(item["completion_tokens"]) for item in items)
+        total_provider_cost = sum(float(item["provider_cost_aud"]) for item in items)
         output[key] = {
             "attempts": n,
             "task_success_rate": successes / n,
@@ -163,25 +170,42 @@ def aggregate_rows(rows: list[dict[str, Any]]) -> dict[str, Any]:
             ),
             "state_contamination_rate": sum(bool(item["state_contaminated"]) for item in items) / n,
             "average_steps": sum(int(item["steps"]) for item in items) / n,
-            "average_prompt_tokens": sum(int(item["prompt_tokens"]) for item in items) / n,
-            "average_completion_tokens": sum(int(item["completion_tokens"]) for item in items) / n,
+            "average_prompt_tokens": total_prompt_tokens / n,
+            "average_completion_tokens": total_completion_tokens / n,
+            "total_prompt_tokens": total_prompt_tokens,
+            "total_completion_tokens": total_completion_tokens,
             "p50_latency_ms": percentile(latencies, 0.50),
             "p95_latency_ms": percentile(latencies, 0.95),
-            "provider_cost_aud_per_task": sum(float(item["provider_cost_aud"]) for item in items) / n,
+            "provider_cost_aud_per_task": total_provider_cost / n,
+            "total_provider_cost_aud": total_provider_cost,
             "total_retries": sum(int(item["retries"]) for item in items),
             "total_rejected_model_calls": sum(int(item["rejected_model_calls"]) for item in items),
             "unsafe_tool_or_dsl_calls": sum(int(item["unsafe_tool_or_dsl_calls"]) for item in items),
+            "stability": {
+                "groups": len(stability_groups),
+                "pass_at_1": (
+                    sum(sum(values) / len(values) for values in stability_groups.values())
+                    / len(stability_groups)
+                ),
+                "pass_all_k": sum(all(values) for values in stability_groups.values()) / len(stability_groups),
+                "k_min": min((len(values) for values in stability_groups.values()), default=0),
+                "k_max": max((len(values) for values in stability_groups.values()), default=0),
+            },
         }
 
-    stability_groups: dict[str, list[bool]] = defaultdict(list)
+    all_stability_groups: dict[str, list[bool]] = defaultdict(list)
     for row in rows:
         key = f"{row['path']}|{row['memory_mode']}|{row['case_id']}|{row['turn_index']}"
-        stability_groups[key].append(bool(row["task_success"]))
+        all_stability_groups[key].append(bool(row["task_success"]))
     output["stability"] = {
-        "groups": len(stability_groups),
-        "pass_at_1": sum(sum(values) / len(values) for values in stability_groups.values()) / len(stability_groups),
-        "pass_all_k": sum(all(values) for values in stability_groups.values()) / len(stability_groups),
-        "k_min": min((len(values) for values in stability_groups.values()), default=0),
-        "k_max": max((len(values) for values in stability_groups.values()), default=0),
+        "groups": len(all_stability_groups),
+        "pass_at_1": (
+            sum(sum(values) / len(values) for values in all_stability_groups.values())
+            / len(all_stability_groups)
+        ),
+        "pass_all_k": sum(all(values) for values in all_stability_groups.values())
+        / len(all_stability_groups),
+        "k_min": min((len(values) for values in all_stability_groups.values()), default=0),
+        "k_max": max((len(values) for values in all_stability_groups.values()), default=0),
     }
     return output

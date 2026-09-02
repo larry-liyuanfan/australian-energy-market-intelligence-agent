@@ -3,7 +3,7 @@
 #SBATCH --account=punim2936
 #SBATCH --partition=gpu-a100-mig
 #SBATCH --gres=gpu:1g.20gb:1
-#SBATCH --time=01:20:00
+#SBATCH --time=03:00:00
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=20G
 #SBATCH --tmp=10000

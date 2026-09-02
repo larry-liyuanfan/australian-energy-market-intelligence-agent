@@ -38,7 +38,7 @@ def test_runtime_progression_is_short_preflight_then_gpu_pilot_then_holdout() ->
     assert "--time=00:15:00" in preflight and "--partition=cascade" in preflight
     assert "module load GCCcore/11.3.0" in preflight
     assert "--time=00:35:00" in pilot and "--partition=gpu-a100-mig" in pilot
-    assert "--time=01:20:00" in holdout and "--partition=gpu-a100-mig" in holdout
+    assert "--time=03:00:00" in holdout and "--partition=gpu-a100-mig" in holdout
     assert "--gres=gpu:1g.20gb:1" in pilot
     assert "--tmp=10000" in pilot and "SLURM_TMPDIR" in pilot
     assert "--tmp=10000" in holdout and "SLURM_TMPDIR" in holdout
