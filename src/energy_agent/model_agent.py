@@ -351,25 +351,33 @@ class ModelDrivenAgent:
             if outcomes and path == AgentPath.constrained_hybrid
             else 0
         )
-        queue = list(planned)
+        queue = [(name, arguments, 1) for name, arguments in planned]
         while queue and len(records) < min(self.max_steps, max_tool_calls):
-            name, arguments = queue.pop(0)
+            name, arguments, attempt = queue.pop(0)
             signature = f"{name}:{json.dumps(arguments, sort_keys=True)}"
             if signature in seen:
                 duplicates += 1
-                records.append(ToolCall(name=name, arguments=arguments, status="skipped"))
+                records.append(ToolCall(name=name, arguments=arguments, status="skipped", attempt=attempt))
                 if duplicates > self.max_duplicates:
                     break
                 continue
             seen.add(signature)
             result, record, error_category = self._execute(name, arguments)
+            if attempt > 1:
+                record = record.model_copy(
+                    update={
+                        "attempt": attempt,
+                        "recovered": result is not None,
+                        "recovery_strategy": "retry_with_backoff",
+                    }
+                )
             records.append(record)
             if result is not None:
                 results.append(result)
                 if name == "detect_price_events" and path != AgentPath.pure_llm:
                     diagnosis = self._diagnosis_call(case.region.value, result)
                     if diagnosis is not None and len(queue) + len(records) < max_tool_calls:
-                        queue.insert(0, diagnosis)
+                        queue.insert(0, (*diagnosis, 1))
                 continue
             if replans >= self.max_replans or path == AgentPath.deterministic:
                 continue
@@ -394,7 +402,9 @@ class ModelDrivenAgent:
                     recovered, _strategy = self._deterministic._recovery_call(name, arguments)
                     replacements = [(name, recovered)]
                     fallback_calls += 1
-            queue = replacements + queue
+            queue = [
+                (replacement_name, replacement_arguments, 2) for replacement_name, replacement_arguments in replacements
+            ] + queue
 
         self.memory.record_results(state, results)
         citations = list({item.evidence_id: item for result in results for item in result.evidence}.values())

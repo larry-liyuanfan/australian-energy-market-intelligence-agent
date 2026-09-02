@@ -17,7 +17,7 @@ from .market import fixture_store, load_dispatch_store
 from .metrics import ServiceMetrics
 from .model_agent import AgentPath, ModelAgentQueryRequest, ModelAgentRun, ModelDrivenAgent
 from .multimodal import MultimodalEvidenceIndex, load_page_records
-from .providers import ModelStudioPlanner, OllamaPlanner
+from .providers import LlamaCppPlanner, ModelStudioPlanner, OllamaPlanner
 from .schemas import AgentQueryRequest, AgentQueryResponse
 from .snapshots import ForecastSnapshotStore, load_forecast_snapshots
 from .tools import ToolRegistry
@@ -53,7 +53,7 @@ if forecast_snapshots_path and Path(forecast_snapshots_path).is_file():
 elif forecast_snapshots_path:
     logger.warning("Forecast snapshot file is unavailable; as-of seasonal fallback remains active")
 planner_provider = ModelStudioPlanner.from_environment()
-turn_planner = planner_provider or OllamaPlanner.from_environment()
+turn_planner = planner_provider or LlamaCppPlanner.from_environment() or OllamaPlanner.from_environment()
 redis_client: Any = None
 elasticsearch_client: Any = None
 if redis_url := os.getenv("ENERGY_REDIS_URL"):

@@ -248,6 +248,83 @@ class OllamaPlanner:
 
 
 @dataclass(frozen=True)
+class LlamaCppPlanner:
+    """Loopback-only llama.cpp OpenAI-compatible typed-tool planner."""
+
+    model: str = "Qwen3-8B-Q4_K_M.gguf"
+    base_url: str = "http://127.0.0.1:11571/v1"
+    timeout_seconds: float = 60.0
+    temperature: float = 0.0
+    transport: Transport = _urlopen_transport
+    name: str = "llama_cpp_local"
+
+    @classmethod
+    def from_environment(cls) -> LlamaCppPlanner | None:
+        enabled = os.getenv("ENERGY_LLAMACPP_ENABLED", "").strip().lower()
+        if enabled not in {"1", "true", "yes"}:
+            return None
+        base_url = os.getenv("LLAMACPP_BASE_URL", "http://127.0.0.1:11571/v1").strip()
+        if not base_url.startswith(("http://127.0.0.1", "http://localhost")):
+            raise ProviderUnavailable("LLAMACPP_BASE_URL must be loopback for the local planner")
+        return cls(
+            model=os.getenv("LLAMACPP_MODEL", "Qwen3-8B-Q4_K_M.gguf"),
+            base_url=base_url,
+        )
+
+    def plan_turn(
+        self,
+        messages: list[dict[str, object]],
+        registry: ToolRegistry,
+        max_tool_calls: int,
+        seed: int,
+    ) -> PlannerOutcome:
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "tools": [{"type": "function", "function": spec} for spec in _planner_specs(registry)],
+            "tool_choice": "auto",
+            "temperature": self.temperature,
+            "seed": seed,
+            "stream": False,
+            "chat_template_kwargs": {"enable_thinking": False},
+        }
+        request = Request(
+            f"{self.base_url.rstrip('/')}/chat/completions",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        started = time.perf_counter()
+        try:
+            decoded: dict[str, Any] = json.loads(self.transport(request, self.timeout_seconds))
+            message = decoded["choices"][0]["message"]
+        except Exception as exc:
+            raise ProviderUnavailable(f"llama.cpp request failed: {type(exc).__name__}") from exc
+        latency_ms = (time.perf_counter() - started) * 1000
+        if not isinstance(message, dict):
+            raise ProviderUnavailable("llama.cpp response did not contain a valid message")
+        calls, rejected, errors = _validated_calls(message.get("tool_calls", []), registry, max_tool_calls)
+        usage = decoded.get("usage", {})
+        if not isinstance(usage, dict):
+            usage = {}
+        return PlannerOutcome(
+            calls=calls,
+            usage=PlannerUsage(
+                prompt_tokens=int(usage.get("prompt_tokens", 0)),
+                completion_tokens=int(usage.get("completion_tokens", 0)),
+                latency_ms=latency_ms,
+                provider_cost_aud=0.0,
+            ),
+            provider=self.name,
+            model=self.model,
+            seed=seed,
+            rejected_calls=rejected,
+            validation_errors=errors,
+            content=str(message.get("content", "")),
+        )
+
+
+@dataclass(frozen=True)
 class ModelStudioPlanner:
     """OpenAI-compatible Model Studio planner constrained to registered typed tools."""
 

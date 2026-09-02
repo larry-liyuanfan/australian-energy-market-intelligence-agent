@@ -24,8 +24,10 @@ def test_holdout_job_binds_real_aemo_inputs_and_real_model_server() -> None:
     assert "dispatch_features_repaired_v2.csv.gz" in text
     assert "evidence_documents.jsonl" in text
     assert "forecast-snapshots-c66e415.jsonl" in text
-    assert "ollama" in text
-    assert "OLLAMA_NO_CLOUD=1" in text
+    assert "llama-server" in text
+    assert "Qwen3-8B-Q4_K_M.gguf" in text
+    assert "MODEL_SHA256=" in text
+    assert "--host 127.0.0.1" in text
     assert "llm_agent_holdout_v1.jsonl" in text
 
 
@@ -35,5 +37,7 @@ def test_runtime_progression_is_short_preflight_then_gpu_pilot_then_holdout() ->
     holdout = (ROOT / "scripts" / "slurm" / "llm_agent_holdout.sbatch").read_text(encoding="utf-8")
     assert "--time=00:15:00" in preflight and "--partition=cascade" in preflight
     assert "module load GCCcore/11.3.0" in preflight
-    assert "--time=00:25:00" in pilot and "--partition=gpu-l40s" in pilot
-    assert "--time=00:50:00" in holdout and "--partition=gpu-l40s" in holdout
+    assert "--time=00:35:00" in pilot and "--partition=gpu-a100-mig" in pilot
+    assert "--time=01:20:00" in holdout and "--partition=gpu-a100-mig" in holdout
+    assert "--gres=gpu:1g.20gb:1" in pilot
+    assert "llama.cpp-$LLAMA_COMMIT" in pilot

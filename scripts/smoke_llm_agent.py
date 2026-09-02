@@ -10,19 +10,25 @@ from pathlib import Path
 
 from energy_agent.market import fixture_store
 from energy_agent.model_agent import AgentPath, MemoryMode, ModelDrivenAgent
-from energy_agent.providers import OllamaPlanner
+from energy_agent.providers import LlamaCppPlanner, OllamaPlanner
 from energy_agent.tools import ToolRegistry
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Real-model tool-call smoke test")
-    parser.add_argument("--ollama-url", required=True)
+    parser.add_argument("--provider", choices=("ollama", "llama_cpp"), default="ollama")
+    parser.add_argument("--provider-url", required=True)
     parser.add_argument("--model", default="qwen3:4b-instruct")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    planner = (
+        OllamaPlanner(model=args.model, base_url=args.provider_url, temperature=0.0)
+        if args.provider == "ollama"
+        else LlamaCppPlanner(model=args.model, base_url=args.provider_url, temperature=0.0)
+    )
     run = ModelDrivenAgent(
         ToolRegistry(fixture_store()),
-        OllamaPlanner(model=args.model, base_url=args.ollama_url, temperature=0.0),
+        planner,
         timeout_seconds=10,
     ).run_turn(
         "Diagnose the SA1 price event on 2025-01-02 and find official evidence.",
@@ -51,7 +57,7 @@ def main() -> None:
         "unsafe_tool_or_dsl_calls": run.metrics.unsafe_tool_or_dsl_calls,
         "result_sha256": hashlib.sha256(result_path.read_bytes()).hexdigest(),
         "fixture_only": True,
-        "real_model_runtime": run.metrics.provider == "ollama_local",
+        "real_model_runtime": run.metrics.provider in {"ollama_local", "llama_cpp_local"},
     }
     (args.output / "run_manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(json.dumps(manifest, indent=2))

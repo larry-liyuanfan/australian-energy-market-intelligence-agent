@@ -191,6 +191,9 @@ def test_bounded_model_replanning_recovers_failed_tool() -> None:
     assert run.metrics.replans == 1
     assert run.metrics.retries == 1
     assert any(result.tool_name == "search_official_evidence" for result in run.results)
+    assert run.tool_calls[0].attempt == 1 and not run.tool_calls[0].recovered
+    assert run.tool_calls[1].attempt == 2 and run.tool_calls[1].recovered
+    assert run.tool_calls[1].recovery_strategy == "retry_with_backoff"
     assert len(planner.seen_messages) == 2
 
 

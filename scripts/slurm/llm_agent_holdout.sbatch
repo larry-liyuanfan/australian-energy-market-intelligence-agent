@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=energy-llm-holdout
 #SBATCH --account=punim2936
-#SBATCH --partition=gpu-l40s
-#SBATCH --gres=gpu:1
-#SBATCH --time=00:50:00
+#SBATCH --partition=gpu-a100-mig
+#SBATCH --gres=gpu:1g.20gb:1
+#SBATCH --time=01:20:00
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=20G
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/llm-agent-eval-20260903/logs/holdout-%j.out
@@ -18,29 +18,35 @@ MARKET=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-
 MARKET_MANIFEST=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/final_manifest_v2.json
 EVIDENCE=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/evidence-index/evidence_documents.jsonl
 SNAPSHOTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/forecast-snapshots-c66e415.jsonl
+LLAMA_COMMIT=7798007a29a90e3053e799394da48cf53a2f8e0f
+SERVER="$ENV_ROOT/llama.cpp-$LLAMA_COMMIT/build/bin/llama-server"
+MODEL="$ENV_ROOT/models/qwen3-8b-gguf-1d54a16/Qwen3-8B-Q4_K_M.gguf"
+MODEL_SHA256=d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785
 PORT=11572
 RUN_DIR="$ARTIFACTS/private/holdout-$SLURM_JOB_ID"
-export OLLAMA_MODELS="$ENV_ROOT/ollama-models"
-export OLLAMA_HOST="127.0.0.1:$PORT"
-export OLLAMA_CONTEXT_LENGTH=8192
-export OLLAMA_KEEP_ALIVE=60m
-export OLLAMA_TMPDIR="$ENV_ROOT/ollama-tmp"
-export OLLAMA_NO_CLOUD=1
-export OLLAMA_NOHISTORY=1
-mkdir -p "$RUN_DIR" "$OLLAMA_TMPDIR"
+export XDG_CACHE_HOME="$ENV_ROOT/xdg-cache"
 
-for path in "$MARKET" "$MARKET_MANIFEST" "$EVIDENCE" "$SNAPSHOTS"; do
+mkdir -p "$RUN_DIR" "$XDG_CACHE_HOME"
+for path in "$MARKET" "$MARKET_MANIFEST" "$EVIDENCE" "$SNAPSHOTS" "$SERVER" "$MODEL"; do
   test -s "$path"
 done
+echo "$MODEL_SHA256  $MODEL" | sha256sum --check
+
+module purge
+module load GCC/13.3.0
+module load CUDA/12.4.1
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
-"$ENV_ROOT/ollama-v0.33.2/bin/ollama" serve >"$PROJECT/logs/ollama-holdout-$SLURM_JOB_ID.log" 2>&1 &
+"$SERVER" --model "$MODEL" --host 127.0.0.1 --port "$PORT" \
+  --ctx-size 12288 --n-gpu-layers 99 --parallel 1 --jinja --reasoning-format none --no-webui \
+  >"$PROJECT/logs/llama-cpp-holdout-$SLURM_JOB_ID.log" 2>&1 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-for _ in $(seq 1 60); do
-  curl -fsS "http://127.0.0.1:$PORT/api/tags" >/dev/null && break
+for _ in $(seq 1 90); do
+  curl -fsS "http://127.0.0.1:$PORT/health" >/dev/null && break
   sleep 1
 done
-curl -fsS "http://127.0.0.1:$PORT/api/tags" >/dev/null
+curl -fsS "http://127.0.0.1:$PORT/health" >/dev/null
+
 cd "$REPO"
 "$ENV_ROOT/venv/bin/python" scripts/evaluate_llm_agent.py \
   --benchmark benchmarks/llm_agent_holdout_v1.jsonl \
@@ -50,6 +56,7 @@ cd "$REPO"
   --data-manifest "$MARKET_MANIFEST" \
   --evidence "$EVIDENCE" \
   --forecast-snapshots "$SNAPSHOTS" \
-  --ollama-url "http://127.0.0.1:$PORT" \
-  --model qwen3:4b-instruct
+  --provider llama_cpp \
+  --provider-url "http://127.0.0.1:$PORT/v1" \
+  --model Qwen3-8B-Q4_K_M.gguf
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P >"$RUN_DIR/slurm_usage.txt"

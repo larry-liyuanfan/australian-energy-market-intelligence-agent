@@ -15,7 +15,7 @@ from energy_agent.evidence import HybridEvidenceIndex, load_official_chunks
 from energy_agent.llm_evaluation import aggregate_rows, load_episodes, score_turn
 from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, ConversationMemory, MemoryMode, ModelDrivenAgent
-from energy_agent.providers import OllamaPlanner
+from energy_agent.providers import LlamaCppPlanner, OllamaPlanner
 from energy_agent.schemas import ToolResult
 from energy_agent.snapshots import ForecastSnapshotStore, load_forecast_snapshots
 from energy_agent.tools import ToolRegistry
@@ -91,7 +91,8 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path)
     parser.add_argument("--figures", type=Path)
     parser.add_argument("--forecast-snapshots", type=Path)
-    parser.add_argument("--ollama-url", default="http://127.0.0.1:11434")
+    parser.add_argument("--provider", choices=("ollama", "llama_cpp"), default="ollama")
+    parser.add_argument("--provider-url", default="http://127.0.0.1:11434")
     parser.add_argument("--model", default="qwen3:4b-instruct")
     parser.add_argument(
         "--paths", nargs="+", choices=[item.value for item in AgentPath], default=[item.value for item in AgentPath]
@@ -111,7 +112,11 @@ def main() -> None:
     if args.max_episodes:
         episodes = episodes[: args.max_episodes]
     base_registry = build_registry(args)
-    planner = OllamaPlanner(model=args.model, base_url=args.ollama_url)
+    planner = (
+        OllamaPlanner(model=args.model, base_url=args.provider_url)
+        if args.provider == "ollama"
+        else LlamaCppPlanner(model=args.model, base_url=args.provider_url)
+    )
     rows: list[dict[str, Any]] = []
     for path_name in args.paths:
         path = AgentPath(path_name)
@@ -159,7 +164,36 @@ def main() -> None:
     metrics = aggregate_rows(rows)
     thresholds = gate["thresholds"]
     hybrid = metrics.get("constrained_hybrid|structured_state", {})
-    deterministic = metrics.get("deterministic|structured_state", {})
+    hybrid_memory_rows = [
+        row
+        for row in rows
+        if row["path"] == AgentPath.constrained_hybrid.value
+        and row["memory_mode"] == MemoryMode.structured_state.value
+        and row["requires_memory"]
+    ]
+    deterministic_memory_rows = [
+        row
+        for row in rows
+        if row["path"] == AgentPath.deterministic.value
+        and row["memory_mode"] == MemoryMode.structured_state.value
+        and row["requires_memory"]
+    ]
+    hybrid_memory_task_success = (
+        sum(float(row["task_success"]) for row in hybrid_memory_rows) / len(hybrid_memory_rows)
+        if hybrid_memory_rows
+        else 0.0
+    )
+    deterministic_memory_task_success = (
+        sum(float(row["task_success"]) for row in deterministic_memory_rows) / len(deterministic_memory_rows)
+        if deterministic_memory_rows
+        else 0.0
+    )
+    metrics["memory_required_subset"] = {
+        "constrained_hybrid_structured_state_task_success_rate": hybrid_memory_task_success,
+        "deterministic_structured_state_task_success_rate": deterministic_memory_task_success,
+        "hybrid_rows": len(hybrid_memory_rows),
+        "deterministic_rows": len(deterministic_memory_rows),
+    }
     promotion_checks = {
         "task_success_rate": hybrid.get("task_success_rate", 0) >= thresholds["task_success_rate"],
         "correct_tool_path_rate": hybrid.get("model_correct_tool_path_rate", 0) >= thresholds["correct_tool_path_rate"],
@@ -172,8 +206,7 @@ def main() -> None:
         "structured_memory_state_contamination": hybrid.get("state_contamination_rate", 1)
         <= thresholds["structured_memory_state_contamination"],
         "unsafe_tool_or_dsl_calls": hybrid.get("unsafe_tool_or_dsl_calls", 1) == thresholds["unsafe_tool_or_dsl_calls"],
-        "beats_deterministic_memory_subset_proxy": hybrid.get("task_success_rate", 0)
-        > deterministic.get("task_success_rate", 0),
+        "beats_deterministic_memory_required_subset": hybrid_memory_task_success > deterministic_memory_task_success,
     }
     metrics["promotion_checks"] = promotion_checks
     metrics["promotion_pass"] = all(promotion_checks.values())
@@ -189,7 +222,7 @@ def main() -> None:
             ["git", "rev-parse", "HEAD"], check=True, capture_output=True, text=True
         ).stdout.strip(),
         "python": platform.python_version(),
-        "provider": "ollama_local_or_same-job-loopback",
+        "provider": planner.name,
         "model": args.model,
         "model_runtime_is_real": True,
         "benchmark_sha256": sha256(args.benchmark),
