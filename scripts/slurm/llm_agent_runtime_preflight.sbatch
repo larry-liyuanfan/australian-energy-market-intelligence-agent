@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=energy-llm-env
 #SBATCH --account=punim2936
-#SBATCH --partition=sapphire
+#SBATCH --partition=cascade
 #SBATCH --time=00:15:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
@@ -20,6 +20,7 @@ test -f "$REPO/benchmarks/llm_agent_promotion_gate_v1.json"
 test -f "$REPO/benchmarks/llm_agent_holdout_v1.jsonl"
 
 module purge
+module load GCCcore/11.3.0
 module load Python/3.11.3
 if [ ! -x "$ENV_ROOT/venv/bin/python" ]; then
   python -m venv "$ENV_ROOT/venv"
