@@ -133,6 +133,25 @@ class ConversationMemory:
         self._states.move_to_end(conversation_id)
         return self._states[conversation_id]
 
+    def constraints_for_mode(
+        self, state: ConversationState, mode: MemoryMode
+    ) -> dict[str, SourcedConstraint]:
+        """Return only constraints that the selected memory policy may expose."""
+
+        current_turn = len(state.user_turns)
+        if mode == MemoryMode.no_memory:
+            return {
+                key: value for key, value in state.constraints.items() if value.source_turn == current_turn
+            }
+        if mode == MemoryMode.sliding_window:
+            first_visible_turn = max(1, current_turn - self.sliding_turns)
+            return {
+                key: value
+                for key, value in state.constraints.items()
+                if value.source_turn >= first_visible_turn
+            }
+        return dict(state.constraints)
+
     def begin_turn(
         self, conversation_id: str, user_text: str, mode: MemoryMode
     ) -> tuple[ConversationState, list[dict[str, object]]]:
@@ -329,7 +348,8 @@ class ModelDrivenAgent:
     ) -> ModelAgentRun:
         started = time.perf_counter()
         state, messages = self.memory.begin_turn(conversation_id, question, memory_mode)
-        resolved_question = self._resolved_question(question, state, memory_mode)
+        resolved_constraints = self.memory.constraints_for_mode(state, memory_mode)
+        resolved_question = self._resolved_question(question, resolved_constraints, memory_mode)
         request = AgentQueryRequest(question=resolved_question, max_tool_calls=max_tool_calls)
         case = self._deterministic._build_case(request)
         baseline_calls = self._deterministic._plan(request)
@@ -458,7 +478,7 @@ class ModelDrivenAgent:
             memory_mode=memory_mode,
             status=status,
             workflow_type=case.workflow_type,
-            resolved_constraints=state.constraints if memory_mode != MemoryMode.no_memory else {},
+            resolved_constraints=resolved_constraints,
             model_proposed_calls=[
                 ToolCall(name=name, arguments=arguments) for outcome in outcomes for name, arguments in outcome.calls
             ],
@@ -486,10 +506,14 @@ class ModelDrivenAgent:
         )
 
     @staticmethod
-    def _resolved_question(question: str, state: ConversationState, mode: MemoryMode) -> str:
-        if mode == MemoryMode.no_memory:
+    def _resolved_question(
+        question: str,
+        constraints: dict[str, SourcedConstraint],
+        mode: MemoryMode,
+    ) -> str:
+        context = {key: item.value for key, item in constraints.items()}
+        if mode == MemoryMode.no_memory or not context:
             return question
-        context = {key: item.value for key, item in state.constraints.items()}
         intent = context.get("intent")
         intent_hint = f"\nPrior sourced intent: {intent}." if intent else ""
         return question + intent_hint + "\nSourced constraints: " + json.dumps(context, sort_keys=True)

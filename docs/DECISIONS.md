@@ -32,6 +32,8 @@ The model-development cases and holdout live in separate files. The holdout uses
 
 The first holdout submission was cancelled before metrics were written when a code review found that the llama.cpp adapter still used greedy temperature zero. Repeating seed labels under greedy decoding would not test sampling stability. The cancelled job and resource usage remain in the report; only the subsequent non-zero-temperature run can make pass@1/pass-all-k claims.
 
+The next submission was also cancelled before metrics were written when review found that hybrid fallback resolved all accumulated constraints for every non-empty memory mode. That made sliding-window execution behave like structured long-term state. The runtime now derives a mode-specific visible constraint set, and the holdout includes a four-turn episode whose final turn requires a date outside the two-turn window. The invalidated job remains disclosed and is excluded from memory results.
+
 ## ADR-005 — Real runtime first, negative result allowed
 
 Status: accepted.

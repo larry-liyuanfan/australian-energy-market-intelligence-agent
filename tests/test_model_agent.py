@@ -12,6 +12,7 @@ from energy_agent.model_agent import (
     SYSTEM_PROMPT,
     AgentPath,
     ConversationMemory,
+    ConversationState,
     MemoryMode,
     ModelDrivenAgent,
 )
@@ -145,6 +146,32 @@ def test_full_history_and_sliding_window_have_distinct_context() -> None:
     assert "prior user turn 1" in str(full)
     assert "prior user turn 1" not in str(sliding)
     assert "prior user turn 2" in str(sliding)
+
+
+def test_memory_modes_expose_only_their_allowed_constraint_horizon() -> None:
+    memory = ConversationMemory(sliding_turns=2)
+    state: ConversationState | None = None
+    for text in (
+        "Use SA1 on 2026-07-12.",
+        "Keep the same market day and fetch another evidence view.",
+        "Switch to a 1MW/2MWh BESS replay with 88% efficiency.",
+        "Correction: use QLD1 and retain the prior settings.",
+    ):
+        state, _messages = memory.begin_turn("horizon", text, MemoryMode.structured_state)
+    assert state is not None
+
+    no_memory = memory.constraints_for_mode(state, MemoryMode.no_memory)
+    sliding = memory.constraints_for_mode(state, MemoryMode.sliding_window)
+    full = memory.constraints_for_mode(state, MemoryMode.full_history)
+    structured = memory.constraints_for_mode(state, MemoryMode.structured_state)
+
+    assert no_memory["region"].value == "QLD1"
+    assert "dates" not in no_memory and "battery_power_mw" not in no_memory
+    assert sliding["region"].value == "QLD1"
+    assert sliding["battery_power_mw"].value == 1.0
+    assert "dates" not in sliding
+    assert full["dates"].value == ["2026-07-12"]
+    assert structured["dates"].value == ["2026-07-12"]
 
 
 def test_hybrid_fills_missing_required_calls_with_deterministic_plan() -> None:

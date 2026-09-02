@@ -8,7 +8,7 @@ from energy_agent.llm_evaluation import aggregate_rows, load_episodes, ordered_s
 def test_holdout_is_separate_and_uses_new_dates() -> None:
     path = Path(__file__).parents[1] / "benchmarks" / "llm_agent_holdout_v1.jsonl"
     episodes = load_episodes(path)
-    assert len(episodes) == 12
+    assert len(episodes) == 13
     text = path.read_text(encoding="utf-8")
     assert "2025-09-15" not in text
     assert "2025-12-15" not in text
