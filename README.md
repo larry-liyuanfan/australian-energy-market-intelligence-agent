@@ -49,7 +49,7 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 
 **Official figures.** A lightweight serving route reads precompiled QED workbook figure records containing figure identity, image hashes and bounded previews of the underlying source cells. A source-disjoint Q1 2026 holdout reached **MRR 0.9667 / Recall@5 1.00**, versus text-chunk MRR 0.7308, on 20 author-curated queries. This proves figure routing and source-cell provenance, not VLM reasoning or answer correctness.
 
-**Optional visual research.** Qwen3-VL-Embedding-2B page retrieval remains an offline Spartan adapter. It is not loaded into the small SG API. Its positive transport and negative fusion experiments are retained in the [experiment catalogue](docs/EXPERIMENT_CATALOG.md), not presented as the online product path.
+**Optional visual research.** Qwen3-VL-Embedding-2B page retrieval remains an offline Spartan adapter. It is not loaded into the small SG API. Its positive transport and negative fusion experiments are retained in the [experiment catalogue](docs/EXPERIMENT_CATALOG.md), not presented as the online product path. The newer ViDoRe/GoalSpec v2 run stopped without a holdout claim after the frozen infrastructure retry limit; see the [evaluation status](docs/VISUAL_GOAL_COMPILER_V2_EVALUATION.md).
 
 ## Three verified results that matter
 

@@ -43,5 +43,6 @@ def test_visual_dependencies_overlap_colpali_runtime_constraints() -> None:
         assert '"pillow==10.4.0"' in text
         assert '"torch==2.8.*"' in text
         assert '"transformers==4.57.3"' in text
+        assert "PYTHON_LIBRARY_PATH" in text
         assert 'pip install --no-deps -e "$QWEN_REPO"' in text
         assert 'pip check' in text
