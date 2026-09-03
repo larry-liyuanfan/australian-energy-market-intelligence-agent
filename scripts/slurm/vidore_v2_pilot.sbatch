@@ -14,14 +14,14 @@ set -euo pipefail
 : "${ENERGY_GIT_COMMIT:?Set the exact pushed commit}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-visual-goal-compiler-v2
 REPO="$PROJECT/repo"
-ENV_ROOT="$PROJECT/env"
 ARTIFACTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/energy-visual-goal-compiler-v2
 TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CODE_ROOT="$TASK_SCRATCH/energy-vidore-v2-pilot-$SLURM_JOB_ID"
 RUN_DIR="$ARTIFACTS/private/vidore-pilot-$SLURM_JOB_ID"
-QWEN_REPO="$ENV_ROOT/Qwen3-VL-Embedding-393e2978"
-MODEL_ROOT="$PROJECT/models"
-export HF_HOME="$PROJECT/hf-cache"
+ENV_ROOT="$TASK_SCRATCH/energy-vidore-v2-pilot-env-$SLURM_JOB_ID"
+QWEN_REPO="$TASK_SCRATCH/Qwen3-VL-Embedding-393e2978"
+MODEL_ROOT="$TASK_SCRATCH/energy-vidore-v2-pilot-models-$SLURM_JOB_ID"
+export HF_HOME="$TASK_SCRATCH/energy-vidore-v2-pilot-hf-$SLURM_JOB_ID"
 export HF_HUB_DISABLE_TELEMETRY=1
 export CODE_ROOT MODEL_ROOT
 
@@ -31,9 +31,15 @@ git clone --shared --no-checkout "$REPO" "$CODE_ROOT"
 git -C "$CODE_ROOT" checkout --detach "$ENERGY_GIT_COMMIT"
 trap 'rm -rf -- "$CODE_ROOT"' EXIT
 module purge
+module load GCCcore/11.3.0 Python/3.11.3
+python -m venv "$ENV_ROOT/venv"
+export PIP_NO_CACHE_DIR=1
+"$ENV_ROOT/venv/bin/python" -m pip install -e "$CODE_ROOT[visual-benchmark,multimodal,ml]"
+module purge
 module load GCC/13.3.0 CUDA/12.4.1
-"$ENV_ROOT/venv/bin/python" -m pip install 'datasets>=3,<5' 'sentence-transformers>=5,<6' 'colpali-engine==0.3.1'
-if [ ! -d "$QWEN_REPO/.git" ]; then git clone --filter=blob:none https://github.com/QwenLM/Qwen3-VL-Embedding.git "$QWEN_REPO"; fi
+PYTHON_ROOT=/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.11.3
+export LD_LIBRARY_PATH="$PYTHON_ROOT/lib:${LD_LIBRARY_PATH:-}"
+git clone --filter=blob:none https://github.com/QwenLM/Qwen3-VL-Embedding.git "$QWEN_REPO"
 git -C "$QWEN_REPO" checkout --detach 393e2978d27852b0d0230d6994f37f9c15bed73c
 "$ENV_ROOT/venv/bin/python" -m pip install -e "$QWEN_REPO"
 export MODEL_ROOT

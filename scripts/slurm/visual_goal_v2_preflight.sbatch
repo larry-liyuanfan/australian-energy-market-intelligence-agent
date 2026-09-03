@@ -12,11 +12,11 @@ set -euo pipefail
 : "${ENERGY_GIT_COMMIT:?Set the exact pushed commit}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-visual-goal-compiler-v2
 REPO="$PROJECT/repo"
-ENV_ROOT="$PROJECT/env"
 TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CODE_ROOT="$TASK_SCRATCH/energy-vg2-preflight-$SLURM_JOB_ID"
-export PIP_CACHE_DIR="$ENV_ROOT/pip-cache"
-export HF_HOME="$PROJECT/hf-cache"
+ENV_ROOT="$TASK_SCRATCH/energy-vg2-preflight-env-$SLURM_JOB_ID"
+export PIP_NO_CACHE_DIR=1
+export HF_HOME="$TASK_SCRATCH/energy-vg2-preflight-hf-$SLURM_JOB_ID"
 export HF_HUB_DISABLE_TELEMETRY=1
 
 test "$(realpath "$PROJECT")" = "$PROJECT"
@@ -28,9 +28,7 @@ trap 'rm -rf -- "$CODE_ROOT"' EXIT
 
 module purge
 module load GCCcore/11.3.0 Python/3.11.3
-if [ ! -x "$ENV_ROOT/venv/bin/python" ]; then
-  python -m venv "$ENV_ROOT/venv"
-fi
+python -m venv "$ENV_ROOT/venv"
 "$ENV_ROOT/venv/bin/python" -m pip install --upgrade 'pip>=25.1,<26'
 "$ENV_ROOT/venv/bin/python" -m pip install -e "$CODE_ROOT[test,search,workbook,multimodal]"
 

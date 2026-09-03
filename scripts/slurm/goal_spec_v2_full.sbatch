@@ -6,7 +6,7 @@
 #SBATCH --time=05:00:00
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=24G
-#SBATCH --tmp=30000
+#SBATCH --tmp=60000
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-visual-goal-compiler-v2/logs/goal-full-%j.out
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-visual-goal-compiler-v2/logs/goal-full-%j.err
 
@@ -14,19 +14,20 @@ set -euo pipefail
 : "${ENERGY_GIT_COMMIT:?Set the exact pushed commit}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-visual-goal-compiler-v2
 REPO="$PROJECT/repo"
-ENV_ROOT="$PROJECT/env"
 ARTIFACTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/energy-visual-goal-compiler-v2
 MARKET=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/dispatch_features_repaired_v2.csv.gz
 MARKET_MANIFEST=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/ingest-12m/final_manifest_v2.json
 EVIDENCE=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/evidence-index/evidence_documents.jsonl
 SNAPSHOTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/forecast-snapshots-c66e415.jsonl
 LLAMA_COMMIT=7798007a29a90e3053e799394da48cf53a2f8e0f
-SERVER="$ENV_ROOT/llama.cpp-$LLAMA_COMMIT/build/bin/llama-server"
-MODEL_ROOT="$PROJECT/models"
-MODEL8="$MODEL_ROOT/Qwen3-8B-Q4_K_M.gguf"
-MODEL14="$MODEL_ROOT/Qwen3-14B-Q4_K_M.gguf"
 TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
 CODE_ROOT="$TASK_SCRATCH/energy-goal-v2-full-$SLURM_JOB_ID"
+ENV_ROOT="$TASK_SCRATCH/energy-goal-v2-full-env-$SLURM_JOB_ID"
+LLAMA_ROOT="$TASK_SCRATCH/llama.cpp-$LLAMA_COMMIT"
+SERVER="$LLAMA_ROOT/build/bin/llama-server"
+MODEL_ROOT="$TASK_SCRATCH/energy-goal-v2-full-models-$SLURM_JOB_ID"
+MODEL8="$MODEL_ROOT/Qwen3-8B-Q4_K_M.gguf"
+MODEL14="$MODEL_ROOT/Qwen3-14B-Q4_K_M.gguf"
 RUN_DIR="$ARTIFACTS/private/goal-full-$SLURM_JOB_ID"
 PORT=11602
 server_pid=''
@@ -44,9 +45,20 @@ stage_model "$MODEL8" 'https://huggingface.co/Qwen/Qwen3-8B-GGUF/resolve/1d54a16
 stage_model "$MODEL14" 'https://huggingface.co/Qwen/Qwen3-14B-GGUF/resolve/530227a7d994db8eca5ab5ced2fb692b614357fd/Qwen3-14B-Q4_K_M.gguf?download=true' 500a8806e85ee9c83f3ae08420295592451379b4f8cf2d0f41c15dffeb6b81f0
 
 module purge
-module load GCC/13.3.0 CUDA/12.4.1
+module load GCCcore/11.3.0 Python/3.11.3
+python -m venv "$ENV_ROOT/venv"
+export PIP_NO_CACHE_DIR=1
+"$ENV_ROOT/venv/bin/python" -m pip install -e "$CODE_ROOT[test,search,workbook]"
+module purge
+module load GCC/13.3.0 CMake/3.31.8 CUDA/12.4.1
 PYTHON_ROOT=/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.11.3
 export LD_LIBRARY_PATH="$PYTHON_ROOT/lib:${LD_LIBRARY_PATH:-}"
+git clone --filter=blob:none https://github.com/ggml-org/llama.cpp.git "$LLAMA_ROOT"
+git -C "$LLAMA_ROOT" checkout --detach "$LLAMA_COMMIT"
+test "$(git -C "$LLAMA_ROOT" rev-parse HEAD)" = "$LLAMA_COMMIT"
+cmake -S "$LLAMA_ROOT" -B "$LLAMA_ROOT/build" \
+  -DGGML_CUDA=ON -DLLAMA_CURL=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_SERVER=ON
+cmake --build "$LLAMA_ROOT/build" --target llama-server --parallel "$SLURM_CPUS_PER_TASK"
 cleanup() { if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi; rm -rf -- "$CODE_ROOT"; }
 trap cleanup EXIT
 start_server() {
