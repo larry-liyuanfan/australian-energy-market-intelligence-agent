@@ -1,0 +1,31 @@
+{
+  "schema_version": "energy-visual-goal-compiler-freeze-v2",
+  "frozen_at": "2026-09-03T00:00:00+10:00",
+  "frozen_before_any_v2_model_or_vidore_quality_run": true,
+  "goal_spec": {
+    "benchmark": "benchmarks/goal_spec_holdout_v2.jsonl",
+    "benchmark_sha256": "1a9417cf73f205b454bee19b240d18c47acd5e239eb25e8165e676c1fd51d20b",
+    "gate": "benchmarks/goal_spec_promotion_gate_v2.json",
+    "gate_sha256": "8df915554658a935e1051b9757ab1c019e47606c4781f8cdd08964d8198732d2",
+    "episodes": 18,
+    "turns": 36,
+    "seeds": [101, 307, 911],
+    "aemo_data_sha256": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "aemo_data_manifest_sha256": "4d18a4f86e3daa13b5b7144b9f0939cb5bf5eba46a8d3ddbd0c442e8065dcc19",
+    "evidence_sha256": "f3cd5fc3727c924bed509605cffb5b205a68d9c567aad28ade7e10f6927dbb04",
+    "forecast_snapshots_sha256": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d"
+  },
+  "vidore": {
+    "config": "benchmarks/vidore_retrieval_v2.json",
+    "config_sha256": "c3f591b9f4f55f168738e62a0dcb1a31ee77bd8c67ae8eef1fea6b8c981d6d3f",
+    "weight_selection_source": "benchmarks/multimodal_page_retrieval_q4_2024.jsonl",
+    "weight_selection_source_sha256": "e85c0f6b5aa6e60a606ee4b49aba3b84de5a12ab834273484cfef30ac4217dbf",
+    "vidore_used_for_weight_selection": false,
+    "tasks": [
+      "docvqa",
+      "infovqa",
+      "tatdqa"
+    ]
+  },
+  "boundary": "This manifest freezes evaluation inputs; it does not assert a positive result or enable a model planner."
+}
