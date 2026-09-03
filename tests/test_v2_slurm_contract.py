@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 
@@ -29,3 +30,10 @@ def test_full_jobs_never_emit_private_predictions_to_github_paths() -> None:
         text = (root / "scripts/slurm" / name).read_text()
         assert "artifacts/public" not in text
         assert "private/" in text
+
+
+def test_visual_dependencies_overlap_colpali_runtime_constraints() -> None:
+    root = Path(__file__).parents[1]
+    project = tomllib.loads((root / "pyproject.toml").read_text())
+    assert "numpy>=1.26,<3" in project["project"]["dependencies"]
+    assert "pillow>=9.2,<13" in project["project"]["optional-dependencies"]["multimodal"]
