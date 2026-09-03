@@ -159,4 +159,5 @@ def test_v2_freeze_manifest_matches_immutable_inputs() -> None:
         ("vidore", "weight_selection_source", "weight_selection_source_sha256"),
     ):
         path = root / freeze[section][path_key]
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == freeze[section][sha_key]
+        git_normalized = path.read_text(encoding="utf-8").encode()
+        assert hashlib.sha256(git_normalized).hexdigest() == freeze[section][sha_key]

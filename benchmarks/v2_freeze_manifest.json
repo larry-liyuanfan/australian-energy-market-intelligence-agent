@@ -17,9 +17,9 @@
   },
   "vidore": {
     "config": "benchmarks/vidore_retrieval_v2.json",
-    "config_sha256": "c3f591b9f4f55f168738e62a0dcb1a31ee77bd8c67ae8eef1fea6b8c981d6d3f",
+    "config_sha256": "3e6013bb3f96ba7bc77e947262d003da4fb742acca0c78c0bc301a2116036e8e",
     "weight_selection_source": "benchmarks/multimodal_page_retrieval_q4_2024.jsonl",
-    "weight_selection_source_sha256": "e85c0f6b5aa6e60a606ee4b49aba3b84de5a12ab834273484cfef30ac4217dbf",
+    "weight_selection_source_sha256": "767e7e8f47b7e3b03e2c10aecb19f95e0ec52981dca013be6fc8988a7d38657b",
     "vidore_used_for_weight_selection": false,
     "tasks": [
       "docvqa",

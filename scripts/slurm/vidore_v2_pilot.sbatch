@@ -51,6 +51,13 @@ cfg=json.loads(Path(os.environ['CODE_ROOT'] + '/benchmarks/vidore_retrieval_v2.j
 for key in ('qwen_text','qwen_vl','colqwen'):
     item=cfg['models'][key]
     snapshot_download(repo_id=item['id'], revision=item['revision'], local_dir=Path(os.environ['MODEL_ROOT'])/key)
+colqwen=cfg['models']['colqwen']
+base=Path(os.environ['MODEL_ROOT'])/'colqwen_base'
+snapshot_download(repo_id=colqwen['base_model_id'], revision=colqwen['base_model_revision'], local_dir=base)
+adapter_path=Path(os.environ['MODEL_ROOT'])/'colqwen'/'adapter_config.json'
+adapter=json.loads(adapter_path.read_text())
+adapter['base_model_name_or_path']=str(base)
+adapter_path.write_text(json.dumps(adapter, sort_keys=True))
 PY
 cd "$CODE_ROOT"
 "$ENV_ROOT/venv/bin/python" scripts/evaluate_vidore_benchmarks.py \

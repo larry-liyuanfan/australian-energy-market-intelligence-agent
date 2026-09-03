@@ -38,6 +38,8 @@
     "colqwen": {
       "id": "vidore/colqwen2-v1.0",
       "revision": "2b6ac8fb37f46a49e4841e599583d00ae8a20117",
+      "base_model_id": "vidore/colqwen2-base",
+      "base_model_revision": "9fe8a713422a7cb4ef79ca77a09b381ee2243101",
       "colpali_engine": "0.3.1"
     }
   },
