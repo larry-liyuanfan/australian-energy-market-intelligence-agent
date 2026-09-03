@@ -1,0 +1,81 @@
+{
+  "schema_version": "vidore-retrieval-config-v2",
+  "frozen_before_execution": true,
+  "tasks": [
+    {
+      "task_id": "docvqa",
+      "dataset_id": "vidore/docvqa_test_subsampled",
+      "dataset_revision": "49bf8f13e13c41dd8cdb0cae5314e31c1da1e0d6",
+      "ocr_dataset_id": "vidore/docvqa_test_subsampled_tesseract",
+      "ocr_dataset_revision": "9a183a7237d678eaaf68dc0f640a42f46016802f"
+    },
+    {
+      "task_id": "infovqa",
+      "dataset_id": "vidore/infovqa_test_subsampled",
+      "dataset_revision": "f793e830aaeae1ceb8a2df626fc555b3fd04d3db",
+      "ocr_dataset_id": "vidore/infovqa_test_subsampled_tesseract",
+      "ocr_dataset_revision": "7bd56b41a40e767bba7b1467c5520c337246291c"
+    },
+    {
+      "task_id": "tatdqa",
+      "dataset_id": "vidore/tatdqa_test",
+      "dataset_revision": "b46fea43695e14697510104a3331d9e88683a416",
+      "ocr_dataset_id": "vidore/tatdqa_test_tesseract",
+      "ocr_dataset_revision": "74e16e7580883ff1640254fdd11b1db54789b257"
+    }
+  ],
+  "models": {
+    "qwen_text": {
+      "id": "Qwen/Qwen3-Embedding-0.6B",
+      "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3"
+    },
+    "qwen_vl": {
+      "id": "Qwen/Qwen3-VL-Embedding-2B",
+      "revision": "9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda",
+      "code_id": "QwenLM/Qwen3-VL-Embedding",
+      "code_revision": "393e2978d27852b0d0230d6994f37f9c15bed73c"
+    },
+    "colqwen": {
+      "id": "vidore/colqwen2-v1.0",
+      "revision": "2b6ac8fb37f46a49e4841e599583d00ae8a20117",
+      "base_model_id": "vidore/colqwen2-base",
+      "base_model_revision": "9fe8a713422a7cb4ef79ca77a09b381ee2243101",
+      "colpali_engine": "0.3.1"
+    }
+  },
+  "fusion_weights": {
+    "source": "existing AEMO Q4 2024 development route; equal-rank weights were frozen before public ViDoRe execution",
+    "ocr_text": {
+      "bm25": 1.0,
+      "qwen_text": 1.0
+    },
+    "text_visual": {
+      "ocr_text": 1.0,
+      "qwen_vl": 1.0,
+      "colqwen": 1.0
+    }
+  },
+  "batch_sizes": {
+    "text": 16,
+    "qwen_vl": 1,
+    "colqwen": 1
+  },
+  "metrics": [
+    "ndcg_at_5",
+    "recall_at_1",
+    "recall_at_5",
+    "mrr",
+    "index_documents_per_second",
+    "query_p50_ms",
+    "query_p95_ms",
+    "index_bytes",
+    "peak_cuda_memory_bytes"
+  ],
+  "slices": [
+    "table",
+    "chart",
+    "infographic",
+    "text-heavy"
+  ],
+  "promotion_rule": "A visual or fused candidate is positive only if paired-bootstrap nDCG@5 improves over the OCR BM25 plus Qwen3 text-vector baseline on at least two of the three frozen tasks."
+}
