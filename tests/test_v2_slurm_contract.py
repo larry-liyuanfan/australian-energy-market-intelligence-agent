@@ -37,3 +37,11 @@ def test_visual_dependencies_overlap_colpali_runtime_constraints() -> None:
     project = tomllib.loads((root / "pyproject.toml").read_text())
     assert "numpy>=1.26,<3" in project["project"]["dependencies"]
     assert "pillow>=9.2,<13" in project["project"]["optional-dependencies"]["multimodal"]
+    for name in ("vidore_v2_pilot.sbatch", "vidore_v2_full.sbatch"):
+        text = (root / "scripts/slurm" / name).read_text()
+        assert '"numpy==1.26.4"' in text
+        assert '"pillow==10.4.0"' in text
+        assert '"torch==2.8.*"' in text
+        assert '"transformers==4.57.3"' in text
+        assert 'pip install --no-deps -e "$QWEN_REPO"' in text
+        assert 'pip check' in text

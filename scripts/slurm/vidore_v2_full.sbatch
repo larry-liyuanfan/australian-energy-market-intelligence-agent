@@ -34,14 +34,20 @@ module purge
 module load GCCcore/11.3.0 Python/3.11.3
 python -m venv "$ENV_ROOT/venv"
 export PIP_NO_CACHE_DIR=1
-"$ENV_ROOT/venv/bin/python" -m pip install -e "$CODE_ROOT[visual-benchmark,multimodal,ml]"
+"$ENV_ROOT/venv/bin/python" -m pip install \
+  "numpy==1.26.4" "pillow==10.4.0" "torch==2.8.*" "torchvision==0.23.*" "transformers==4.57.3" \
+  -e "$CODE_ROOT[visual-benchmark,multimodal,ml]"
 module purge
 module load GCC/13.3.0 CUDA/12.4.1
 PYTHON_ROOT=/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.11.3
 export LD_LIBRARY_PATH="$PYTHON_ROOT/lib:${LD_LIBRARY_PATH:-}"
 git clone --filter=blob:none https://github.com/QwenLM/Qwen3-VL-Embedding.git "$QWEN_REPO"
 git -C "$QWEN_REPO" checkout --detach 393e2978d27852b0d0230d6994f37f9c15bed73c
-"$ENV_ROOT/venv/bin/python" -m pip install -e "$QWEN_REPO"
+"$ENV_ROOT/venv/bin/python" -m pip install "qwen-vl-utils==0.0.14"
+# The pinned Qwen package's video-only OpenCV dependency requires NumPy 2, while pinned ColQwen2 requires NumPy 1.
+# This image-only benchmark imports the pinned source tree directly and installs only its runtime image dependency.
+"$ENV_ROOT/venv/bin/python" -m pip install --no-deps -e "$QWEN_REPO"
+"$ENV_ROOT/venv/bin/python" -m pip check
 "$ENV_ROOT/venv/bin/python" - <<'PY'
 import json, os
 from pathlib import Path
