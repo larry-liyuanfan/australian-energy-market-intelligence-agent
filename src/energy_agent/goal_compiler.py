@@ -216,6 +216,8 @@ class GoalSpecPlanner(Protocol):
 
 def _json_object(content: str) -> dict[str, Any]:
     stripped = content.strip()
+    if stripped.startswith("<think>") and "</think>" in stripped:
+        stripped = stripped.split("</think>", maxsplit=1)[1].strip()
     if stripped.startswith("```"):
         stripped = re.sub(r"^```(?:json)?\s*", "", stripped, flags=re.IGNORECASE)
         stripped = re.sub(r"\s*```$", "", stripped)
@@ -223,6 +225,18 @@ def _json_object(content: str) -> dict[str, Any]:
     if not isinstance(decoded, dict):
         raise TypeError("GoalSpec response must be a JSON object")
     return decoded
+
+
+def _message_content(message: object) -> str:
+    if not isinstance(message, dict):
+        raise TypeError("llama.cpp response message must be an object")
+    content = message.get("content")
+    if isinstance(content, str) and content.strip():
+        return content
+    reasoning = message.get("reasoning_content")
+    if isinstance(reasoning, str) and reasoning.strip():
+        return reasoning
+    raise ValueError("llama.cpp response did not contain GoalSpec JSON")
 
 
 def _forbidden_goal_content(value: object) -> int:
@@ -256,6 +270,8 @@ class LlamaCppGoalSpecPlanner:
     name: str = "llama_cpp_goal_spec"
 
     def plan_goal(self, messages: list[dict[str, object]], seed: int) -> GoalSpecPlannerOutcome:
+        if not self.base_url.startswith(("http://127.0.0.1", "http://localhost")):
+            raise ValueError("GoalSpec llama.cpp endpoint must be loopback")
         payload = {
             "model": self.model,
             "messages": messages,
@@ -273,14 +289,12 @@ class LlamaCppGoalSpecPlanner:
         )
         started = time.perf_counter()
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310 - loopback is checked below
+            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310 - loopback checked above
                 decoded: dict[str, Any] = json.loads(response.read())
             message = decoded["choices"][0]["message"]
-            content = str(message["content"])
+            content = _message_content(message)
         except Exception as exc:
             raise RuntimeError(f"GoalSpec llama.cpp request failed: {type(exc).__name__}") from exc
-        if not self.base_url.startswith(("http://127.0.0.1", "http://localhost")):
-            raise ValueError("GoalSpec llama.cpp endpoint must be loopback")
         usage_data = decoded.get("usage", {})
         usage = PlannerUsage(
             prompt_tokens=int(usage_data.get("prompt_tokens", 0)) if isinstance(usage_data, dict) else 0,

@@ -19,6 +19,8 @@ from energy_agent.goal_compiler import (
     GoalSpecPlannerOutcome,
     GoalTimeRange,
     RequestedOutput,
+    _json_object,
+    _message_content,
 )
 from energy_agent.market import fixture_store
 from energy_agent.providers import PlannerUsage
@@ -121,6 +123,16 @@ def test_invalid_model_goal_never_falls_back_to_deterministic_goal() -> None:
     assert run.compiled_goal is None
     assert run.tool_calls == []
     assert run.metrics.unsafe_or_forbidden_fields == 1
+
+
+def test_goal_json_accepts_qwen_thinking_wrapper() -> None:
+    assert _json_object('<think>reasoning</think>\n{"intent":"coverage"}') == {"intent": "coverage"}
+
+
+def test_goal_message_uses_reasoning_content_when_openai_content_is_empty() -> None:
+    assert _message_content({"content": "", "reasoning_content": '{"intent":"coverage"}'}) == (
+        '{"intent":"coverage"}'
+    )
 
 
 def test_v2_benchmark_is_exactly_18_episodes_36_turns_and_source_separated() -> None:
