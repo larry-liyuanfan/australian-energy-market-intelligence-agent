@@ -76,5 +76,7 @@ COMMON=(--benchmark benchmarks/goal_spec_development_v2.jsonl --gate benchmarks/
 "$ENV_ROOT/venv/bin/python" scripts/evaluate_goal_spec_agent.py "${COMMON[@]}" \
   --output "$RUN_DIR/goal" --system goal_spec --system-label qwen3_8b_goal_spec \
   --provider-url "http://127.0.0.1:$PORT/v1" --model Qwen3-8B-Q4_K_M.gguf --seeds 101
+"$ENV_ROOT/venv/bin/python" scripts/validate_v2_artifacts.py \
+  --goal-run "$RUN_DIR/direct" --goal-run "$RUN_DIR/goal"
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P >"$RUN_DIR/slurm_usage.txt"
 sha256sum "$SERVER" "$MODEL" >"$RUN_DIR/runtime_sha256.txt"

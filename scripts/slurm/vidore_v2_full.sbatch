@@ -63,4 +63,5 @@ cd "$CODE_ROOT"
   --config benchmarks/vidore_retrieval_v2.json --output "$RUN_DIR/evaluation" --qwen-repo "$QWEN_REPO" \
   --qwen-vl-model "$MODEL_ROOT/qwen_vl" --qwen-text-model "$MODEL_ROOT/qwen_text" \
   --colqwen-model "$MODEL_ROOT/colqwen"
+"$ENV_ROOT/venv/bin/python" scripts/validate_v2_artifacts.py --vidore-run "$RUN_DIR/evaluation"
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P >"$RUN_DIR/slurm_usage.txt"

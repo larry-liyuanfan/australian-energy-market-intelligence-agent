@@ -95,5 +95,9 @@ stop_server
   --run "deterministic=$RUN_DIR/deterministic" --run "qwen3_8b_direct_tool=$RUN_DIR/qwen3-8b-direct" \
   --run "qwen3_8b_goal_spec=$RUN_DIR/qwen3-8b-goal" --run "qwen3_14b_goal_spec=$RUN_DIR/qwen3-14b-goal" \
   --output "$RUN_DIR/aggregate.json"
+"$ENV_ROOT/venv/bin/python" scripts/validate_v2_artifacts.py \
+  --goal-run "$RUN_DIR/deterministic" --goal-run "$RUN_DIR/qwen3-8b-direct" \
+  --goal-run "$RUN_DIR/qwen3-8b-goal" --goal-run "$RUN_DIR/qwen3-14b-goal" \
+  --goal-aggregate "$RUN_DIR/aggregate.json"
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P >"$RUN_DIR/slurm_usage.txt"
 sha256sum "$SERVER" "$MODEL8" "$MODEL14" >"$RUN_DIR/runtime_sha256.txt"
