@@ -30,7 +30,7 @@ def validate_goal_run_directory(path: Path) -> dict[str, Any]:
 
 
 def validate_goal_aggregate(path: Path) -> dict[str, Any]:
-    artifact = json.loads(path.read_text(encoding="utf-8"))
+    artifact: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     if artifact.get("schema_version") != "goal-spec-agent-aggregate-v2":
         raise ValueError("invalid GoalSpec aggregate schema_version")
     required = {
