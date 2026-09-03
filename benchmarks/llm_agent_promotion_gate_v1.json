@@ -1,0 +1,20 @@
+{
+  "schema_version": "llm-agent-promotion-gate-v1",
+  "preregistered_before_holdout_execution": true,
+  "holdout": "benchmarks/llm_agent_holdout_v1.jsonl",
+  "seeds": [17, 29, 43],
+  "sampling_temperature": 0.2,
+  "thresholds": {
+    "task_success_rate": 0.85,
+    "correct_tool_path_rate": 0.90,
+    "parameter_accuracy": 0.90,
+    "citation_correctness": 1.0,
+    "settlement_consistency": 1.0,
+    "replanning_success_rate": 0.80,
+    "structured_memory_recall": 0.85,
+    "structured_memory_state_contamination": 0.02,
+    "unsafe_tool_or_dsl_calls": 0
+  },
+  "promotion_rule": "Constrained hybrid must pass every absolute threshold and exceed deterministic task success on the memory-required subset. Otherwise retain it as a negative experiment.",
+  "reporting_rule": "All attempts, rejected calls, retries, tokens, latency, and local-provider cost fields remain visible."
+}

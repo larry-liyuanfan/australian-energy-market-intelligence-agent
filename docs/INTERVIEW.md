@@ -100,6 +100,13 @@ asset-specific degradation and investment return.
 46. Why freeze MiniCheck's checkpoint, token contract and threshold before the GPU run?
 47. How can 90% counterfactual rejection coexist with only 67.5% balanced accuracy?
 48. Why did the failed MiniCheck gate stay offline instead of tuning the threshold on the test pairs?
+49. Why is a real model allowed to propose tools but not execute SQL, Elasticsearch DSL or optimisation expressions?
+50. Why did you score raw model proposals separately from guarded hybrid execution?
+51. How did structured memory differ from Redis trace retention and a sliding chat window?
+52. Why were two Spartan runs cancelled before the valid holdout, and what bias would each have introduced?
+53. Why can zero unsafe calls coexist with a failed Agent promotion gate?
+54. What caused Qwen3-8B to reach 91.4% parameter accuracy but only 34.7% complete-path accuracy?
+55. Why did structured hybrid win the four-turn memory case but still remain offline?
 
 ## Code evidence map
 
@@ -119,6 +126,7 @@ asset-specific degradation and investment return.
 | Provider boundary and deterministic fallback | `src/energy_agent/providers.py` |
 | FastAPI, traces and metrics | `src/energy_agent/api.py`, `scripts/evaluate_service.py` |
 | Agent task evaluation | `scripts/evaluate_agent_real.py`, `src/energy_agent/evaluation.py` |
+| Real-model planner, sourced memory and holdout | `src/energy_agent/model_agent.py`, `src/energy_agent/llm_evaluation.py`, `scripts/evaluate_llm_agent.py`, `docs/LLM_AGENT_PLANNER_MEMORY_EVALUATION.md`, `artifacts/public/llm_agent_holdout_20260903.json` |
 | Reproducible Spartan execution | `scripts/slurm/`, public compact artifacts and run manifests |
 | Executable regression evidence | `tests/` |
 
@@ -128,7 +136,7 @@ asset-specific degradation and investment return.
 - The monetary metric is a gross/net-operating proxy under an explicit cycling-cost assumption, not accounting profit or ROI.
 - The failed scenario-CVaR gate prohibits a claim of lower tail risk.
 - Loopback service evaluation is not a public-internet SLA.
-- Live Model Studio generation/cost remains unverified; deterministic planning and provider adapters are implemented and tested.
+- Live Model Studio generation/cost remains unverified. Local Qwen3-8B/llama.cpp planning was tested, but its 79.2% structured-hybrid task success and 34.7% raw complete-path accuracy failed promotion; deterministic planning remains the serving path.
 - The 100-task suite uses template-declared expected tools and a deterministic planner; it proves contract routing/recovery, not live-LLM reasoning quality.
 - Passage labels remain author-curated: the 20-claim development score is not generalisation evidence, while the 14-claim Q2 2025 gate is source-disjoint with frozen features but still not human-blind relevance or answer entailment. Security trials are deterministic architecture regressions rather than live-LLM robustness evidence.
 - The SG service loads one year/525,600 market rows and 905 official-report chunks; the two-year/1,051,200-row result remains an offline Spartan transport gate.

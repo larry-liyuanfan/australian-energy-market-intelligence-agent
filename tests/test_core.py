@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar
+from urllib.request import Request
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,7 +14,7 @@ from energy_agent.battery import optimize_dispatch, optimize_dispatch_cvar
 from energy_agent.evaluation import citation_structure_metrics
 from energy_agent.forecast import seasonal_conformal
 from energy_agent.market import MarketRow, MarketStore, fixture_store, robust_events
-from energy_agent.providers import ModelStudioPlanner
+from energy_agent.providers import LlamaCppPlanner, ModelStudioPlanner
 from energy_agent.schemas import TOOL_MODELS, AgentQueryRequest, BatterySpec, Region, ToolResult
 from energy_agent.tools import ToolRegistry
 
@@ -359,3 +360,49 @@ def test_model_studio_adapter_accepts_only_registered_typed_calls() -> None:
     )
     calls = provider.plan("Explain SA1 data coverage", ToolRegistry(fixture_store()), 3)
     assert calls == [("explain_data_coverage", {"region": "SA1"})]
+
+
+def test_llama_cpp_adapter_uses_openai_tool_protocol_and_canonical_validation() -> None:
+    response = {
+        "choices": [
+            {
+                "message": {
+                    "content": "",
+                    "tool_calls": [
+                        {
+                            "function": {
+                                "name": "explain_data_coverage",
+                                "arguments": json.dumps({"region": "SA1"}),
+                            }
+                        }
+                    ],
+                }
+            }
+        ],
+        "usage": {"prompt_tokens": 101, "completion_tokens": 7},
+    }
+    captured: dict[str, object] = {}
+
+    def transport(request: Request, _timeout: float) -> bytes:
+        captured["url"] = request.full_url
+        captured["payload"] = json.loads(request.data)
+        return json.dumps(response).encode()
+
+    outcome = LlamaCppPlanner(
+        model="Qwen3-8B-Q4_K_M.gguf",
+        base_url="http://127.0.0.1:11571/v1",
+        temperature=0.2,
+        transport=transport,
+    ).plan_turn(
+        [{"role": "user", "content": "Explain SA1 coverage"}],
+        ToolRegistry(fixture_store()),
+        max_tool_calls=3,
+        seed=17,
+    )
+    assert captured["url"] == "http://127.0.0.1:11571/v1/chat/completions"
+    assert len(captured["payload"]["tools"]) == 8  # type: ignore[index]
+    assert captured["payload"]["temperature"] == 0.2  # type: ignore[index]
+    assert captured["payload"]["seed"] == 17  # type: ignore[index]
+    assert outcome.calls == [("explain_data_coverage", {"region": "SA1"})]
+    assert outcome.usage.prompt_tokens == 101
+    assert outcome.provider == "llama_cpp_local"

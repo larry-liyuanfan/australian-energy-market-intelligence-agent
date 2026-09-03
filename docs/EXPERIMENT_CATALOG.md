@@ -28,6 +28,7 @@ This catalogue preserves negative and superseded results without allowing them t
 | `minicheck_claim_support_stop_20260821.json` | Supported-claim recall was insufficient |
 | `claim_support_transport_stop_20260822.json` | Counterfactual rejection passed; support recall did not |
 | `multimodal_qwen_q4_2024_20260822.json` | Fusion regression fixed but did not beat text |
+| `llm_agent_holdout_20260903.json` | Real Qwen3-8B structured hybrid reached 79.2% task success and 34.7% raw complete-path accuracy; promotion gate failed |
 
 ## Supporting transport, not the online mainline
 

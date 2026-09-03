@@ -15,8 +15,9 @@ from .composite_evidence import CompositeEvidenceIndex
 from .evidence import ElasticsearchHybridEvidenceIndex, EvidenceIndex, HybridEvidenceIndex, load_official_chunks
 from .market import fixture_store, load_dispatch_store
 from .metrics import ServiceMetrics
+from .model_agent import AgentPath, ModelAgentQueryRequest, ModelAgentRun, ModelDrivenAgent
 from .multimodal import MultimodalEvidenceIndex, load_page_records
-from .providers import ModelStudioPlanner
+from .providers import LlamaCppPlanner, ModelStudioPlanner, OllamaPlanner
 from .schemas import AgentQueryRequest, AgentQueryResponse
 from .snapshots import ForecastSnapshotStore, load_forecast_snapshots
 from .tools import ToolRegistry
@@ -52,6 +53,7 @@ if forecast_snapshots_path and Path(forecast_snapshots_path).is_file():
 elif forecast_snapshots_path:
     logger.warning("Forecast snapshot file is unavailable; as-of seasonal fallback remains active")
 planner_provider = ModelStudioPlanner.from_environment()
+turn_planner = planner_provider or LlamaCppPlanner.from_environment() or OllamaPlanner.from_environment()
 redis_client: Any = None
 elasticsearch_client: Any = None
 if redis_url := os.getenv("ENERGY_REDIS_URL"):
@@ -84,6 +86,7 @@ agent = EnergyAgent(
     planner_provider=planner_provider,
     trace_capacity=int(os.getenv("ENERGY_TRACE_CACHE_SIZE", "128")),
 )
+model_agent = ModelDrivenAgent(registry, turn_planner)
 service_metrics = ServiceMetrics()
 app = FastAPI(title="Australian Energy Market Intelligence Agent", version="0.1.0")
 
@@ -125,7 +128,9 @@ def health() -> dict[str, object]:
         "elasticsearch": elasticsearch_status,
         "evidence_backend": evidence_index.backend if evidence_index else "market_evidence_fallback",
         "evidence_index": (
-            text_evidence_index.index_name if isinstance(text_evidence_index, ElasticsearchHybridEvidenceIndex) else None
+            text_evidence_index.index_name
+            if isinstance(text_evidence_index, ElasticsearchHybridEvidenceIndex)
+            else None
         ),
         "evidence_indexed_documents": (
             text_evidence_index.indexed_documents
@@ -137,6 +142,7 @@ def health() -> dict[str, object]:
         "page_evidence_records": len(page_index.documents) if page_index else 0,
         "forecast_snapshots": forecast_snapshots.count,
         "model_provider": planner_provider.name if planner_provider else "deterministic",
+        "model_agent_provider": turn_planner.name if turn_planner else "deterministic_only",
         "trace_cache": dict(zip(("entries", "capacity", "evictions"), agent.trace_stats(), strict=True)),
     }
 
@@ -156,6 +162,20 @@ def query(request: AgentQueryRequest) -> AgentQueryResponse:
             json.dumps(trace_payload),
         )
     return response
+
+
+@app.post("/api/agent/model-query", response_model=ModelAgentRun)
+def model_query(request: ModelAgentQueryRequest) -> ModelAgentRun:
+    if request.path != AgentPath.deterministic and turn_planner is None:
+        raise HTTPException(503, "No real model planner runtime is configured; deterministic path remains available")
+    return model_agent.run_turn(
+        request.question,
+        conversation_id=request.conversation_id,
+        path=request.path,
+        memory_mode=request.memory_mode,
+        seed=request.seed,
+        max_tool_calls=request.max_tool_calls,
+    )
 
 
 @app.get("/api/agent/traces/{trace_id}")

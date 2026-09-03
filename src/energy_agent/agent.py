@@ -129,7 +129,7 @@ class EnergyAgent:
         requested_regions = [
             region
             for region in Region
-            if region.value.lower() in text or region.value[:-1].lower() in text
+            if re.search(rf"\b{re.escape(region.value[:-1].lower())}1?\b", text)
         ]
         region = requested_regions[0] if requested_regions else Region.NSW1
         end = datetime.now(UTC)
@@ -143,7 +143,7 @@ class EnergyAgent:
         comparison = any(term in text for term in ("compare", "versus", " vs ", "比较", "对比"))
         coverage = "coverage" in text or "覆盖" in text
         forecast = any(term in text for term in ("forecast", "risk", "预测", "风险"))
-        event = any(term in text for term in ("event", "spike", "anomaly", "异常", "尖峰", "发生了什么"))
+        event = any(term in text for term in ("event", "spike", "anomaly", "happened", "异常", "尖峰", "发生了什么"))
         workflow_type: Literal[
             "decision_replay",
             "event_diagnosis",
