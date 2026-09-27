@@ -229,15 +229,26 @@ operating proxies, excluding CAPEX/network charges/FCAS and investment returns.
 
 CPU preflight 31365441 used a separate exact-commit checkout and passed **222
 tests**, Ruff, strict mypy and all 20 development/holdout region-days. CI at
-`1b7f681` passed in a fresh runner environment, including vulnerability and
-high-confidence secret scans. The current [environment record](ENVIRONMENT_STATUS.md)
+`1b7f681` passed tests, lint, types and the installed-environment vulnerability
+audit. **Correction:** its secret scan did not execute: both run `36286722679`
+and the later `9a2cb64` run `36289310946` logged `rg: command not found` while
+reporting success. Those green statuses are not secret-scan evidence. The
+independent local compact-artifact pattern review remains a separate, scoped
+check. The current [environment record](ENVIRONMENT_STATUS.md)
 states which optional dependencies were **not** installed/audited; no blanket
 checkpoint or transitive-license certification is implied.
 
 After the diagnostic-only export change, local validation passed **226 tests**,
 Ruff and strict mypy over 74 source files. One existing Starlette/httpx deprecation
 warning was emitted; there was no test failure or unrequested dependency upgrade.
-The final publication commit is also checked by the PR's fresh-runner CI.
+The subsequent CI repair explicitly installs and verifies ripgrep before tests.
+Its wrapper accepts only rg exit 1 as clean; detections, missing executables,
+permissions, timeouts and other scanner errors fail closed without printing
+scanner output. Local verification passed **237 tests**, Ruff, strict mypy over
+75 source files and the actual bounded scan. Eleven new tests include real clean
+and matching hidden-file fixtures; unavailable rg is a test failure, not a skip.
+The repaired publication still requires its own fresh-runner logs, not the old
+green badge. This tooling correction changes no frozen task, score or model run.
 
 Reproduction: use the [recorded page and Slurm template](INTERVIEW_DEMO.md), including
 the exact commit variables, `direct_demo`, resource review, `sbatch --test-only`

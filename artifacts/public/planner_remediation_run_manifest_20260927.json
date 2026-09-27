@@ -67,7 +67,7 @@
     "metrics_benchmark_gate_sha_checked": true,
     "actual_seed_and_case_turn_coverage_checked": true,
     "diagnostic_revision": "cooccurring-observations-r1: rename only; frozen metrics and manifest unchanged",
-    "public_summary_secret_pii_private_path_scan": "passed scoped pattern scan",
+    "public_summary_secret_pii_private_path_scan": "passed independent local scoped pattern scan; not evidence from the invalid historical CI scans",
     "preflight_job": "31365441", "preflight_tests": 222,
     "post_export_local_tests": 226,
     "post_export_lint_and_strict_mypy": "passed; 74 checked source files",
@@ -75,6 +75,21 @@
     "pre_publication_ci_commit": "1b7f68160b8e4bfdb19d9d4f62b77a1952167557",
     "pre_publication_ci_run": "36286722679",
     "pre_publication_ci_status": "success",
+    "historical_ci_secret_scan": {
+      "status": "invalid_not_executed",
+      "affected_runs": ["36286722679", "36289310946"],
+      "affected_commits": ["1b7f68160b8e4bfdb19d9d4f62b77a1952167557", "9a2cb64c417b65b5ab9ac6441fafe10ece25b562"],
+      "observed_error": "rg: command not found",
+      "interpretation": "Overall reported success is preserved as historical scheduler status, not secret-scan evidence."
+    },
+    "scanner_repair_local_validation": {
+      "tests_passed": 237, "new_scanner_tests": 11,
+      "ruff": "passed", "strict_mypy_source_files": 75,
+      "actual_bounded_scan": "completed: no matches",
+      "real_fixture_tests": "clean and hidden matching fixtures passed; missing rg is a failure, not a skip",
+      "implementation": "CI installs/verifies ripgrep; scripts/secret_scan.py treats only rg exit 1 as clean and fails closed on launch, timeout or other errors without echoing scanner output.",
+      "ci_boundary": "Local evidence only; the repaired commit requires its own CI logs. Old green runs are not reused as scan proof."
+    },
     "p1_case_manifest": "artifacts/public/p1_recorded_replay_manifest_20260927.json",
     "dependency_audit_scope": "docs/ENVIRONMENT_STATUS.md"
   },

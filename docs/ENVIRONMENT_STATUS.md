@@ -15,6 +15,7 @@ host details, local personal paths or restricted artifacts belong in this file.
 | OpenSSH | Windows `9.5p2`; existing Iris SSH connection succeeded | Reuse the configured alias; do not copy keys or alter host/authentication settings. |
 | Project Python | `3.13.13` in the existing project virtual environment | Local validation uses this environment, not a global dependency upgrade. |
 | Validation packages | pytest `9.1.1`, Ruff `0.16.3`, mypy `1.20.2` | Installed package metadata checked; test results remain in the actual run reports. |
+| High-confidence scanner | Local ripgrep executes; CI now explicitly installs the `ripgrep` package and checks `command -v rg` / `rg --version` | Required before tests; missing/broken tooling fails closed. Old CI scans were invalid, as recorded below. |
 | API/schema packages | FastAPI `0.141.1`, Pydantic `2.13.4` | Installed package metadata checked. |
 | `uv` | Not found on PATH; optional | Current reproduction and Slurm scripts use `venv` and `pip`; no install needed. This does not assert absence everywhere on disk. |
 | Spartan Energy runtime | Dedicated environment and successful CPU preflight | Latest CPU job `31365441` passed 222 tests, lint, types, all 20 region-day coverage checks and the corrected quarterly-context baseline. GPU availability is checked at submission. |
@@ -33,6 +34,28 @@ tool; record optional dependencies instead of broadening the environment. Record
 account authorization, runtime availability, resource contention and application
 correctness separately. A successful install or JSON schema check cannot stand in
 for a real inference, relevant evidence retrieval or an end-to-end evaluation.
+
+## CI scanner incident and repair
+
+Runs [36286722679](https://github.com/larry-liyuanfan/australian-energy-market-intelligence-agent/actions/runs/36286722679)
+(`1b7f681`) and [36289310946](https://github.com/larry-liyuanfan/australian-energy-market-intelligence-agent/actions/runs/36289310946)
+(`9a2cb64`) reported success but their final scan logged `rg: command not found`.
+The shell conditional conflated "no match" with execution failure. The prior claim
+that those CI scans passed is withdrawn; other completed steps and the independent
+local compact-artifact review retain their own evidence, not scan coverage by proxy.
+
+The repaired workflow installs/verifies ripgrep before tests and invokes
+`scripts/secret_scan.py`. rg exit 1 means no match (wrapper success); exit 0 means
+detected content (wrapper failure); every other exit, launch failure or 120-second
+timeout is an error (wrapper failure). Captured scanner output is never echoed.
+This remains a bounded high-confidence pattern scan, respects rg ignore rules and
+excludes `.git` / `.venv`; it is not a comprehensive secret-history or PII audit.
+Eleven regression tests exercise status/error handling and real clean/matching
+hidden-file fixtures; missing rg cannot silently skip those tests. Local results:
+237 tests, Ruff, strict mypy over 75 files and the actual bounded scan passed.
+The repaired commit's CI must independently confirm installation and scan execution;
+neither historical green status is sufficient. No model rerun or frozen-result
+change is part of this correction.
 
 ## Dependency and license audit scope
 
