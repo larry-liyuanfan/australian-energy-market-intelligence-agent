@@ -179,11 +179,12 @@ thresholds or executing code. The final report must retain the following limits.
 
 | Reported field | What it measures / does not establish |
 | --- | --- |
+| Task success | Post-execution composite of required tool path, selected parameters and structural checks, not initial model planning or answer-semantic accuracy. `no_memory` explicitly waives the recall condition; its path/parameter checks still apply. Disclose that policy when comparing the four modes. |
 | Initial model complete path | Required tool names appear in order in the first validated proposal. Later replans and runtime additions do not count as initial planning. |
 | Model parameter accuracy | Exact checks on proposed non-search calls: region sets, timestamps, windows and the specified battery fields/objective/settlement mode. Omitted tools are penalised by the separate path metric; search query semantics and every possible tool argument are not covered by this average. |
 | Citation correctness | The scorer requires citations with HTTPS URLs and 64-character hashes. Runtime also checks hexadecimal hash format. Neither is independent document rehashing, source entailment, or human-judged answer support. |
 | Settlement consistency | Correct presence/absence of planned and realised fields for the returned margin basis; no-dispatch turns pass by non-applicability. This aggregate is not an independent cash-flow or battery-constraint proof. The P1 exporter performs those additional checks for its recorded case. |
-| Memory recall / contamination | Retention of expected region/date values in sourced constraint state, and absence of benchmark-specific forbidden values from active state/executed structured arguments. Battery edits are additionally checked in dispatch parameters. This is not a complete measure of all remembered facts or all possible contamination. |
+| Memory recall / contamination | Retention of expected region/date values in sourced constraint state, and absence of benchmark-specific forbidden values from active state/executed structured arguments. Battery edits are additionally checked in dispatch parameters. This metric does not verify source-turn attribution, all remembered facts or all possible contamination. |
 | Unsafe tool/DSL calls | Counts rejected unsafe/unknown proposal errors, not only executed calls. Rejection, runtime replacement and actual execution must remain separately attributed. Zero on this finite suite is not universal injection resistance. |
 | Stability and latency | Repeated-seed turn-level pass rates and measured end-to-end time including recovery; turns within an episode and seeds of one prompt are correlated. Wilson intervals are descriptive, not independent-task generalisation guarantees or a service SLA. |
 
