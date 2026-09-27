@@ -46,3 +46,21 @@ jobs:
           docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 test rules /etc/prometheus/alerts_test.yml
       - name: High-confidence secret scan
         run: python scripts/secret_scan.py
+
+  graph-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install isolated optional graph extra with exact constraints
+        run: |
+          python -m pip install pip==26.2.1
+          python -m pip install -c requirements/agent-graph-py313.lock -e ".[graph,test]"
+      - name: Execute graph persistence and archival-audit contracts
+        run: python -m pytest tests/test_graph_runtime.py tests/test_application_audit.py tests/test_application_demo.py

@@ -74,6 +74,13 @@ It includes the original model proposals, typed runtime corrections, official Q4
 text/source values and independently recomputed historical settlement. It is a
 captured guarded run, not a claim that the model autonomously planned every stage.
 
+The [application walkthrough](docs/demos/agent-application-20260927/index.html)
+separates that recording from a newly executed, opt-in **LangGraph** market workflow:
+SQLite pause/resume, sourced cross-turn correction and thread isolation on real
+AEMO records. See the [implementation, bounded audit and reproduction handoff](docs/AGENT_APPLICATION_HANDOFF_20260927.md).
+This graph uses deterministic planning, not new model inference; the default API
+and full BESS runtime are unchanged.
+
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 
 ![Historical decision replay demo](docs/assets/decision-replay-demo.png)
