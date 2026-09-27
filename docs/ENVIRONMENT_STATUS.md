@@ -7,6 +7,7 @@ host details, local personal paths or restricted artifacts belong in this file.
 | Component | Verified state | Role / next action |
 | --- | --- | --- |
 | Git | `2.54.0.windows.1`; feature checkout clean before this record | Existing isolated Energy feature branch; no default-branch writes. |
+| Git-bundled Bash | `5.3.9(1)-release`; four demo-document Bash blocks passed `bash -n` | Syntax-only check; no Slurm submissions or WSL installation. Use the verified bundled executable instead of assuming a default install path. |
 | GitHub CLI | `2.92.0`; authenticated identity query succeeded | Existing PR workflow is usable. Do not reinstall or alter authentication. |
 | GitHub plugin | Directory reports installed, enabled | Plugin installation is distinct from a local skill being available. CLI access is independently verified. |
 | `yeet` skill | Installed from `openai/skills`, `skills/.curated/yeet`; `SKILL.md` fully read | Use the official installer, not a copied or invented `github:yeet` alias. Follow explicit-file staging and branch isolation required by project rules. |
@@ -32,6 +33,30 @@ tool; record optional dependencies instead of broadening the environment. Record
 account authorization, runtime availability, resource contention and application
 correctness separately. A successful install or JSON schema check cannot stand in
 for a real inference, relevant evidence retrieval or an end-to-end evaluation.
+
+## Dependency and license audit scope
+
+The P1 export and native GoalSpec transport repair add no third-party Python
+dependency. That statement is limited to those patches, **not the entire PR**:
+the retained v2 visual experiment adds the optional `visual-benchmark` extra.
+The current CI installs `[test,ml,search,redis,workbook]` and runs `pip-audit`
+against that installed environment. It does not install or vulnerability-audit
+`visual-benchmark`, model weights, or every allowed version in a dependency range.
+
+Declared code licenses checked against publisher sources on 2026-09-27:
+
+| Optional dependency | Declared range / code license | Evidence and status |
+| --- | --- | --- |
+| `datasets` | `>=3,<5`; Apache-2.0 | [Publisher LICENSE](https://github.com/huggingface/datasets/blob/main/LICENSE); upstream declaration reviewed, not every historical release or transitive dependency. |
+| `sentence-transformers` | `>=5,<6`; Apache-2.0 | [Publisher LICENSE](https://github.com/huggingface/sentence-transformers/blob/main/LICENSE); upstream declaration reviewed, not an audit of downloaded checkpoints. |
+| `colpali-engine` | `==0.3.1`; MIT | [Exact-release publisher metadata](https://pypi.org/project/colpali-engine/0.3.1/); optional extra is outside current CI vulnerability coverage. |
+
+These entries register dormant experiment dependencies, not deployment approval.
+No visual environment was installed or resumed for this review. Model and dataset
+licenses remain separate from library code licenses; no weights or third-party
+corpora are redistributed. Any future activation requires its own resolved
+environment, vulnerability and transitive-license review. P1 and the direct-tool
+holdout do not depend on activating this optional experiment.
 
 ## Remaining application issue, not a missing dependency
 

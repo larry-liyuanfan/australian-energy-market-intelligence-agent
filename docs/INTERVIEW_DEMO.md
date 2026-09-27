@@ -59,6 +59,71 @@ Open the generated `index.html` directly or serve its directory locally:
 python -m http.server 8097 --bind 127.0.0.1 --directory PATH_TO_RECORDED_DEMO
 ```
 
+## Future Slurm replay of the accepted path
+
+This is a reproduction template, **not a request to submit another run now**.
+Do not run preflight while a job uses this Energy environment: preflight updates
+its project-scoped venv. Check GPU availability before submission and keep at
+most one authorised GPU job active; never cancel or alter other projects' jobs.
+All calculation remains inside Slurm allocations.
+
+Prerequisites on the approved Iris connection: the existing Energy `repo`
+contains the frozen commit below and its scripts, `logs/` already exists, the
+four private AEMO input files in the command above are present, and the pinned
+llama.cpp build `7798007a29a90e3053e799394da48cf53a2f8e0f` exists under the earlier
+Energy `llm-agent-eval-20260903/env` directory. The scripts verify that runtime
+revision, copy its binaries into this Energy environment and verify the downloaded
+GGUF hash in job scratch. This is not a zero-setup recipe for another cluster or
+permission to reuse another project's environment. A fresh cluster also needs
+the private inputs and pinned runtime provisioned separately.
+
+Run the following only after the existing evaluation is terminal and a new
+reproduction is authorised. Replace no frozen model, scorer, prompt or benchmark
+to obtain a better holdout score.
+
+```bash
+set -euo pipefail
+PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
+ARTIFACTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/planner-remediation-20260927
+RUN_COMMIT=72323060ad7b2314facd82cf8064f1f0c174b308
+cd "$PROJECT/repo"
+test "$(git rev-parse HEAD)" = "$RUN_COMMIT"
+
+sbatch --test-only --export=ALL,ENERGY_GIT_COMMIT="$RUN_COMMIT" \
+  scripts/slurm/planner_remediation_preflight.sbatch
+preflight_job=$(sbatch --parsable --export=ALL,ENERGY_GIT_COMMIT="$RUN_COMMIT" \
+  scripts/slurm/planner_remediation_preflight.sbatch)
+preflight_job=${preflight_job%%;*}
+FIGURES="$ARTIFACTS/private/preflight-$preflight_job/q4-workbook/figure_manifest.jsonl"
+
+# direct_demo deliberately excludes the already-completed GoalSpec experiment.
+PILOT_EXPORT="ALL,ENERGY_GIT_COMMIT=$RUN_COMMIT,ENERGY_PILOT_STAGE=direct_demo,ENERGY_FIGURES=$FIGURES"
+sbatch --test-only --dependency="afterok:$preflight_job" --export="$PILOT_EXPORT" \
+  scripts/slurm/planner_remediation_pilot.sbatch
+pilot_job=$(sbatch --parsable --dependency="afterok:$preflight_job" --export="$PILOT_EXPORT" \
+  scripts/slurm/planner_remediation_pilot.sbatch)
+pilot_job=${pilot_job%%;*}
+```
+
+Inspect the completed pilot, `stage_exit_codes.json`, demo checks, and measured
+elapsed/RSS before accepting its resource envelope. Do not submit the full run
+on pilot submission alone. Once accepted, the separately authorised holdout uses
+both exact commit variables and the successful-pilot dependency:
+
+```bash
+HOLDOUT_EXPORT="ALL,ENERGY_GIT_COMMIT=$RUN_COMMIT,ENERGY_PILOT_COMMIT=$RUN_COMMIT"
+sbatch --test-only --dependency="afterok:$pilot_job" --export="$HOLDOUT_EXPORT" \
+  scripts/slurm/planner_remediation_holdout.sbatch
+sbatch --dependency="afterok:$pilot_job" --export="$HOLDOUT_EXPORT" \
+  scripts/slurm/planner_remediation_holdout.sbatch
+```
+
+The accepted existing chain was preflight `31365441` → direct/demo `31365444` →
+holdout `31365531`. Use new job IDs for any future replay; do not modify, reuse or
+overwrite those recorded runs. The holdout itself has no figure mount and is not
+a figure-grounding accuracy evaluation. Watching the committed HTML needs none
+of this infrastructure.
+
 ## Two-minute narration
 
 “这个项目服务能源分析师和电池策略人员，回答的是一个历史决策问题：某天市场发生了什么，

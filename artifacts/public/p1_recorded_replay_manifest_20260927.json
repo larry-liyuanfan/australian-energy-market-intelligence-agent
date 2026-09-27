@@ -42,7 +42,7 @@
     "independent_export_checks_passed": 13,
     "browser_visual_review": "Top, forecast/SoC curves, complete attribution table and source metadata checked in the in-app browser.",
     "new_public_text_secret_and_private_path_scan": "passed",
-    "new_dependency_scope": "No new third-party Python dependency; native model endpoint uses the existing standard-library HTTP client.",
+    "new_dependency_scope": "P1 export/native transport patches only: no additional third-party Python dependency; native endpoint uses the existing standard-library HTTP client. The wider PR retains an optional visual-benchmark extra outside current CI vulnerability coverage; see docs/ENVIRONMENT_STATUS.md.",
     "license_review": "Project and pinned llama.cpp MIT; Qwen official card Apache-2.0. Raw AEMO workbook/PDF and model weights not redistributed; official sources retain their own terms.",
     "model_license_source": "https://huggingface.co/Qwen/Qwen3-8B-GGUF"
   },
