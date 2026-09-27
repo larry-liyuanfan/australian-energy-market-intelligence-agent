@@ -4,6 +4,12 @@ Status: implementation in progress; no new real-model result or promotion yet.
 This follows the 26 September career strengthening plan. Existing v1 metrics,
 v2 benchmark labels and negative experiments remain unchanged.
 
+Tool installation and readiness are recorded separately in
+[environment status](ENVIRONMENT_STATUS.md). Browser review of the first
+numerically valid P1 recording found irrelevant gas-market/following-quarter
+figures: citation presence does not establish relevance, so that preview remains
+unaccepted pending a topic/period grounding correction.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
