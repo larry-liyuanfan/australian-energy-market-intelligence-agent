@@ -55,6 +55,17 @@ request-time budget and one generation. It does not disable schema validation or
 silently fall back to unconstrained JSON. Direct-tool results are preserved and
 are not rerun for this independent GoalSpec/demo retry.
 
+The direct pilot used 16 real generations, 42,056 prompt / 3,558 completion
+tokens, 134.73 s total model latency and 137.69 s end-to-end task time. The full
+direct holdout has 432 model turns plus 72 deterministic turns. Scaling the
+measured 8.61 s/model turn gives about 62 minutes before fault replans/setup.
+A single 150-minute allocation allows about 2x task-time headroom plus setup;
+16 GiB host RAM is retained above the measured 5.98 GiB batch RSS. These are
+scheduling estimates, not promised latency or actual resource consumption.
+The holdout script refuses planner/scorer/benchmark drift from the accepted
+direct pilot; the subsequent changes are journaling and independent GoalSpec/demo
+compatibility. No holdout outputs are used to select prompts or thresholds.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
