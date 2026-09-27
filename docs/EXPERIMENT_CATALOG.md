@@ -31,6 +31,7 @@ This catalogue preserves negative and superseded results without allowing them t
 | `llm_agent_holdout_20260903.json` | Real Qwen3-8B structured hybrid reached 79.2% task success and 34.7% raw complete-path accuracy; promotion gate failed |
 | `VISUAL_GOAL_COMPILER_V2_EVALUATION.md` | GoalSpec development pilot missed schema quality; ViDoRe stopped after the preregistered infrastructure retry limit, so no holdout promotion claim was made |
 | `goal_spec_remediation_pilot_20260927.json` | Native schema transport works, but new four-turn/two-seed GoalSpec development achieved 0/8 task success; not selected for promotion |
+| `planner_remediation_holdout_v3_20260927.json` | Frozen 504-row comparison: structured hybrid 54/54 final but 18/54 initial paths and 88.9% selected parameters; no quality advantage over deterministic, not promoted |
 
 ## Supporting transport, not the online mainline
 

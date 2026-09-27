@@ -18,7 +18,7 @@ host details, local personal paths or restricted artifacts belong in this file.
 | API/schema packages | FastAPI `0.141.1`, Pydantic `2.13.4` | Installed package metadata checked. |
 | `uv` | Not found on PATH; optional | Current reproduction and Slurm scripts use `venv` and `pip`; no install needed. This does not assert absence everywhere on disk. |
 | Spartan Energy runtime | Dedicated environment and successful CPU preflight | Latest CPU job `31365441` passed 222 tests, lint, types, all 20 region-day coverage checks and the corrected quarterly-context baseline. GPU availability is checked at submission. |
-| Real-model inference | Pinned Qwen3-8B / llama.cpp inference executed; real-model recording passed in `31365444` | GoalSpec remains a real negative pilot (0/8 tasks). Frozen direct holdout `31365531` is running; a successful guarded demo is not planner promotion. |
+| Real-model inference | Pinned Qwen3-8B / llama.cpp inference executed; real-model recording passed in `31365444` | Frozen direct holdout `31365531` completed all 504 scored rows. Structured hybrid 54/54 final versus 18/54 initial model paths; no quality advantage over deterministic. Not promoted; GoalSpec remains a separate 0/8 negative pilot. |
 
 Installed `yeet/SKILL.md` SHA-256:
 `4829d4909081e1abf91507fb581e6f566ce7064001892414f32191895b08a595`.
@@ -70,8 +70,9 @@ runtime verification failures, and screening a longer passage than the displayed
 quote. These are application fixes with rejection tests, not missing dependencies.
 Those export gaps and the model's chart/text-route mismatch are now corrected.
 The real-model recording passed 13 export checks in `31365444`; it remains
-explicitly runtime-assisted. A completed-case claim is supported, but a full
-holdout or model-promotion claim is not yet supported by this tools record.
+explicitly runtime-assisted. The [completed holdout report](PLANNER_REMEDIATION_V3_EVALUATION.md)
+now provides the separate full evaluation and non-promotion decision. Tool
+readiness and a completed-case claim are not substitutes for that comparison.
 
 See [remediation review](REMEDIATION_REVIEW_20260927.md) for the P0/P1 execution
 record and [demo contract](INTERVIEW_DEMO.md) for the intended deliverable.

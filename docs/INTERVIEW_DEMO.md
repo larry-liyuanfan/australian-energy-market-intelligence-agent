@@ -16,7 +16,9 @@ The case passed 13 export checks. Qwen's snapshot and event proposals were
 accepted; retrieval, forecast and dispatch were replaced by typed runtime guards,
 and event diagnosis was a runtime dependency. Its 2,423/510 prompt/completion
 tokens and 18.38 s elapsed time describe one sample, not a percentile or SLA.
-The full new holdout remains separate; this case does not promote the planner.
+The [completed new holdout](PLANNER_REMEDIATION_V3_EVALUATION.md) remains separate:
+structured hybrid finished 54/54 tasks but only 18/54 initial model paths, without
+exceeding deterministic quality. Neither this case nor the holdout promotes the planner.
 
 ![Recorded real-model replay](assets/p1-model-replay-top-20260927.png)
 
@@ -156,13 +158,16 @@ Task: make one replay understandable and make planner measurements attributable.
 Action: diagnose the old pilot; apply sourced constraints without reparsing
 corrections; separate first proposals, guarded calls and execution; reject oracle
 substitution; verify input hashes and recompute battery settlement; label report
-publication precision. Result: a real-model SA1 recording passed 13 independent
-export checks, with two model-accepted stages and four explicitly runtime-owned
-stages. The independent GoalSpec development experiment still achieved 0/8 task
-success and was not promoted. Full planner accuracy must come from the completed
-frozen holdout, not this demonstration or development pilot.
+publication precision. Result: a real-model SA1 recording passed 13 export checks,
+including independent cash-flow/SoC checks, with two model-accepted stages and four runtime-owned
+stages. The frozen new holdout then completed 504 scored rows: structured hybrid
+achieved 54/54 final tasks, but its initial model path was only 18/54, selected
+parameters 88.9%, and deterministic already achieved 18/18. P95 was 22.57 s versus
+0.787 s. I retained the deterministic planner because quality did not improve;
+the independent GoalSpec pilot also remained a 0/8 negative result. Runtime
+recovery is useful engineering, but cannot be claimed as autonomous model skill.
 
-At most two candidate statements, pending completion evidence and career review:
+At most two evidence-backed candidate statements, for separate career review:
 
 1. 构建历史能源决策回放 Agent，将真实 NEM 数据、官方文本/图表、as-of 价格预测和受约束
    BESS 调度串成可追溯流程，独立复核完整电池约束与历史结算，提供可离线演示的决策报告。

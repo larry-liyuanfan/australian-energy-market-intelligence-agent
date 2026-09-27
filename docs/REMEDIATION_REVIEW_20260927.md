@@ -1,7 +1,9 @@
 # Planner review and bounded P0/P1 remediation
 
-Status: P0 development diagnosis and P1 real-model recording completed; the new
-frozen direct-tool holdout is running. No planner promotion decision is claimed.
+Status: P0 diagnosis, frozen direct-tool holdout, final comparison review and P1
+real-model recording completed. The model is not promoted. See the
+[final report](PLANNER_REMEDIATION_V3_EVALUATION.md) and
+[bounded completion handoff](P0_P1_HANDOFF_20260927.md).
 This follows the 26 September career strengthening plan. Existing v1 metrics,
 v2 benchmark labels and negative experiments remain unchanged.
 
@@ -196,7 +198,7 @@ has its own visible-source checks. Fault-injected and non-fault tracks must be
 reported separately; the latter still includes the explicit prompt-injection
 case and is not synonymous with benign ordinary queries.
 
-## P1 accepted recording and remaining full evaluation
+## P1 accepted recording and completed full evaluation
 
 Job `31365444` completed in 4:04 with 5,656,984 KiB MaxRSS on code `7232306`.
 The corrected direct pilot again scored deterministic 4/4, pure LLM 2/8,
@@ -211,7 +213,14 @@ manifest are provided without requiring an always-on GPU or public service.
 
 After `sbatch --test-only` and an `afterok:31365444` dependency, frozen holdout
 job `31365531` was submitted at exact commit `72323060ad7b2314facd82cf8064f1f0c174b308`.
-It covers 504 scored turns (72 deterministic and 432 model attempts before
-replans). Only progress counts are inspected while it runs. Its full results,
-failure-separated aggregates and final comparison report remain pending; the
-completed P1 case is not a substitute for that outcome. No SG or resume change.
+It completed in 1:02:12, exit 0:0, with 11,281,388 KiB batch MaxRSS. All 504 scored
+turns (72 deterministic and 432 initial model attempts) are present, with 549
+actual model requests including 117 replans. Only progress counts were inspected
+while it ran. Structured hybrid scored 54/54 final tasks but only 18/54 initial
+complete model paths and 88.9% selected parameters; deterministic was 18/18.
+Three promotion conditions failed. The full comparison and fault-separated
+aggregates are published in the final report; no post-result tuning or rerun was
+performed. Publication review renamed the compact's misleading failure-cause
+label to co-occurring failed-row observations, without changing metrics, task
+labels or gates; four exporter tests cover the diagnostic-only transformation.
+No SG or resume change.

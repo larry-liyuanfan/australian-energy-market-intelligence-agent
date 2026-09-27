@@ -2,3 +2,4 @@
 docs/demos/**/index.html text eol=lf
 docs/demos/**/recorded_run.json text eol=lf
 docs/assets/p1-model-replay-*.png -text
+artifacts/public/planner_remediation_holdout_v3_20260927.json text eol=lf

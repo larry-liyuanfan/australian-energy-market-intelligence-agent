@@ -63,6 +63,12 @@ A hash-pinned Qwen3-8B/llama.cpp planner was evaluated on Spartan across 24 hold
 
 ## Local demo
 
+The completed [v3 remediation report](docs/PLANNER_REMEDIATION_V3_EVALUATION.md)
+keeps that decision: structured hybrid finished 54/54 new sampled turns but only
+18/54 initial model paths, while deterministic already finished 18/18. This is
+runtime-assisted success without measured model-quality uplift, not promotion
+or a directly comparable improvement over the earlier differently scored set.
+
 For an interview without a live GPU, use the [recorded real-Qwen replay](docs/INTERVIEW_DEMO.md).
 It includes the original model proposals, typed runtime corrections, official Q4
 text/source values and independently recomputed historical settlement. It is a
