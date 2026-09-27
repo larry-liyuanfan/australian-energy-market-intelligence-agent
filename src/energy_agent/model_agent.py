@@ -8,6 +8,7 @@ import time
 import uuid
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from datetime import datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Any, ClassVar, Literal
 
@@ -15,7 +16,7 @@ from pydantic import Field
 
 from .agent import EnergyAgent
 from .providers import PlannerOutcome, PlannerUsage, ProviderUnavailable, TurnPlanner
-from .schemas import AgentQueryRequest, Evidence, StrictModel, ToolCall, ToolResult
+from .schemas import AgentQueryRequest, DecisionCase, Evidence, StrictModel, ToolCall, ToolResult
 from .tools import ToolRegistry
 
 SYSTEM_PROMPT = """You are the planning component of a historical Australian energy decision-replay agent.
@@ -98,6 +99,9 @@ class ModelAgentRun(StrictModel):
     workflow_type: str
     resolved_constraints: dict[str, SourcedConstraint]
     model_proposed_calls: list[ToolCall] = Field(default_factory=list)
+    initial_model_proposed_calls: list[ToolCall] = Field(default_factory=list)
+    planner_attempts: list[dict[str, Any]] = Field(default_factory=list)
+    guarded_calls: list[ToolCall] = Field(default_factory=list)
     planner_validation_errors: list[str] = Field(default_factory=list)
     tool_calls: list[ToolCall]
     results: list[ToolResult]
@@ -158,7 +162,8 @@ class ConversationMemory:
         state = self.state(conversation_id)
         state.user_turns.append(user_text)
         turn = len(state.user_turns)
-        self._extract_user_constraints(state, user_text, turn)
+        prior = self.constraints_for_mode(state, mode)
+        self._extract_user_constraints(state, user_text, turn, prior)
         messages: list[dict[str, object]] = [{"role": "system", "content": SYSTEM_PROMPT}]
         if mode == MemoryMode.full_history:
             for index, text in enumerate(state.user_turns[:-1], start=1):
@@ -180,10 +185,13 @@ class ConversationMemory:
         return state, messages
 
     @staticmethod
-    def _extract_user_constraints(state: ConversationState, text: str, turn: int) -> None:
+    def _extract_user_constraints(
+        state: ConversationState, text: str, turn: int,
+        prior: dict[str, SourcedConstraint] | None = None,
+    ) -> None:
         upper = text.upper()
-        previous_regions = state.constraints.get("regions")
-        regions = [region for region in ("NSW1", "QLD1", "SA1", "TAS1", "VIC1") if region in upper]
+        previous_regions = (state.constraints if prior is None else prior).get("regions")
+        regions = list(dict.fromkeys(re.findall(r"\b(?:NSW1|QLD1|SA1|TAS1|VIC1)\b", upper)))
         replacement = re.search(
             r"(?:REPLACE|替换)\s+(NSW1|QLD1|SA1|TAS1|VIC1)\s+(?:WITH|为)\s+"
             r"(NSW1|QLD1|SA1|TAS1|VIC1)",
@@ -192,6 +200,11 @@ class ConversationMemory:
         if replacement and previous_regions and isinstance(previous_regions.value, list):
             old, new = replacement.groups()
             regions = [new if item == old else item for item in previous_regions.value]
+        elif (
+            len(regions) == 1 and previous_regions and isinstance(previous_regions.value, list)
+            and any(term in text.lower() for term in ("compare", "comparison", "versus", "比较", "对比"))
+        ):
+            regions = list(dict.fromkeys([*previous_regions.value, *regions]))
         if regions:
             state.constraints["regions"] = SourcedConstraint(key="regions", value=regions, source_turn=turn)
             state.constraints["region"] = SourcedConstraint(key="region", value=regions[0], source_turn=turn)
@@ -349,10 +362,25 @@ class ModelDrivenAgent:
         started = time.perf_counter()
         state, messages = self.memory.begin_turn(conversation_id, question, memory_mode)
         resolved_constraints = self.memory.constraints_for_mode(state, memory_mode)
-        resolved_question = self._resolved_question(question, resolved_constraints, memory_mode)
-        request = AgentQueryRequest(question=resolved_question, max_tool_calls=max_tool_calls)
-        case = self._deterministic._build_case(request)
-        baseline_calls = self._deterministic._plan(request)
+        request = AgentQueryRequest(question=question, max_tool_calls=max_tool_calls)
+        case = self._case_from_constraints(request, resolved_constraints)
+        baseline_calls = self._deterministic._plan(request, case=case)
+        for name, arguments in baseline_calls:
+            if name == "optimize_battery_dispatch":
+                battery_keys = {
+                    "battery_power_mw": "power_mw", "battery_energy_mwh": "energy_mwh",
+                    "round_trip_efficiency": "round_trip_efficiency",
+                }
+                battery = {
+                    target: resolved_constraints[source].value
+                    for source, target in battery_keys.items() if source in resolved_constraints
+                }
+                if battery:
+                    arguments["battery"] = battery
+                if "degradation_cost_aud_mwh" in resolved_constraints:
+                    arguments["variable_degradation_cost_aud_per_mwh_discharged"] = (
+                        resolved_constraints["degradation_cost_aud_mwh"].value
+                    )
         outcomes: list[PlannerOutcome] = []
         if path == AgentPath.deterministic:
             planned = sorted(baseline_calls, key=lambda call: self._dag_order[call[0]])
@@ -404,11 +432,15 @@ class ModelDrivenAgent:
                     if diagnosis is not None and len(queue) + len(records) < max_tool_calls:
                         queue.insert(0, (*diagnosis, 1))
                 continue
-            if replans >= self.max_replans or path == AgentPath.deterministic:
+            if retries >= self.max_replans:
                 continue
             seen.remove(signature)
-            replans += 1
             retries += 1
+            if path == AgentPath.deterministic:
+                recovered, _strategy = self._deterministic._recovery_call(name, arguments)
+                queue.insert(0, (name, recovered, 2))
+                continue
+            replans += 1
             failure_message: dict[str, object] = {
                 "role": "system",
                 "content": (
@@ -422,10 +454,9 @@ class ModelDrivenAgent:
             outcomes.append(outcome)
             replacements = outcome.calls
             if path == AgentPath.constrained_hybrid:
-                replacements = [call for call in replacements if call[0] == name]
-                if not replacements:
-                    recovered, _strategy = self._deterministic._recovery_call(name, arguments)
-                    replacements = [(name, recovered)]
+                recovered, _strategy = self._deterministic._recovery_call(name, arguments)
+                replacements = self._hybrid_guard(replacements, [(name, recovered)])
+                if replacements != outcome.calls:
                     fallback_calls += 1
             queue = [
                 (replacement_name, replacement_arguments, 2) for replacement_name, replacement_arguments in replacements
@@ -482,6 +513,21 @@ class ModelDrivenAgent:
             model_proposed_calls=[
                 ToolCall(name=name, arguments=arguments) for outcome in outcomes for name, arguments in outcome.calls
             ],
+            initial_model_proposed_calls=[
+                ToolCall(name=name, arguments=arguments) for name, arguments in outcomes[0].calls
+            ] if outcomes else [],
+            planner_attempts=[
+                {
+                    "attempt": index + 1, "seed": outcome.seed,
+                    "calls": [ToolCall(name=n, arguments=a).model_dump(mode="json") for n, a in outcome.calls],
+                    "prompt_tokens": outcome.usage.prompt_tokens,
+                    "completion_tokens": outcome.usage.completion_tokens,
+                    "latency_ms": outcome.usage.latency_ms,
+                    "rejected_calls": outcome.rejected_calls,
+                    "validation_errors": list(outcome.validation_errors),
+                } for index, outcome in enumerate(outcomes)
+            ],
+            guarded_calls=[ToolCall(name=name, arguments=arguments) for name, arguments in planned],
             planner_validation_errors=[error for outcome in outcomes for error in outcome.validation_errors],
             tool_calls=records,
             results=results,
@@ -504,6 +550,29 @@ class ModelDrivenAgent:
             latency_ms=sum(item.usage.latency_ms for item in outcomes),
             provider_cost_aud=sum(item.usage.provider_cost_aud for item in outcomes),
         )
+
+    @staticmethod
+    def _case_from_constraints(
+        request: AgentQueryRequest, constraints: dict[str, SourcedConstraint]
+    ) -> DecisionCase:
+        """Apply sourced state as typed values, without reparsing correction prose."""
+        payload = EnergyAgent._build_case(request).model_dump(mode="json")
+        context = {key: item.value for key, item in constraints.items()}
+        intent = context.get("intent")
+        if isinstance(intent, str):
+            payload["workflow_type"] = intent.replace(" ", "_")
+        regions = context.get("regions")
+        if isinstance(regions, list) and regions:
+            payload["region"] = regions[0]
+            payload["requested_regions"] = regions
+        dates = context.get("dates")
+        if isinstance(dates, list) and dates:
+            nem_time = timezone(timedelta(hours=10))
+            payload["window"] = {
+                "start": datetime.fromisoformat(str(dates[0])).replace(tzinfo=nem_time),
+                "end": datetime.fromisoformat(str(dates[-1])).replace(tzinfo=nem_time) + timedelta(days=1),
+            }
+        return DecisionCase.model_validate(payload)
 
     @staticmethod
     def _resolved_question(
@@ -537,7 +606,10 @@ class ModelDrivenAgent:
                 "compare_region_period": ("regions", "window"),
                 "detect_price_events": ("region", "window"),
                 "forecast_price_risk": ("region", "window", "horizon_intervals"),
-                "optimize_battery_dispatch": ("region", "window", "settlement_mode"),
+                "optimize_battery_dispatch": (
+                    "region", "window", "settlement_mode", "battery",
+                    "variable_degradation_cost_aud_per_mwh_discharged",
+                ),
                 "explain_data_coverage": ("region",),
                 "search_official_evidence": (),
             }[name]

@@ -16,6 +16,7 @@ from energy_agent.llm_evaluation import load_episodes, score_turn
 from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, ConversationMemory, MemoryMode, ModelDrivenAgent
 from energy_agent.providers import LlamaCppPlanner
+from energy_agent.remediation import validate_market_windows
 from energy_agent.schemas import ToolResult
 from energy_agent.snapshots import ForecastSnapshotStore, load_forecast_snapshots
 from energy_agent.tools import ToolRegistry
@@ -115,6 +116,11 @@ def main() -> None:
     if args.max_episodes:
         episodes = episodes[: args.max_episodes]
     base_registry = build_registry(args)
+    if args.data:
+        validate_market_windows(
+            [{**episode, "turns": [legacy_turn(turn) for turn in episode["turns"]]} for episode in episodes],
+            base_registry.store,
+        )
     rows: list[dict[str, Any]] = []
     for seed in seeds:
         for episode in episodes:

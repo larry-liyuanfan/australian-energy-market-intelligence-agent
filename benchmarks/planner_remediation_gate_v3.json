@@ -1,0 +1,27 @@
+{
+  "schema_version": "planner-remediation-gate-v3",
+  "preregistered_before_holdout_execution": true,
+  "holdout": "benchmarks/planner_remediation_holdout_v3.jsonl",
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "sampling_temperature": 0.2,
+  "episodes": 10,
+  "turns": 18,
+  "thresholds": {
+    "task_success_rate": 0.85,
+    "correct_tool_path_rate": 0.9,
+    "parameter_accuracy": 0.9,
+    "citation_correctness": 1,
+    "settlement_consistency": 1,
+    "replanning_success_rate": 0.8,
+    "structured_memory_recall": 0.85,
+    "structured_memory_state_contamination": 0.02,
+    "unsafe_tool_or_dsl_calls": 0
+  },
+  "promotion_rule": "Pass every absolute threshold and exceed deterministic memory-required task success. Raw means initial proposal only. Publish failure unchanged.",
+  "scope": "Qwen3-8B; deterministic/pure_llm/constrained_hybrid; all four memory modes. No 14B or visual benchmark. Separate actual vs injected-fault rows.",
+  "development": "benchmarks/planner_remediation_development_v3.jsonl"
+}
