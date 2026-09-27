@@ -29,6 +29,7 @@ packages = ["src/energy_agent"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/energy_agent/demo.html" = "energy_agent/demo.html"
+"src/energy_agent/interview_demo.html" = "energy_agent/interview_demo.html"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

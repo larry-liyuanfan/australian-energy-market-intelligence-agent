@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -49,7 +50,16 @@ class ForecastSnapshotStore:
         }
 
     def get(self, region: Region, start: datetime, end: datetime) -> ForecastSnapshot | None:
-        return self._snapshots.get((region, start.isoformat(), end.isoformat()))
+        snapshot = self._snapshots.get((region, start.isoformat(), end.isoformat()))
+        intervals = (end - start).total_seconds() / 300
+        if snapshot is None or intervals != len(snapshot.point):
+            return None
+        if any(
+            not all(math.isfinite(value) for value in (low, point, high)) or not low <= point <= high
+            for low, point, high in zip(snapshot.lower, snapshot.point, snapshot.upper, strict=True)
+        ):
+            return None
+        return snapshot
 
     @property
     def count(self) -> int:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import statistics
 from datetime import timedelta
 from typing import Any
@@ -141,6 +143,8 @@ class ToolRegistry:
                         source_page=hit.get("page_number"),
                         asset_id=hit.get("asset_id"),
                         asset_sha256=hit.get("asset_sha256"),
+                        figure_id=hit.get("figure_id"),
+                        source_cell_preview=hit.get("source_cell_preview"),
                         retrieval_scores={
                             key: float(value)
                             for key, value in hit.get("component_scores", {}).items()
@@ -198,6 +202,9 @@ class ToolRegistry:
                     "training_cutoff": args.window.start.isoformat(),
                     "history_intervals": len(history),
                 }
+            forecast_data["signal_sha256"] = hashlib.sha256(
+                json.dumps(forecast_data["point"], separators=(",", ":"), allow_nan=False).encode()
+            ).hexdigest()
             return ToolResult(
                 tool_name=name,
                 data=forecast_data,
@@ -303,6 +310,12 @@ class ToolRegistry:
                 "objective": args.objective,
                 "settlement_mode": args.settlement_mode,
                 "signal_intervals": len(signal),
+                "signal_sha256": hashlib.sha256(
+                    json.dumps(signal, separators=(",", ":"), allow_nan=False).encode()
+                ).hexdigest(),
+                "variable_degradation_cost_aud_per_mwh_discharged": (
+                    args.variable_degradation_cost_aud_per_mwh_discharged
+                ),
                 "planned_margin_aud": planned_margin,
                 "realized_margin_aud": realized_margin,
                 "oracle_regret_aud": oracle_regret,

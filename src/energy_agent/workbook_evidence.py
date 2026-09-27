@@ -193,6 +193,7 @@ class FigureEvidenceIndex:
                 {
                     **hit,
                     "figure_id": figure.figure_id,
+                    "source_cell_preview": figure.text[:500],
                     "figure_number": figure.figure_number,
                     "subtitle": figure.subtitle,
                     "image_sha256": list(figure.image_sha256),

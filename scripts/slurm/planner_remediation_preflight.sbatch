@@ -40,3 +40,11 @@ for split in development holdout; do
 done
 sha256sum benchmarks/planner_remediation* src/energy_agent/remediation.py > "$RUN/input_sha256.txt"
 printf '%s\n' "$ENERGY_GIT_COMMIT" > "$RUN/git_sha.txt"
+"$PYTHON" scripts/export_interview_demo.py \
+  --data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz" \
+  --data-manifest "$ROOT/ingest-12m/final_manifest_v2.json" \
+  --evidence "$ROOT/claim-transport-input-905/evidence_documents.jsonl" \
+  --figures "$ROOT/multimodal/q1-2026-workbook-holdout-0096f16/figure_manifest.jsonl" \
+  --forecast-snapshots "$ROOT/forecast-snapshots-c66e415.jsonl" \
+  --output "$ARTIFACTS/preview/preflight-$SLURM_JOB_ID" \
+  --private-output "$RUN/demo"
