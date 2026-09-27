@@ -9,7 +9,8 @@ Tool installation and readiness are recorded separately in
 [environment status](ENVIRONMENT_STATUS.md). Browser review of the first
 numerically valid P1 recording found irrelevant gas-market/following-quarter
 figures: citation presence does not establish relevance, so that preview remains
-unaccepted pending a topic/period grounding correction.
+unaccepted. The correction and accepted replacement recording are documented
+below; the earlier preview is not retroactively relabelled as successful.
 
 Preflight `31365151` failed the security regression suite after dated queries
 were scoped too broadly. Quarter filtering now requires an explicit quarter
@@ -85,9 +86,10 @@ The explicit text-plus-source-values export gate rejected it. Hybrid runtime now
 checks retrieval route, requested modality, publication filter and canonical
 region/date/quarter scope; compatible model query expansions are still permitted.
 The raw erroneous proposal remains in the private trace, and replacement calls
-are attributed to runtime rather than the model. Because this changes direct
-execution, a new direct development pilot is required before freezing holdout.
-The GoalSpec result is not rerun by that pilot. `31365356` remains a failed job
+are attributed to runtime rather than the model. Because this changed direct
+execution, a new direct development pilot was required before freezing holdout;
+it subsequently completed as `31365444`. The GoalSpec result was not rerun by
+that pilot. `31365356` remains a failed job
 (2:59 elapsed, 6,044,920 KiB MaxRSS); a successful substage is not a successful
 overall P1 export.
 
@@ -169,6 +171,29 @@ in the Energy artifact root.
   An interrupted `predictions.partial.jsonl` is not a completed evaluation and
   cannot be promoted. Progress messages contain counts, not quality scores, so
   scheduling observation does not require inspecting holdout outcomes mid-run.
+
+## Reading the frozen v3 metrics
+
+These definitions clarify the existing scorer; they do not change its labels,
+thresholds or executing code. The final report must retain the following limits.
+
+| Reported field | What it measures / does not establish |
+| --- | --- |
+| Initial model complete path | Required tool names appear in order in the first validated proposal. Later replans and runtime additions do not count as initial planning. |
+| Model parameter accuracy | Exact checks on proposed non-search calls: region sets, timestamps, windows and the specified battery fields/objective/settlement mode. Omitted tools are penalised by the separate path metric; search query semantics and every possible tool argument are not covered by this average. |
+| Citation correctness | The scorer requires citations with HTTPS URLs and 64-character hashes. Runtime also checks hexadecimal hash format. Neither is independent document rehashing, source entailment, or human-judged answer support. |
+| Settlement consistency | Correct presence/absence of planned and realised fields for the returned margin basis; no-dispatch turns pass by non-applicability. This aggregate is not an independent cash-flow or battery-constraint proof. The P1 exporter performs those additional checks for its recorded case. |
+| Memory recall / contamination | Retention of expected region/date values in sourced constraint state, and absence of benchmark-specific forbidden values from active state/executed structured arguments. Battery edits are additionally checked in dispatch parameters. This is not a complete measure of all remembered facts or all possible contamination. |
+| Unsafe tool/DSL calls | Counts rejected unsafe/unknown proposal errors, not only executed calls. Rejection, runtime replacement and actual execution must remain separately attributed. Zero on this finite suite is not universal injection resistance. |
+| Stability and latency | Repeated-seed turn-level pass rates and measured end-to-end time including recovery; turns within an episode and seeds of one prompt are correlated. Wilson intervals are descriptive, not independent-task generalisation guarantees or a service SLA. |
+
+The direct holdout uses real market data, official text evidence and forecast
+snapshots; its Slurm command does not mount workbook figure records. A chart
+request exercising text recovery therefore does not establish figure-grounding
+accuracy. The independently recorded P1 case does mount the 117 Q4 figures and
+has its own visible-source checks. Fault-injected and non-fault tracks must be
+reported separately; the latter still includes the explicit prompt-injection
+case and is not synonymous with benign ordinary queries.
 
 ## P1 accepted recording and remaining full evaluation
 
