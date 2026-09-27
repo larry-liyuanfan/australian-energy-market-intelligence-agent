@@ -10,6 +10,14 @@ established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. N
 model request occurred. The scheduler recommended the newer `sapphire` CPU
 partition, which is now explicit in the preflight script.
 
+CPU preflight `31364416` completed in 80 seconds (482,180 KiB batch MaxRSS),
+including the full suite and coverage checks for 5 development and 15 holdout
+region-days. P1 preflight `31364486` passed tests/lint/types but failed at export:
+official report metadata contains date-only publication values. The exporter now
+treats missing time/zone precision conservatively as retrospective-only. Review
+also added actual market-file digest verification before parsing; manifest claims
+alone no longer establish the input hash. Both failures remain in the run record.
+
 ## Findings from existing artifacts and code
 
 1. **Pilot data mismatch.** The four-turn GoalSpec pilot used 4–5 August 2025;

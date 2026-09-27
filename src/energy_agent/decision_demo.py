@@ -15,6 +15,8 @@ from .schemas import TOOL_MODELS, Evidence, OptimizeBatteryDispatchInput
 def evidence_publication_role(evidence: Evidence, decision_as_of: datetime) -> str:
     if evidence.published_at is None:
         return "publication_unknown_retrospective_only"
+    if evidence.published_at.tzinfo is None:
+        return "publication_time_or_timezone_uncertain_retrospective_only"
     return "available_by_decision_time" if evidence.published_at <= decision_as_of else "published_later_retrospective_only"
 
 
@@ -66,15 +68,22 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
     if not all(checks.values()):
         raise ValueError(f"recorded-demo calculation gate failed: {[name for name, passed in checks.items() if not passed]}")
     citations: list[dict[str, Any]] = []
+    quoted_sources: set[str] = set()
     for evidence in run.citations:
         if evidence.evidence_type != "explanatory":
             continue
+        excerpt = " ".join(evidence.snippet.split()[:18]) if (
+            evidence.modality == "text" and evidence.url not in quoted_sources
+        ) else None
+        if excerpt:
+            quoted_sources.add(evidence.url)
         citations.append({
             "evidence_id": evidence.evidence_id, "title": evidence.title, "url": evidence.url,
             "published_at": evidence.published_at.isoformat() if evidence.published_at else None,
             "publication_role": evidence_publication_role(evidence, request.window.start),
             "modality": evidence.modality, "page": evidence.source_page, "figure_id": evidence.figure_id,
             "source_cell_preview": evidence.source_cell_preview,
+            "short_text_excerpt": excerpt,
             "sha256": evidence.sha256, "asset_sha256": evidence.asset_sha256,
         })
     checks["official_text_and_figure_present"] = (
@@ -97,12 +106,25 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
         )
         workflow.append({"tool": call.name, "status": call.status, "origin": origin, "duration_ms": call.duration_ms})
     sample = list(range(0, n, 6))
+    peak = max(rows, key=lambda row: row.rrp)
+    events = results.get("detect_price_events")
+    event_records = events.data.get("events", []) if events else []
+    diagnosis = results.get("diagnose_price_event")
     return {
         "schema_version": "energy-interview-recorded-run-v1",
         "recorded_at": datetime.now(UTC).isoformat(), "question": question,
         "mode": "recorded real-model evaluation" if run.metrics.provider != "deterministic" else "recorded deterministic baseline",
         "region": request.region.value, "day": request.window.start.date().isoformat(),
         "trace_id": run.trace_id, "status": run.status, "workflow": workflow,
+        "market_context": {
+            "mean_rrp_aud_mwh": math.fsum(row.rrp for row in rows) / n,
+            "minimum_rrp_aud_mwh": min(row.rrp for row in rows),
+            "peak_rrp_aud_mwh": peak.rrp, "peak_interval": peak.interval.isoformat(),
+            "negative_price_intervals": sum(row.rrp < 0 for row in rows),
+            "detected_event_count": len(event_records),
+            "diagnosis": diagnosis.data if diagnosis else None,
+            "interpretation_boundary": "Market changes are associations. Quarterly report context does not establish the cause of this day's event.",
+        },
         "model": {"provider": run.metrics.provider, "name": run.metrics.model,
                   "initial_proposals": [call.model_dump(mode="json") for call in run.initial_model_proposed_calls],
                   "metrics": run.metrics.model_dump(mode="json")},

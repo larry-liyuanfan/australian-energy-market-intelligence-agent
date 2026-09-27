@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
 from energy_agent.decision_demo import build_demo_bundle, evidence_publication_role
-from energy_agent.market import fixture_store
+from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, MemoryMode, ModelDrivenAgent
 from energy_agent.schemas import Evidence, Region
 from energy_agent.snapshots import ForecastSnapshot, ForecastSnapshotStore
@@ -48,6 +50,11 @@ def test_recorded_demo_recomputes_settlement_and_labels_retrospective_evidence()
 def test_unknown_report_date_cannot_be_called_available_as_of() -> None:
     evidence = fixture_registry().store.evidence[0].model_copy(update={"published_at": None})
     assert evidence_publication_role(evidence, datetime.now(UTC)) == "publication_unknown_retrospective_only"
+    naive_date = datetime(2025, 2, 1)  # noqa: DTZ001 - intentional date-only metadata regression
+    naive = evidence.model_copy(update={"published_at": naive_date})
+    assert evidence_publication_role(naive, datetime.now(UTC)) == (
+        "publication_time_or_timezone_uncertain_retrospective_only"
+    )
 
 
 def test_short_snapshot_cannot_diverge_forecast_from_dispatch() -> None:
@@ -59,3 +66,12 @@ def test_short_snapshot_cannot_diverge_forecast_from_dispatch() -> None:
     )
     store = ForecastSnapshotStore([snapshot])
     assert store.get(Region.SA1, start, start + timedelta(days=1)) is None
+
+
+def test_market_digest_is_checked_before_parsing_or_snapshot_loading(tmp_path: Path) -> None:
+    data = tmp_path / "substituted.csv.gz"
+    manifest = tmp_path / "manifest.json"
+    data.write_bytes(b"explicit invalid fixture")
+    manifest.write_text(json.dumps({"data_sha256": "0" * 64}))
+    with pytest.raises(ValueError, match="file SHA-256 does not match"):
+        load_dispatch_store(data, manifest)

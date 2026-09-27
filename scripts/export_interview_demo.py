@@ -48,10 +48,11 @@ def main() -> None:
     (args.private_output / "full_run.json").write_text(run.model_dump_json(indent=2), encoding="utf-8")
     bundle = build_demo_bundle(run, registry.store, QUESTION)
     bundle["git_sha"] = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    bundle["input_hashes"] = {
-        name: hashlib.sha256(getattr(args, name).read_bytes()).hexdigest()
-        for name in ("data_manifest", "evidence", "figures", "forecast_snapshots")
-    }
+    input_hashes = {}
+    for name in ("data", "data_manifest", "evidence", "figures", "forecast_snapshots"):
+        with getattr(args, name).open("rb") as handle:
+            input_hashes[name] = hashlib.file_digest(handle, "sha256").hexdigest()
+    bundle["input_hashes"] = input_hashes
     args.output.mkdir(parents=True, exist_ok=False)
     (args.output / "recorded_run.json").write_text(json.dumps(bundle, indent=2), encoding="utf-8")
     template = Path(__file__).parents[1] / "src/energy_agent/interview_demo.html"

@@ -95,6 +95,10 @@ def fixture_store() -> MarketStore:
 def load_dispatch_store(data_path: Path, manifest_path: Path) -> MarketStore:
     manifest_bytes = manifest_path.read_bytes()
     manifest = json.loads(manifest_bytes)
+    with data_path.open("rb") as data_handle:
+        actual_sha256 = hashlib.file_digest(data_handle, "sha256").hexdigest()
+    if actual_sha256 != manifest["data_sha256"]:
+        raise ValueError("market data file SHA-256 does not match its manifest")
     rows: list[MarketRow] = []
     with gzip.open(data_path, "rt", encoding="utf-8", newline="") as handle:
         for raw in csv.DictReader(handle):
