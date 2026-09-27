@@ -15,6 +15,7 @@ from typing import Any, ClassVar, Literal
 from pydantic import Field
 
 from .agent import EnergyAgent
+from .evidence_scope import market_evidence_query
 from .providers import PlannerOutcome, PlannerUsage, ProviderUnavailable, TurnPlanner
 from .schemas import AgentQueryRequest, DecisionCase, Evidence, StrictModel, ToolCall, ToolResult
 from .tools import ToolRegistry
@@ -380,10 +381,9 @@ class ModelDrivenAgent:
                 modality = resolved_constraints.get("evidence_modality")
                 preferred = modality.value if modality else arguments["preferred_modality"]
                 arguments.update({
-                    "query": (
-                        f"{case.workflow_type.replace('_', ' ')} "
-                        f"{' '.join(item.value for item in case.requested_regions or [case.region])} "
-                        f"{case.window.start.date()} official {preferred} evidence"
+                    "query": market_evidence_query(
+                        [item.value for item in case.requested_regions or [case.region]],
+                        case.window.start.date(), case.workflow_type,
                     ),
                     "preferred_modality": preferred,
                     "retrieval_mode": "hybrid_rerank" if preferred in {"text", "auto"} else "multimodal_fusion",

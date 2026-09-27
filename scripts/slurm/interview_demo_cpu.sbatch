@@ -10,6 +10,7 @@
 set -euo pipefail
 umask 077
 : "${ENERGY_GIT_COMMIT:?exact commit required}"
+: "${ENERGY_FIGURES:?verified Q4 2025 figure manifest required}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ROOT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts
 CODE="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}/energy-demo-$SLURM_JOB_ID"
@@ -29,7 +30,7 @@ cd "$CODE"
   --data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz" \
   --data-manifest "$ROOT/ingest-12m/final_manifest_v2.json" \
   --evidence "$ROOT/claim-transport-input-905/evidence_documents.jsonl" \
-  --figures "$ROOT/multimodal/q1-2026-workbook-holdout-0096f16/figure_manifest.jsonl" \
+  --figures "$ENERGY_FIGURES" \
   --forecast-snapshots "$ROOT/forecast-snapshots-c66e415.jsonl" \
   --output "$ROOT/planner-remediation-20260927/preview/demo-$SLURM_JOB_ID" \
   --private-output "$RUN/trace"

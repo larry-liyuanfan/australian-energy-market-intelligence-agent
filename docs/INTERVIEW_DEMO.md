@@ -15,7 +15,7 @@ python scripts/export_interview_demo.py \
   --data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz" \
   --data-manifest "$ROOT/ingest-12m/final_manifest_v2.json" \
   --evidence "$ROOT/claim-transport-input-905/evidence_documents.jsonl" \
-  --figures "$ROOT/multimodal/q1-2026-workbook-holdout-0096f16/figure_manifest.jsonl" \
+  --figures "$FIGURES" \
   --forecast-snapshots "$ROOT/forecast-snapshots-c66e415.jsonl" \
   --output "$ROOT/planner-remediation-20260927/preview/my-recorded-run" \
   --private-output "$ROOT/planner-remediation-20260927/private/my-recorded-run"
@@ -27,6 +27,14 @@ only inside an allocation running the verified loopback model. The full private
 tool trace stays in the private output directory; publish only the inspected
 compact response, HTML, screenshot and hashes. A failed gate does not write a
 successful demo. Output paths must be new, preventing silent replacement of runs.
+
+Before export, compile the Q4 2025 official workbook on the allocated compute node
+with `python scripts/compile_demo_workbook.py --output NEW_PRIVATE_WORKBOOK_DIR`,
+and set `FIGURES` to its `figure_manifest.jsonl`. The source URL and publication
+date are taken from AEMO's official QED catalogue. Compilation records the source
+and derived hashes without publishing the raw workbook. Q1 2026 figures are not
+substitutes for Q4 2025 context. Topic, region and report-quarter screening is a
+conservative filter, not an entailment classifier or day-specific causal proof.
 
 Open the generated `index.html` directly or serve its directory locally:
 

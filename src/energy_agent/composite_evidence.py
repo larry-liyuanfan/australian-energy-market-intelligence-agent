@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Any, Literal
 
 from .evidence import EvidenceIndex, OfficialChunk
+from .evidence_scope import filter_scoped_hits, query_scope
 
 
 class CompositeEvidenceIndex:
@@ -37,7 +38,8 @@ class CompositeEvidenceIndex:
         top_k: int = 5,
         mode: Literal["bm25", "dense", "rrf", "hybrid_rerank"] = "hybrid_rerank",
     ) -> list[dict[str, Any]]:
-        return self.text_index.search(query, top_k=top_k, mode=mode)
+        count = max(top_k, 100) if query_scope(query) else top_k
+        return filter_scoped_hits(self.text_index.search(query, top_k=count, mode=mode), query)[:top_k]
 
     @staticmethod
     def _rrf(channels: list[list[dict[str, Any]]], top_k: int) -> list[dict[str, Any]]:
@@ -74,11 +76,12 @@ class CompositeEvidenceIndex:
         if preferred_modality == "text":
             return self.search(query, top_k)
         channels: list[list[dict[str, Any]]] = []
+        count = max(top_k * 3, 100 if query_scope(query) else 10)
         if preferred_modality in {"chart", "table", "visual"} and self.figure_index is not None:
-            channels.append(self.figure_index.search(query, max(top_k * 3, 10)))
+            channels.append(self.figure_index.search(query, count))
         if preferred_modality in {"chart", "table", "visual"} and self.page_index is not None:
             page_search = getattr(self.page_index, "search_multimodal", None)
             if callable(page_search):
-                channels.append(page_search(query, max(top_k * 3, 10), preferred_modality))
-        channels.append(self.text_index.search(query, max(top_k * 3, 10)))
-        return self._rrf(channels, top_k)
+                channels.append(page_search(query, count, preferred_modality))
+        channels.append(self.text_index.search(query, count))
+        return self._rrf([filter_scoped_hits(hits, query) for hits in channels], top_k)

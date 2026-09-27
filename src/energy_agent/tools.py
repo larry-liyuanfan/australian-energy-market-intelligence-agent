@@ -8,6 +8,7 @@ from typing import Any
 
 from .battery import optimize_dispatch, threshold_dispatch
 from .evidence import EvidenceIndex
+from .evidence_scope import evidence_excerpt, filter_scoped_hits, query_scope
 from .forecast import seasonal_conformal
 from .market import MarketStore, robust_events
 from .schemas import TOOL_MODELS, Evidence, StrictModel, ToolResult
@@ -127,7 +128,9 @@ class ToolRegistry:
                 if args.retrieval_mode == "multimodal_fusion" and callable(multimodal_search):
                     hits = multimodal_search(args.query, args.top_k, args.preferred_modality)
                 else:
-                    hits = self.evidence_index.search(args.query, args.top_k)
+                    count = max(args.top_k, 100) if query_scope(args.query) else args.top_k
+                    hits = self.evidence_index.search(args.query, count)
+                hits = filter_scoped_hits(hits, args.query)[:args.top_k]
                 evidence = [
                     Evidence(
                         evidence_id=hit["chunk_id"],
@@ -136,7 +139,8 @@ class ToolRegistry:
                         published_at=hit["published_at"],
                         retrieved_at=hit["retrieved_at"],
                         sha256=hit["sha256"],
-                        snippet=hit["text"][:500],
+                        snippet=evidence_excerpt(hit["text"], args.query)[0],
+                        source_text_start=evidence_excerpt(hit["text"], args.query)[1],
                         evidence_type="explanatory",
                         score=hit["score"],
                         modality=hit.get("modality", "text"),
@@ -164,6 +168,7 @@ class ToolRegistry:
                         "hits": len(evidence),
                         "modalities": sorted({item.modality for item in evidence}),
                         "preferred_modality": args.preferred_modality,
+                        "scope_checks": {hit["chunk_id"]: hit.get("scope_checks") for hit in hits},
                     },
                     evidence=evidence,
                 )

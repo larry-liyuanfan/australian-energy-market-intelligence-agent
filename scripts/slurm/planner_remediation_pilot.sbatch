@@ -12,6 +12,7 @@
 set -euo pipefail
 umask 077
 : "${ENERGY_GIT_COMMIT:?exact commit required}"
+: "${ENERGY_FIGURES:?verified Q4 2025 figure manifest required}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ROOT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts
 RUN="$ROOT/planner-remediation-20260927/private/pilot-$SLURM_JOB_ID"
@@ -60,4 +61,13 @@ COMMON=(--data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz"
  --benchmark benchmarks/planner_goal_development_v3.jsonl \
  --gate benchmarks/goal_spec_promotion_gate_v2.json --system goal_spec \
  --system-label qwen3_8b_goal_remediation --seeds 17 29 --output "$RUN/goal"
+"$PYTHON" scripts/export_interview_demo.py \
+ --data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz" \
+ --data-manifest "$ROOT/ingest-12m/final_manifest_v2.json" \
+ --evidence "$ROOT/claim-transport-input-905/evidence_documents.jsonl" \
+ --forecast-snapshots "$ROOT/forecast-snapshots-c66e415.jsonl" \
+ --figures "$ENERGY_FIGURES" --provider-url "http://127.0.0.1:$PORT/v1" \
+ --model Qwen3-8B-Q4_K_M.gguf --seed 17 \
+ --output "$ROOT/planner-remediation-20260927/preview/model-demo-$SLURM_JOB_ID" \
+ --private-output "$RUN/demo"
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P > "$RUN/slurm_usage_at_end.txt"

@@ -7,6 +7,7 @@ import math
 from datetime import UTC, datetime
 from typing import Any
 
+from .evidence_scope import EvidenceScope, official_evidence_url, scope_support
 from .market import MarketStore
 from .model_agent import ModelAgentRun
 from .schemas import TOOL_MODELS, Evidence, OptimizeBatteryDispatchInput
@@ -20,7 +21,11 @@ def evidence_publication_role(evidence: Evidence, decision_as_of: datetime) -> s
     return "available_by_decision_time" if evidence.published_at <= decision_as_of else "published_later_retrospective_only"
 
 
-def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> dict[str, Any]:
+def build_demo_bundle(
+    run: ModelAgentRun, store: MarketStore, question: str, *, allow_fixture: bool = False,
+) -> dict[str, Any]:
+    if "fixture" in store.data_version.lower() and not allow_fixture:
+        raise ValueError("fixture cannot be exported as a real recorded demonstration")
     results = {result.tool_name: result for result in run.results}
     forecast = results["forecast_price_risk"].data
     dispatch = results["optimize_battery_dispatch"].data
@@ -69,6 +74,7 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
         raise ValueError(f"recorded-demo calculation gate failed: {[name for name, passed in checks.items() if not passed]}")
     citations: list[dict[str, Any]] = []
     quoted_sources: set[str] = set()
+    scope = EvidenceScope((request.region.value,), request.window.start.year, (request.window.start.month - 1) // 3 + 1)
     for evidence in run.citations:
         if evidence.evidence_type != "explanatory":
             continue
@@ -77,6 +83,10 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
         ) else None
         if excerpt:
             quoted_sources.add(evidence.url)
+        support = scope_support({
+            "title": evidence.title, "url": evidence.url, "text": evidence.snippet,
+            "source_cell_preview": evidence.source_cell_preview or "",
+        }, scope)
         citations.append({
             "evidence_id": evidence.evidence_id, "title": evidence.title, "url": evidence.url,
             "published_at": evidence.published_at.isoformat() if evidence.published_at else None,
@@ -85,6 +95,9 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
             "source_cell_preview": evidence.source_cell_preview,
             "short_text_excerpt": excerpt,
             "sha256": evidence.sha256, "asset_sha256": evidence.asset_sha256,
+            "source_text_start": evidence.source_text_start,
+            "scope_checks": support,
+            "context_scope": "quarterly_electricity_context" if all(support.values()) else "unsupported_context",
         })
     checks["official_text_and_figure_present"] = (
         any(item["modality"] == "text" for item in citations)
@@ -92,6 +105,12 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
     )
     if not checks["official_text_and_figure_present"]:
         raise ValueError("recorded-demo evidence gate requires both official text and workbook source cells")
+    checks["all_citations_topic_region_and_report_period_supported"] = all(
+        all(item["scope_checks"].values()) for item in citations
+    )
+    checks["official_citation_origins"] = all(official_evidence_url(item["url"]) for item in citations)
+    if not all(checks.values()):
+        raise ValueError("recorded-demo evidence scope gate failed: topic/region/report period or official origin mismatch")
 
     def signature(name: str, args: dict[str, Any]) -> str:
         return name + TOOL_MODELS[name].model_validate(args).model_dump_json()
@@ -153,5 +172,6 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
             "Displayed curves are downsampled; calculations use every five-minute interval.",
             "Historical operating proxy, not investment return, live trading, automatic bidding or a public SLA.",
             "Workbook previews preserve values but do not claim original spreadsheet cell coordinates.",
+            "Evidence scope checks reject obvious mismatches; quarterly context is not day-specific causal evidence or an entailment score.",
         ],
     }
