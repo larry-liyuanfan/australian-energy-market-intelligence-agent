@@ -1,0 +1,4 @@
+# Recorded artifacts have byte-level manifest hashes; preserve LF on Windows.
+docs/demos/**/index.html text eol=lf
+docs/demos/**/recorded_run.json text eol=lf
+docs/assets/p1-model-replay-*.png -text
