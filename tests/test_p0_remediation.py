@@ -109,6 +109,29 @@ def test_hybrid_rejects_oracle_and_retrieval_uses_corrected_state() -> None:
     assert result is None and record.status == "error"
 
 
+def test_hybrid_chart_intent_and_scoped_query_cannot_be_dropped_by_model() -> None:
+    agent = ModelDrivenAgent(ToolRegistry(fixture_store()), None)
+    baseline = {
+        "query": "SA1 2025-01-03 Q1 2025 electricity prices", "preferred_modality": "chart",
+        "retrieval_mode": "multimodal_fusion", "top_k": 5,
+    }
+    for change in (
+        {"query": "SA1 2025-01-03", "retrieval_mode": "hybrid_rerank"},
+        {"query": "SA1 2025-01-04 Q1 2025 electricity prices"},
+        {"query": "VIC1 2025-01-03 Q1 2025 electricity prices"},
+        {"preferred_modality": "text"},
+        {"published_after": "2026-01-01T00:00:00Z"},
+    ):
+        proposed = {**baseline, **change}
+        assert agent._hybrid_guard([("search_official_evidence", proposed)], [("search_official_evidence", baseline)]) == [
+            ("search_official_evidence", baseline),
+        ]
+    compatible = {**baseline, "query": "SA1 2025-01-03 Q1 2025 negative prices and batteries", "top_k": 8}
+    assert agent._hybrid_guard([("search_official_evidence", compatible)], [("search_official_evidence", baseline)]) == [
+        ("search_official_evidence", compatible),
+    ]
+
+
 def test_no_memory_comparison_cannot_crash_or_invent_missing_region() -> None:
     agent = ModelDrivenAgent(ToolRegistry(fixture_store()), ScriptedPlanner([[('compare_region_period', {
         "regions": ["SA1", "QLD1"],

@@ -66,6 +66,30 @@ The holdout script refuses planner/scorer/benchmark drift from the accepted
 direct pilot; the subsequent changes are journaling and independent GoalSpec/demo
 compatibility. No holdout outputs are used to select prompts or thresholds.
 
+Retry `31365356` used the native GoalSpec interface successfully: eight sampled
+attempts, 12,488 prompt / 1,704 completion tokens, 50% valid GoalSpec rate,
+required-field F1 0.8571 and **0/8 compiled task success**. Every second-turn
+correction incorrectly attributed its correction record to source turn 1 rather
+than turn 2. First-turn valid objects omitted required requested outputs, so a
+recognised comparison/forecast intent did not compile into a complete path.
+This is a real negative development result: schema-constrained generation did
+not solve goal completeness or memory attribution. GoalSpec is not selected for
+the full holdout or the serving path, and no additional model/schema tuning is
+started merely to make its score positive. The old v2 findings remain unchanged.
+
+The same job's independent P1 export failed: Qwen proposed `preferred_modality=
+chart` together with `retrieval_mode=hybrid_rerank`, and an unscoped date-only
+query; execution returned five text citations from mismatched report periods.
+The explicit text-plus-source-values export gate rejected it. Hybrid runtime now
+checks retrieval route, requested modality, publication filter and canonical
+region/date/quarter scope; compatible model query expansions are still permitted.
+The raw erroneous proposal remains in the private trace, and replacement calls
+are attributed to runtime rather than the model. Because this changes direct
+execution, a new direct development pilot is required before freezing holdout.
+The GoalSpec result is not rerun by that pilot. `31365356` remains a failed job
+(2:59 elapsed, 6,044,920 KiB MaxRSS); a successful substage is not a successful
+overall P1 export.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No

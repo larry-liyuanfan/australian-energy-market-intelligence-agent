@@ -15,7 +15,7 @@ from typing import Any, ClassVar, Literal
 from pydantic import Field
 
 from .agent import EnergyAgent
-from .evidence_scope import market_evidence_query
+from .evidence_scope import market_evidence_query, query_scope
 from .providers import PlannerOutcome, PlannerUsage, ProviderUnavailable, TurnPlanner
 from .schemas import AgentQueryRequest, DecisionCase, Evidence, StrictModel, ToolCall, ToolResult
 from .tools import ToolRegistry
@@ -638,8 +638,17 @@ class ModelDrivenAgent:
                     "variable_degradation_cost_aud_per_mwh_discharged",
                 ),
                 "explain_data_coverage": ("region",),
-                "search_official_evidence": (),
+                "search_official_evidence": ("preferred_modality", "retrieval_mode", "published_after"),
             }[name]
+            if name == "search_official_evidence":
+                model_query = str(proposed_validated["query"])
+                canonical_query = str(baseline_validated["query"])
+                if (
+                    query_scope(model_query) != query_scope(canonical_query)
+                    or re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", model_query)
+                    != re.findall(r"\b20\d{2}-\d{2}-\d{2}\b", canonical_query)
+                ):
+                    continue
             if all(proposed_validated.get(key) == baseline_validated.get(key) for key in critical_keys):
                 by_name[name] = call
         guarded = [by_name.get(name, (name, arguments)) for name, arguments in baseline]

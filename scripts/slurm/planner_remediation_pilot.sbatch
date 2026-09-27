@@ -14,7 +14,7 @@ umask 077
 : "${ENERGY_GIT_COMMIT:?exact commit required}"
 : "${ENERGY_FIGURES:?verified Q4 2025 figure manifest required}"
 STAGE="${ENERGY_PILOT_STAGE:-all}"
-case "$STAGE" in all|goal_demo) ;; *) echo "Unknown pilot stage" >&2; exit 2 ;; esac
+case "$STAGE" in all|goal_demo|direct_demo) ;; *) echo "Unknown pilot stage" >&2; exit 2 ;; esac
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ROOT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts
 RUN="$ROOT/planner-remediation-20260927/private/pilot-$SLURM_JOB_ID"
@@ -54,7 +54,7 @@ COMMON=(--data "$ROOT/ingest-12m/dispatch_features_repaired_v2.csv.gz"
  --evidence "$ROOT/claim-transport-input-905/evidence_documents.jsonl"
  --forecast-snapshots "$ROOT/forecast-snapshots-c66e415.jsonl"
  --provider-url "http://127.0.0.1:$PORT/v1" --model Qwen3-8B-Q4_K_M.gguf)
-if [ "$STAGE" = all ]; then
+if [ "$STAGE" != goal_demo ]; then
  "$PYTHON" scripts/evaluate_llm_agent.py "${COMMON[@]}" \
  --benchmark benchmarks/planner_remediation_development_v3.jsonl \
  --gate benchmarks/planner_remediation_gate_v3.json --scoring-version v3 \
@@ -76,11 +76,15 @@ demo_status=0
  --output "$ROOT/planner-remediation-20260927/preview/model-demo-$SLURM_JOB_ID" \
  --private-output "$RUN/demo" || { demo_status=$?; overall_status=1; }
 goal_status=0
+if [ "$STAGE" != direct_demo ]; then
 "$PYTHON" scripts/evaluate_goal_spec_agent.py "${COMMON[@]}" \
  --benchmark benchmarks/planner_goal_development_v3.jsonl \
  --gate benchmarks/goal_spec_promotion_gate_v2.json --system goal_spec \
  --system-label qwen3_8b_goal_remediation --seeds 17 29 --output "$RUN/goal" \
  || { goal_status=$?; overall_status=1; }
+else
+ goal_status=-1  # Not requested: preserve the independently completed GoalSpec run.
+fi
 printf '{"demo_exit":%s,"goal_exit":%s}\n' "$demo_status" "$goal_status" > "$RUN/stage_exit_codes.json"
 sacct -j "$SLURM_JOB_ID" --format=JobID,State,Elapsed,MaxRSS,AllocTRES -P > "$RUN/slurm_usage_at_end.txt"
 exit "$overall_status"

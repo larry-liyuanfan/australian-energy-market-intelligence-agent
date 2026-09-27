@@ -12,6 +12,7 @@
 set -euo pipefail
 umask 077
 : "${ENERGY_GIT_COMMIT:?exact frozen commit required}"
+: "${ENERGY_PILOT_COMMIT:?exact accepted direct-tool pilot commit required}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ROOT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts
 RUN="$ROOT/planner-remediation-20260927/private/holdout-$SLURM_JOB_ID"
@@ -26,10 +27,10 @@ git clone --shared --no-checkout "$PROJECT/repo" "$CODE"
 git -C "$CODE" checkout --detach "$ENERGY_GIT_COMMIT"
 # Only journaling/export/GoalSpec compatibility may differ from the accepted
 # direct-tool pilot. A planner/scorer/benchmark change needs a new pilot decision.
-git -C "$CODE" diff --exit-code 1b88fc9 "$ENERGY_GIT_COMMIT" -- \
- src/energy_agent/model_agent.py src/energy_agent/providers.py \
- src/energy_agent/remediation.py src/energy_agent/llm_evaluation.py \
- src/energy_agent/evidence_scope.py 'benchmarks/planner_remediation*'
+git -C "$CODE" diff --exit-code "$ENERGY_PILOT_COMMIT" "$ENERGY_GIT_COMMIT" -- \
+ src/energy_agent ':(exclude)src/energy_agent/goal_compiler.py' \
+ ':(exclude)src/energy_agent/decision_demo.py' ':(exclude)src/energy_agent/interview_demo.html' \
+ 'benchmarks/planner_remediation*'
 test "$(git -C "$EXISTING/llama.cpp-$LLAMA_COMMIT" rev-parse HEAD)" = "$LLAMA_COMMIT"
 cp -a "$EXISTING/llama.cpp-$LLAMA_COMMIT/build/bin/." "$PROJECT/env/llama-runtime/"
 SERVER="$PROJECT/env/llama-runtime/llama-server"
