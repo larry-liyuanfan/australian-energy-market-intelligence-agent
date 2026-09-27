@@ -32,7 +32,7 @@ class EvidenceScope:
 
 def market_evidence_query(regions: list[str], day: date, workflow: str) -> str:
     aliases = " ".join(REGION_NAMES[region] for region in regions)
-    topic = "electricity spot prices demand generation"
+    topic = "electricity spot prices"
     if workflow == "decision_replay":
         topic += " battery dispatch"
     return f"{' '.join(regions)} {day.isoformat()} {aliases} NEM {topic} Q{(day.month - 1) // 3 + 1} {day.year}"
@@ -76,7 +76,9 @@ def scope_support(hit: dict[str, Any], scope: EvidenceScope) -> dict[str, bool]:
     whole_nem = bool(re.search(r"\b(nem-wide|across (the )?nem|nem average|whole nem)\b", content))
     generic_nem = bool(re.search(r"\b(nem|national electricity market)\b", content))
     region_ok = requested_region or whole_nem or (generic_nem and not other_regions)
+    catalogue = len(re.findall(r"\bfigure\s+\d+\b", content)) >= 4
     return {"report_period_matches": period_ok, "electricity_price_topic": electricity and prices and not gas_only,
+            "not_figure_catalogue": not catalogue,
             "region_or_nem_context": bool(region_ok)}
 
 
@@ -106,6 +108,31 @@ def evidence_excerpt(text: str, query: str, limit: int = 500) -> tuple[str, int]
 
     start = max(starts, key=score)
     return text[start:start + limit], start
+
+
+def prepare_evidence_hits(hits: list[dict[str, Any]], query: str, top_k: int) -> list[dict[str, Any]]:
+    """Screen the actual bounded passage that will be returned, not hidden text."""
+    prepared = []
+    for hit in hits:
+        excerpt, offset = evidence_excerpt(str(hit["text"]), query)
+        prepared.append({**hit, "text": excerpt, "source_text_start": offset})
+    return filter_scoped_hits(prepared, query)[:top_k]
+
+
+def figure_source_preview(text: str, query: str) -> str:
+    scope = query_scope(query)
+    if scope is None:
+        return text[:500]
+    lines = text.splitlines()
+    matched = [line for line in lines[5:] if any(
+        re.search(rf"\b{re.escape(alias)}\b", line, re.IGNORECASE)
+        for region in scope.regions for alias in (region, REGION_SHORT[region], REGION_NAMES[region])
+    )]
+    if not matched:
+        return text[:500]
+    matched.sort(key=lambda line: (str(scope.year) in line and f"Q{scope.quarter}" in line), reverse=True)
+    # Exact source rows plus original labels/units; never reconstructed values.
+    return "\n".join([*lines[:5], *matched])[:500]
 
 
 def official_evidence_url(url: str) -> bool:

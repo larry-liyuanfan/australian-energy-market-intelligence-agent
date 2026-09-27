@@ -10,9 +10,11 @@ from energy_agent.composite_evidence import CompositeEvidenceIndex
 from energy_agent.evidence import HybridEvidenceIndex
 from energy_agent.evidence_scope import (
     evidence_excerpt,
+    figure_source_preview,
     filter_scoped_hits,
     market_evidence_query,
     official_evidence_url,
+    prepare_evidence_hits,
     query_scope,
     scope_support,
 )
@@ -75,3 +77,18 @@ def test_topic_and_region_false_positive_counterexamples(content: str, supported
 def test_demo_links_reject_unsafe_scheme_credentials_and_suffixes(url: str) -> None:
     assert not official_evidence_url(url)
     assert official_evidence_url("https://www.aemo.com.au/report.pdf")
+
+
+def test_source_preview_retains_requested_region_row_and_original_header() -> None:
+    rows = ["Figure 12", "Wholesale electricity prices", "$/MWh", "Region | Year | Quarter | Energy", "Source: AEMO"]
+    rows += ["QLD | 2024 | Q4 | 90"] * 40 + ["SA | 2025 | Q4 | 20", "SA | 2024 | Q4 | 80"]
+    preview = figure_source_preview("\n".join(rows), "SA1 2025-12-15 Q4 2025")
+    assert "Region | Year | Quarter | Energy" in preview and "SA | 2025 | Q4 | 20" in preview
+
+
+def test_catalogue_and_only_hidden_context_cannot_pass_returned_passage_gate() -> None:
+    hit = {"title": "Q4 2025", "text": "South Australia electricity spot prices " + "Figure 1 Figure 2 Figure 3 Figure 4"}
+    assert filter_scoped_hits([hit], "SA1 2025-12-15 Q4 2025") == []
+    hit["text"] = "South Australia electricity spot prices " + "x" * 600 + "Victorian gas spot prices " * 20
+    prepared = prepare_evidence_hits([hit], "SA1 2025-12-15 Q4 2025", 5)
+    assert all(len(item["text"]) <= 500 and all(item["scope_checks"].values()) for item in prepared)

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from energy_agent.evidence import HybridEvidenceIndex, OfficialChunk
+from energy_agent.evidence_scope import figure_source_preview
 
 FIGURE = re.compile(r"^Figure\s+(\d+)\s+(.+)$", re.IGNORECASE)
 
@@ -193,7 +194,7 @@ class FigureEvidenceIndex:
                 {
                     **hit,
                     "figure_id": figure.figure_id,
-                    "source_cell_preview": figure.text[:500],
+                    "source_cell_preview": figure_source_preview(figure.text, query),
                     "figure_number": figure.figure_number,
                     "subtitle": figure.subtitle,
                     "image_sha256": list(figure.image_sha256),

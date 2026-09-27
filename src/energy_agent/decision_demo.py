@@ -110,7 +110,9 @@ def build_demo_bundle(
     )
     checks["official_citation_origins"] = all(official_evidence_url(item["url"]) for item in citations)
     if not all(checks.values()):
-        raise ValueError("recorded-demo evidence scope gate failed: topic/region/report period or official origin mismatch")
+        failed = {item["evidence_id"]: [name for name, ok in item["scope_checks"].items() if not ok]
+                  for item in citations if not all(item["scope_checks"].values())}
+        raise ValueError(f"recorded-demo evidence scope gate failed: {failed}; origins={checks['official_citation_origins']}")
 
     def signature(name: str, args: dict[str, Any]) -> str:
         return name + TOOL_MODELS[name].model_validate(args).model_dump_json()

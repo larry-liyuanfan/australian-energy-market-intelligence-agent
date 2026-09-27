@@ -17,6 +17,15 @@ tests. The 24 failures remain recorded. Independent review also supplied gas
 body-text, other-region/NEM and unsafe URL-scheme counterexamples; each has a
 regression test. The scope screen is not described as semantic entailment.
 
+Preflight `31365171` passed the full suite, lint, types and all 20 region-day
+coverage checks. It compiled 117 figures from the official Q4 2025 workbook
+(source SHA `5c2881adf33b78e3bd4e7772bbefd1461631208c6d6a6c14048cf815d83e08f9`),
+then correctly rejected the demo: returned snippets/source previews had lost
+regional/topic support, and a report figure catalogue ranked as explanatory text.
+Retrieval now checks the actual returned passage, excludes catalogue passages and
+retains exact requested-region source rows with original labels and units. The
+raw workbook stays private and is not edited or redistributed.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
