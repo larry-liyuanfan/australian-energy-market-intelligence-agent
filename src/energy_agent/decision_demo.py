@@ -122,7 +122,7 @@ def build_demo_bundle(run: ModelAgentRun, store: MarketStore, question: str) -> 
             "peak_rrp_aud_mwh": peak.rrp, "peak_interval": peak.interval.isoformat(),
             "negative_price_intervals": sum(row.rrp < 0 for row in rows),
             "detected_event_count": len(event_records),
-            "diagnosis": diagnosis.data if diagnosis else None,
+            "diagnosis": diagnosis.model_dump(mode="json")["data"] if diagnosis else None,
             "interpretation_boundary": "Market changes are associations. Quarterly report context does not establish the cause of this day's event.",
         },
         "model": {"provider": run.metrics.provider, "name": run.metrics.model,

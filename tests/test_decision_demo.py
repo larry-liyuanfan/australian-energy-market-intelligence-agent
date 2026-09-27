@@ -9,7 +9,7 @@ import pytest
 from energy_agent.decision_demo import build_demo_bundle, evidence_publication_role
 from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, MemoryMode, ModelDrivenAgent
-from energy_agent.schemas import Evidence, Region
+from energy_agent.schemas import Evidence, Region, ToolResult
 from energy_agent.snapshots import ForecastSnapshot, ForecastSnapshotStore
 from energy_agent.tools import ToolRegistry
 
@@ -35,7 +35,9 @@ def test_recorded_demo_recomputes_settlement_and_labels_retrospective_evidence()
     run = ModelDrivenAgent(registry, None).run_turn(
         question, conversation_id="test-demo", path=AgentPath.deterministic, memory_mode=MemoryMode.structured_state,
     )
+    run.results.append(ToolResult(tool_name="diagnose_price_event", data={"interval": datetime(2025, 1, 3, tzinfo=UTC)}))
     bundle = build_demo_bundle(run, registry.store, question)
+    assert json.loads(json.dumps(bundle))["market_context"]["diagnosis"]["interval"] == "2025-01-03T00:00:00Z"
     assert all(bundle["verification"].values())
     assert bundle["settlement"]["realised_gross_aud"] > 0
     assert bundle["settlement"]["realised_gross_aud"] == bundle["settlement"]["realised_operating_proxy_aud"]

@@ -18,6 +18,11 @@ treats missing time/zone precision conservatively as retrospective-only. Review
 also added actual market-file digest verification before parsing; manifest claims
 alone no longer establish the input hash. Both failures remain in the run record.
 
+P1 retry `31364532` passed all calculation checks but could not serialize an event
+diagnosis timestamp into the compact JSON. Diagnosis now uses the canonical
+Pydantic JSON serialization; a regression test includes an actual datetime.
+The failed export is not a published demonstration.
+
 ## Findings from existing artifacts and code
 
 1. **Pilot data mismatch.** The four-turn GoalSpec pilot used 4–5 August 2025;
