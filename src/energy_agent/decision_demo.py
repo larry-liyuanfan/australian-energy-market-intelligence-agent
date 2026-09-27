@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 from datetime import UTC, datetime
 from typing import Any
 
@@ -21,11 +22,53 @@ def evidence_publication_role(evidence: Evidence, decision_as_of: datetime) -> s
     return "available_by_decision_time" if evidence.published_at <= decision_as_of else "published_later_retrospective_only"
 
 
+def visible_text_excerpt(evidence: Evidence, scope: EvidenceScope) -> tuple[str, int, int] | None:
+    """An exact, bounded displayed passage, never support from hidden words.
+
+    At most 24 words from any one URL are displayed by the caller. This screen
+    establishes scope only; it cannot establish entailment or a causal account.
+    """
+    tokens = list(re.finditer(r"\S+", evidence.snippet))
+    candidates: list[tuple[tuple[int, int, int], str, int, int]] = []
+    for i, token in enumerate(tokens):
+        # Prefer a whole short sentence; a longer sentence remains an explicitly
+        # marked excerpt. Numeric axes/footnotes are not a prose explanation.
+        window = tokens[i:i + 24]
+        for j, end_token in enumerate(window):
+            if end_token.group().endswith((".", "!", "?")):
+                window = window[:j + 1]
+                break
+        start, end = token.start(), window[-1].end()
+        passage = evidence.snippet[start:end]
+        checks = scope_support({"title": evidence.title, "url": evidence.url, "text": passage}, scope)
+        numeric = sum(bool(re.search(r"\d", item.group())) for item in window)
+        if not all(checks.values()) or numeric > len(window) / 4:
+            continue
+        full_sentence = int(passage[0].isupper() and passage.endswith((".", "!", "?")))
+        candidates.append(((full_sentence, -numeric, -start), passage, start, end))
+    if not candidates:
+        return None
+    _, passage, start, end = max(candidates)
+    return passage, evidence.source_text_start + start, evidence.source_text_start + end
+
+
 def build_demo_bundle(
     run: ModelAgentRun, store: MarketStore, question: str, *, allow_fixture: bool = False,
 ) -> dict[str, Any]:
     if "fixture" in store.data_version.lower() and not allow_fixture:
         raise ValueError("fixture cannot be exported as a real recorded demonstration")
+    required_verifications = (
+        "required_tools_satisfied", "citation_hashes_valid", "citation_urls_valid",
+        "settlement_consistent", "economic_boundary_present",
+    )
+    if run.status != "completed" or any(run.verification.get(key) is not True for key in required_verifications):
+        raise ValueError("recorded-demo runtime verification failed")
+    if not run.citations or any(
+        not re.fullmatch(r"[a-f0-9]{64}", item.sha256)
+        or (item.asset_sha256 is not None and not re.fullmatch(r"[a-f0-9]{64}", item.asset_sha256))
+        for item in run.citations
+    ):
+        raise ValueError("recorded-demo citation digest format invalid; source rehash is a separate provenance check")
     results = {result.tool_name: result for result in run.results}
     forecast = results["forecast_price_risk"].data
     dispatch = results["optimize_battery_dispatch"].data
@@ -69,6 +112,8 @@ def build_demo_bundle(
         "planned_margin_independently_recomputed": abs(planned - dispatch["planned_margin_aud"]) < tolerance,
         "realised_margin_independently_recomputed": abs(realised - dispatch["realized_margin_aud"]) < tolerance,
         "forecast_objective_only": request.objective == "forecast",
+        "runtime_verification_passed": True,
+        "citation_digest_formats_valid": True,
     }
     if not all(checks.values()):
         raise ValueError(f"recorded-demo calculation gate failed: {[name for name, passed in checks.items() if not passed]}")
@@ -78,15 +123,18 @@ def build_demo_bundle(
     for evidence in run.citations:
         if evidence.evidence_type != "explanatory":
             continue
-        excerpt = " ".join(evidence.snippet.split()[:18]) if (
+        selected = visible_text_excerpt(evidence, scope) if (
             evidence.modality == "text" and evidence.url not in quoted_sources
         ) else None
-        if excerpt:
+        excerpt, excerpt_start, excerpt_end = selected if selected else (None, None, None)
+        if selected:
             quoted_sources.add(evidence.url)
         support = scope_support({
-            "title": evidence.title, "url": evidence.url, "text": evidence.snippet,
+            "title": evidence.title, "url": evidence.url,
+            "text": (excerpt or "") if evidence.modality == "text" else evidence.snippet,
             "source_cell_preview": evidence.source_cell_preview or "",
         }, scope)
+        displayed = evidence.modality != "text" or selected is not None
         citations.append({
             "evidence_id": evidence.evidence_id, "title": evidence.title, "url": evidence.url,
             "published_at": evidence.published_at.isoformat() if evidence.published_at else None,
@@ -94,24 +142,28 @@ def build_demo_bundle(
             "modality": evidence.modality, "page": evidence.source_page, "figure_id": evidence.figure_id,
             "source_cell_preview": evidence.source_cell_preview,
             "short_text_excerpt": excerpt,
+            "excerpt_source_start": excerpt_start, "excerpt_source_end": excerpt_end,
+            "display_role": "visible_evidence" if displayed else "source_link_only",
             "sha256": evidence.sha256, "asset_sha256": evidence.asset_sha256,
             "source_text_start": evidence.source_text_start,
             "scope_checks": support,
-            "context_scope": "quarterly_electricity_context" if all(support.values()) else "unsupported_context",
+            "context_scope": "quarterly_electricity_context" if displayed and all(support.values())
+            else "source_link_no_displayed_support",
         })
     checks["official_text_and_figure_present"] = (
-        any(item["modality"] == "text" for item in citations)
+        any(item["modality"] == "text" and item["short_text_excerpt"] for item in citations)
         and any(item["figure_id"] and item["source_cell_preview"] for item in citations)
     )
     if not checks["official_text_and_figure_present"]:
         raise ValueError("recorded-demo evidence gate requires both official text and workbook source cells")
-    checks["all_citations_topic_region_and_report_period_supported"] = all(
-        all(item["scope_checks"].values()) for item in citations
+    checks["displayed_evidence_topic_region_and_report_period_supported"] = all(
+        all(item["scope_checks"].values()) if item["display_role"] == "visible_evidence"
+        else item["scope_checks"]["report_period_matches"] for item in citations
     )
     checks["official_citation_origins"] = all(official_evidence_url(item["url"]) for item in citations)
     if not all(checks.values()):
         failed = {item["evidence_id"]: [name for name, ok in item["scope_checks"].items() if not ok]
-                  for item in citations if not all(item["scope_checks"].values())}
+                  for item in citations if item["display_role"] == "visible_evidence" and not all(item["scope_checks"].values())}
         raise ValueError(f"recorded-demo evidence scope gate failed: {failed}; origins={checks['official_citation_origins']}")
 
     def signature(name: str, args: dict[str, Any]) -> str:

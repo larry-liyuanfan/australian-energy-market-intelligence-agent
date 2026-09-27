@@ -26,6 +26,18 @@ Retrieval now checks the actual returned passage, excludes catalogue passages an
 retains exact requested-region source rows with original labels and units. The
 raw workbook stays private and is not edited or redistributed.
 
+Preflight `31365198` completed in 62 seconds (479,704 KiB batch MaxRSS), with
+216 tests, Ruff, strict mypy, all 20 region-day checks and an 11-check deterministic
+SA1 recording. Browser review confirmed the gross/sensitivity separation and
+quarterly-context labels; GitHub quality run `36283626257` also passed. This is
+not a model run. Independent review then reproduced two exporter false accepts:
+an explicitly failed runtime citation check, and a short displayed quote whose
+support occurred only in hidden text. The exporter now rejects failed/missing
+required runtime checks, independently validates digest formats, and scope-screens
+the exact displayed quote with source-character offsets. Same-URL link-only items
+are labelled as such and cannot satisfy visible text grounding. Digest-format
+checks are not described as rehashing original documents.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No

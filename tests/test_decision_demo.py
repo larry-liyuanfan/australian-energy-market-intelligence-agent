@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from energy_agent.decision_demo import build_demo_bundle, evidence_publication_role
+from energy_agent.decision_demo import build_demo_bundle, evidence_publication_role, visible_text_excerpt
+from energy_agent.evidence_scope import EvidenceScope
 from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, MemoryMode, ModelDrivenAgent
 from energy_agent.schemas import Evidence, Region, ToolResult
@@ -86,3 +87,41 @@ def test_market_digest_is_checked_before_parsing_or_snapshot_loading(tmp_path: P
     manifest.write_text(json.dumps({"data_sha256": "0" * 64}))
     with pytest.raises(ValueError, match="file SHA-256 does not match"):
         load_dispatch_store(data, manifest)
+
+
+def test_displayed_quote_contains_support_and_exact_offsets_not_hidden_words() -> None:
+    original = "Background context. " * 24 + "South Australia electricity spot prices fell. More background."
+    evidence = fixture_registry().store.evidence[0].model_copy(update={"snippet": original, "source_text_start": 50})
+    selected = visible_text_excerpt(evidence, EvidenceScope(("SA1",), 2025, 1))
+    assert selected is not None
+    text, start, end = selected
+    assert len(text.split()) <= 24 and "South Australia electricity spot prices" in text
+    assert original[start - 50:end - 50] == text and start > 50
+    unrelated = evidence.model_copy(update={"snippet": "Background only, no support."})
+    assert visible_text_excerpt(unrelated, EvidenceScope(("SA1",), 2025, 1)) is None
+
+
+def test_demo_rejects_runtime_failures_and_bad_digest_and_limits_url_quotes() -> None:
+    registry = fixture_registry()
+    question = "Replay SA1 on 2025-01-03 with 1MW/2MWh BESS and chart evidence."
+    run = ModelDrivenAgent(registry, None).run_turn(
+        question, conversation_id="test-export-gate", path=AgentPath.deterministic, memory_mode=MemoryMode.structured_state,
+    )
+    text = next(item for item in run.citations if item.modality == "text")
+    run.citations.append(text.model_copy(update={"evidence_id": "same-url-second-text"}))
+    bundle = build_demo_bundle(run, registry.store, question, allow_fixture=True)
+    second = bundle["citations"][-1]
+    assert second["short_text_excerpt"] is None and second["display_role"] == "source_link_only"
+    assert sum(len((item["short_text_excerpt"] or "").split()) for item in bundle["citations"]) <= 24
+    for key in ("required_tools_satisfied", "citation_hashes_valid", "citation_urls_valid", "settlement_consistent"):
+        run.verification[key] = False
+        with pytest.raises(ValueError, match="runtime verification failed"):
+            build_demo_bundle(run, registry.store, question, allow_fixture=True)
+        run.verification[key] = True
+    run.citations[-1] = text.model_copy(update={"sha256": "invalid"})
+    with pytest.raises(ValueError, match="citation digest format"):
+        build_demo_bundle(run, registry.store, question, allow_fixture=True)
+    run.citations = [item.model_copy(update={"snippet": "No support."}) if item.modality == "text" else item
+                     for item in registry.store.evidence]
+    with pytest.raises(ValueError, match="requires both official text"):
+        build_demo_bundle(run, registry.store, question, allow_fixture=True)
