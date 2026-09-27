@@ -249,6 +249,15 @@ class ConversationMemory:
             intent = "coverage"
         if intent:
             state.constraints["intent"] = SourcedConstraint(key="intent", value=intent, source_turn=turn)
+        modality = (
+            "chart" if any(term in lowered for term in ("chart", "figure", "图表"))
+            else "table" if any(term in lowered for term in ("table", "表格"))
+            else "text" if "text evidence" in lowered else None
+        )
+        if modality:
+            state.constraints["evidence_modality"] = SourcedConstraint(
+                key="evidence_modality", value=modality, source_turn=turn
+            )
 
     @staticmethod
     def _render_constraints(constraints: dict[str, SourcedConstraint]) -> str:
@@ -365,7 +374,20 @@ class ModelDrivenAgent:
         request = AgentQueryRequest(question=question, max_tool_calls=max_tool_calls)
         case = self._case_from_constraints(request, resolved_constraints)
         baseline_calls = self._deterministic._plan(request, case=case)
+        missing_comparison_context = case.workflow_type == "region_comparison" and len(case.requested_regions) < 2
         for name, arguments in baseline_calls:
+            if name == "search_official_evidence":
+                modality = resolved_constraints.get("evidence_modality")
+                preferred = modality.value if modality else arguments["preferred_modality"]
+                arguments.update({
+                    "query": (
+                        f"{case.workflow_type.replace('_', ' ')} "
+                        f"{' '.join(item.value for item in case.requested_regions or [case.region])} "
+                        f"{case.window.start.date()} official {preferred} evidence"
+                    ),
+                    "preferred_modality": preferred,
+                    "retrieval_mode": "hybrid_rerank" if preferred in {"text", "auto"} else "multimodal_fusion",
+                })
             if name == "optimize_battery_dispatch":
                 battery_keys = {
                     "battery_power_mw": "power_mw", "battery_energy_mwh": "energy_mwh",
@@ -390,8 +412,12 @@ class ModelDrivenAgent:
             outcome = self.planner.plan_turn(messages, self.registry, max_tool_calls, seed)
             outcomes.append(outcome)
             planned = outcome.calls
-            if path == AgentPath.constrained_hybrid:
+            if path == AgentPath.constrained_hybrid and not missing_comparison_context:
                 planned = self._hybrid_guard(planned, baseline_calls)
+        if missing_comparison_context:
+            # Still record the model proposal, but never invent the missing region
+            # or let an invalid deterministic fallback terminate an evaluation.
+            planned = []
 
         records: list[ToolCall] = []
         results: list[ToolResult] = []
@@ -538,6 +564,7 @@ class ModelDrivenAgent:
                 "citation_urls_valid": urls_valid,
                 "settlement_consistent": settlement_consistent,
                 "economic_boundary_present": bool(settlement.get("economic_boundary")) if settlement else True,
+                "missing_comparison_context": missing_comparison_context,
             },
             metrics=metrics,
         )
@@ -607,7 +634,7 @@ class ModelDrivenAgent:
                 "detect_price_events": ("region", "window"),
                 "forecast_price_risk": ("region", "window", "horizon_intervals"),
                 "optimize_battery_dispatch": (
-                    "region", "window", "settlement_mode", "battery",
+                    "region", "window", "settlement_mode", "battery", "objective",
                     "variable_degradation_cost_aud_per_mwh_discharged",
                 ),
                 "explain_data_coverage": ("region",),
@@ -622,6 +649,8 @@ class ModelDrivenAgent:
         started = time.perf_counter()
         try:
             self.registry.validate(name, arguments)
+            if name == "optimize_battery_dispatch" and arguments.get("objective", "forecast") != "forecast":
+                raise ValueError("model replay cannot use realised prices as a planning signal")
             if os.name == "nt" and name == "optimize_battery_dispatch":
                 result = self.registry.execute(name, arguments)
             else:

@@ -51,6 +51,45 @@ def test_goal_decoding_schema_rejects_bess_parent_key() -> None:
     assert "time_range" in sources["required"]
 
 
+def test_hybrid_rejects_oracle_and_retrieval_uses_corrected_state() -> None:
+    registry = ToolRegistry(fixture_store())
+    agent = ModelDrivenAgent(registry, ScriptedPlanner([[], []]))
+    agent.run_turn(
+        "Compare SA1 and VIC1 on 2025-01-03.", conversation_id="c",
+        path=AgentPath.constrained_hybrid, memory_mode=MemoryMode.structured_state,
+    )
+    run = agent.run_turn(
+        "Replace VIC1 with QLD1.", conversation_id="c",
+        path=AgentPath.constrained_hybrid, memory_mode=MemoryMode.structured_state,
+    )
+    search = next(call for call in run.tool_calls if call.name == "search_official_evidence")
+    assert "VIC1" not in search.arguments["query"]
+    assert "SA1 QLD1 2025-01-03" in search.arguments["query"]
+    args = {
+        "region": "SA1", "settlement_mode": "historical_replay",
+        "window": {"start": "2025-01-03T00:00:00+10:00", "end": "2025-01-04T00:00:00+10:00"},
+    }
+    oracle = {**args, "objective": "perfect_foresight"}
+    guarded = agent._hybrid_guard([("optimize_battery_dispatch", oracle)], [("optimize_battery_dispatch", args)])
+    assert guarded[0][1].get("objective", "forecast") == "forecast"
+    result, record, _ = agent._execute("optimize_battery_dispatch", oracle)
+    assert result is None and record.status == "error"
+
+
+def test_no_memory_comparison_cannot_crash_or_invent_missing_region() -> None:
+    agent = ModelDrivenAgent(ToolRegistry(fixture_store()), ScriptedPlanner([[('compare_region_period', {
+        "regions": ["SA1", "QLD1"],
+        "window": {"start": "2025-01-03T00:00:00+10:00", "end": "2025-01-04T00:00:00+10:00"},
+    })]]))
+    run = agent.run_turn(
+        "Compare it with QLD1.", conversation_id="lost", path=AgentPath.constrained_hybrid,
+        memory_mode=MemoryMode.no_memory,
+    )
+    assert run.tool_calls == []
+    assert len(run.initial_model_proposed_calls) == 1
+    assert run.verification["missing_comparison_context"] is True
+
+
 def test_invalid_goal_does_not_erase_attributed_user_context() -> None:
     class CapturingPlanner(InvalidPlanner):
         def __init__(self) -> None:

@@ -5,6 +5,7 @@ original meaning. This scorer is frozen before the new evaluation is executed.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -54,6 +55,7 @@ def exact_parameter_accuracy(calls: list[ToolCall], expected: dict[str, Any]) ->
             checks.append(datetime.fromisoformat(args["window"]["end"]) == day + timedelta(days=1))
         if call.name == "optimize_battery_dispatch":
             checks.append(args.get("settlement_mode") == "historical_replay")
+            checks.append(args.get("objective") == "forecast")
             for source, target in (
                 ("battery_power_mw", "power_mw"), ("battery_energy_mwh", "energy_mwh"),
                 ("round_trip_efficiency", "round_trip_efficiency"),
@@ -85,6 +87,13 @@ def score_remediation_turn(run: ModelAgentRun, turn: dict[str, Any]) -> dict[str
     score["missing_initial_tools"] = sorted(set(expected_tools) - {call.name for call in initial})
     score["missing_executed_tools"] = sorted(set(expected_tools) - {call.name for call in successful})
     score["model_requests"] = len(run.planner_attempts)
+    active_state = json.dumps({key: value.value for key, value in run.resolved_constraints.items()}, sort_keys=True)
+    structured_arguments = json.dumps([
+        {key: value for key, value in call.arguments.items() if key != "query"} for call in successful
+    ], sort_keys=True)
+    score["state_contaminated"] = any(
+        str(value) in active_state + structured_arguments for value in turn.get("forbidden_values", [])
+    )
     score["task_success"] = (
         score["tool_path_correct"] and score["parameter_accuracy"] == 1.0
         and score["citation_correct"] and score["settlement_consistent"] and score["replan_success"]
