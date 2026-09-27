@@ -10,12 +10,14 @@
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927/logs/pilot-%j.out
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927/logs/pilot-%j.err
 set -euo pipefail
+umask 077
 : "${ENERGY_GIT_COMMIT:?exact commit required}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ROOT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts
 RUN="$ROOT/planner-remediation-20260927/private/pilot-$SLURM_JOB_ID"
-CODE="${SLURM_TMPDIR:?}/energy-code-$SLURM_JOB_ID"
-MODEL="$SLURM_TMPDIR/Qwen3-8B-Q4_K_M.gguf"
+TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+CODE="$TASK_SCRATCH/energy-code-$SLURM_JOB_ID"
+MODEL="$TASK_SCRATCH/Qwen3-8B-$SLURM_JOB_ID.gguf"
 MODEL_SHA=d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785
 LLAMA_COMMIT=7798007a29a90e3053e799394da48cf53a2f8e0f
 EXISTING=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/llm-agent-eval-20260903/env

@@ -1,17 +1,19 @@
 #!/bin/bash
 #SBATCH --job-name=energy-p0-preflight
 #SBATCH --account=punim2936
-#SBATCH --partition=cascade
+#SBATCH --partition=sapphire
 #SBATCH --time=00:15:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=12G
 #SBATCH --output=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927/logs/preflight-%j.out
 #SBATCH --error=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927/logs/preflight-%j.err
 set -euo pipefail
+umask 077
 : "${ENERGY_GIT_COMMIT:?exact commit required}"
 PROJECT=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927
 ARTIFACTS=/data/gpfs/projects/punim2936/portfolio_20260820/energy-artifacts/planner-remediation-20260927
-CODE="${SLURM_TMPDIR:?}/energy-code-$SLURM_JOB_ID"
+TASK_SCRATCH="${SLURM_TMPDIR:-${TMPDIR:-/tmp}}"
+CODE="$TASK_SCRATCH/energy-code-$SLURM_JOB_ID"
 RUN="$ARTIFACTS/private/preflight-$SLURM_JOB_ID"
 mkdir -p "$RUN" "$PROJECT/env"
 git clone --shared --no-checkout "$PROJECT/repo" "$CODE"

@@ -4,6 +4,12 @@ Status: implementation in progress; no new real-model result or promotion yet.
 This follows the 26 September career strengthening plan. Existing v1 metrics,
 v2 benchmark labels and negative experiments remain unchanged.
 
+Infrastructure record: CPU preflight `31364397` failed after two seconds because
+this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
+established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
+model request occurred. The scheduler recommended the newer `sapphire` CPU
+partition, which is now explicit in the preflight script.
+
 ## Findings from existing artifacts and code
 
 1. **Pilot data mismatch.** The four-turn GoalSpec pilot used 4–5 August 2025;
