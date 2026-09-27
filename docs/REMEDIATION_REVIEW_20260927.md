@@ -10,6 +10,13 @@ numerically valid P1 recording found irrelevant gas-market/following-quarter
 figures: citation presence does not establish relevance, so that preview remains
 unaccepted pending a topic/period grounding correction.
 
+Preflight `31365151` failed the security regression suite after dated queries
+were scoped too broadly. Quarter filtering now requires an explicit quarter
+request, preserving daily-event retrieval and the existing injected-evidence
+tests. The 24 failures remain recorded. Independent review also supplied gas
+body-text, other-region/NEM and unsafe URL-scheme counterexamples; each has a
+regression test. The scope screen is not described as semantic entailment.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No

@@ -41,7 +41,9 @@ def market_evidence_query(regions: list[str], day: date, workflow: str) -> str:
 def query_scope(query: str) -> EvidenceScope | None:
     match = re.search(r"\b20\d{2}-\d{2}-\d{2}\b", query)
     regions = tuple(region for region in REGION_NAMES if re.search(rf"\b{region}\b", query, re.IGNORECASE))
-    if not match or not regions:
+    # Only explicit quarterly-context requests use this restrictive report
+    # filter. A dated market question can legitimately retrieve daily AER reports.
+    if not match or not regions or not PERIOD.search(query):
         return None
     try:
         day = date.fromisoformat(match.group())
@@ -53,21 +55,27 @@ def query_scope(query: str) -> EvidenceScope | None:
 def scope_support(hit: dict[str, Any], scope: EvidenceScope) -> dict[str, bool]:
     identity = " ".join(str(hit.get(key, "")) for key in ("source_id", "url", "title"))
     periods = {(int(year), int(quarter)) for quarter, year in PERIOD.findall(identity)}
-    title = str(hit.get("title", "")).lower()
     content = " ".join(str(hit.get(key, "")) for key in ("title", "subtitle", "text", "source_cell_preview")).lower()
     # Quarter metadata selects the report, not its publication date. Unknown
     # and different report periods are not silently treated as compatible.
     period_ok = periods == {(scope.year, scope.quarter)}
-    electricity = bool(re.search(r"\b(nem|electricity|mwh|rrp|spot|batter\w*|generation|solar|pv)\b", content))
+    explicit_power = bool(re.search(r"\b(electricity|mwh|rrp|batter\w*|solar|pv)\b", content))
+    gas_context = bool(re.search(r"\b(iona|lng|sttm|dwgm|gas|gj)\b", content))
+    electricity = explicit_power or (bool(re.search(r"\bnem\b", content)) and not gas_context)
     prices = bool(re.search(r"\b(price\w*|pricing|rrp)\b", content))
-    gas_only = bool(re.search(r"\b(iona|lng|sttm|dwgm|gas|gj)\b", title)) and not bool(
-        re.search(r"\b(electricity|generation|nem|battery)\b", title)
-    )
+    gas_only = gas_context and not explicit_power
     requested_region = any(
         re.search(rf"\b{re.escape(alias.lower())}\b", content)
         for region in scope.regions for alias in (region, REGION_SHORT[region], REGION_NAMES[region])
     )
-    region_ok = requested_region or bool(re.search(r"\b(nem|national electricity market)\b", content))
+    other_regions = any(
+        re.search(rf"\b{re.escape(alias.lower())}\b", content)
+        for region in REGION_NAMES if region not in scope.regions
+        for alias in (region, REGION_SHORT[region], REGION_NAMES[region])
+    )
+    whole_nem = bool(re.search(r"\b(nem-wide|across (the )?nem|nem average|whole nem)\b", content))
+    generic_nem = bool(re.search(r"\b(nem|national electricity market)\b", content))
+    region_ok = requested_region or whole_nem or (generic_nem and not other_regions)
     return {"report_period_matches": period_ok, "electricity_price_topic": electricity and prices and not gas_only,
             "region_or_nem_context": bool(region_ok)}
 
@@ -101,5 +109,8 @@ def evidence_excerpt(text: str, query: str, limit: int = 500) -> tuple[str, int]
 
 
 def official_evidence_url(url: str) -> bool:
-    host = (urlparse(url).hostname or "").lower()
-    return any(host == domain or host.endswith("." + domain) for domain in ("aemo.com.au", "aer.gov.au"))
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    return parsed.scheme == "https" and parsed.username is None and parsed.password is None and any(
+        host == domain or host.endswith("." + domain) for domain in ("aemo.com.au", "aer.gov.au")
+    )
