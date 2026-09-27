@@ -38,6 +38,23 @@ the exact displayed quote with source-character offsets. Same-URL link-only item
 are labelled as such and cannot satisfy visible text grounding. Digest-format
 checks are not described as rehashing original documents.
 
+Real-model development pilot `31365278` completed the direct-tool comparison:
+deterministic 4/4, pure LLM 2/8, constrained hybrid 8/8 final task success;
+hybrid initial complete paths were 4/8, so runtime completion remains material.
+The job then failed on its first GoalSpec request before the demo export.
+Its 3:46 elapsed / 6,271,336 KiB MaxRSS and failed state remain recorded.
+The server grammar expected JSON immediately after the assistant prefix, while
+Qwen's template had already appended an empty thinking block. This matches the
+upstream [structured-output issue](https://github.com/ggml-org/llama.cpp/issues/23775);
+that similarity is diagnostic context, not proof from a different model/runtime.
+The pinned server documentation and source were checked: `/apply-template`
+returns the model-formatted prompt and `/completion` accepts `json_schema`.
+The bounded compatibility repair uses those native endpoints for GoalSpec only,
+with the same model, prompt, schema, temperature, seed and token cap, one total
+request-time budget and one generation. It does not disable schema validation or
+silently fall back to unconstrained JSON. Direct-tool results are preserved and
+are not rerun for this independent GoalSpec/demo retry.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
@@ -108,6 +125,10 @@ in the Energy artifact root.
   and deterministic retries remain distinct. Retry tokens and time are included.
 - Run the new holdout once after the pilot decision and code freeze. Report all
   failures and uncertainty; no relabelling or tuning on its outputs.
+- The evaluator journals each completed attempt privately before continuing.
+  An interrupted `predictions.partial.jsonl` is not a completed evaluation and
+  cannot be promoted. Progress messages contain counts, not quality scores, so
+  scheduling observation does not require inspecting holdout outcomes mid-run.
 
 ## P1 acceptance evidence still required
 

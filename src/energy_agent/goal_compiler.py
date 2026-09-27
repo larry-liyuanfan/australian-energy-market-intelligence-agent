@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta, timezone
 from enum import StrEnum
 from typing import Any, Literal, Protocol
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from pydantic import Field, ValidationError, model_validator
@@ -278,7 +279,7 @@ class LlamaCppGoalSpecPlanner:
     base_url: str
     timeout_seconds: float = 90.0
     temperature: float = 0.2
-    name: str = "llama_cpp_goal_spec"
+    name: str = "llama_cpp_goal_spec_native_schema"
 
     @staticmethod
     def decoding_schema() -> dict[str, Any]:
@@ -295,36 +296,45 @@ class LlamaCppGoalSpecPlanner:
         return schema
 
     def plan_goal(self, messages: list[dict[str, object]], seed: int) -> GoalSpecPlannerOutcome:
-        if not self.base_url.startswith(("http://127.0.0.1", "http://localhost")):
+        endpoint = urlsplit(self.base_url)
+        if endpoint.scheme != "http" or endpoint.hostname not in {"127.0.0.1", "localhost", "::1"} or endpoint.username:
             raise ValueError("GoalSpec llama.cpp endpoint must be loopback")
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "response_format": {"type": "json_object", "schema": self.decoding_schema()},
-            "max_tokens": 1536,
-            "temperature": self.temperature,
-            "seed": seed,
-            "stream": False,
-            "chat_template_kwargs": {"enable_thinking": False},
-        }
-        request = Request(
-            f"{self.base_url.rstrip('/')}/chat/completions",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
         started = time.perf_counter()
+
+        def post(endpoint: str, payload: dict[str, object]) -> dict[str, Any]:
+            request = Request(
+                f"{self.base_url.rstrip('/').removesuffix('/v1')}/{endpoint}",
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}, method="POST",
+            )
+            remaining = self.timeout_seconds - (time.perf_counter() - started)
+            if remaining <= 0:
+                raise TimeoutError("GoalSpec request budget exhausted")
+            with urlopen(request, timeout=remaining) as response:  # nosec B310 - loopback checked above
+                result: dict[str, Any] = json.loads(response.read())
+            return result
+
         try:
-            with urlopen(request, timeout=self.timeout_seconds) as response:  # nosec B310 - loopback checked above
-                decoded: dict[str, Any] = json.loads(response.read())
-            message = decoded["choices"][0]["message"]
-            content = _message_content(message)
+            # The pinned chat autoparser builds a grammar incompatible with
+            # Qwen's prefilled empty <think> block. Use the same server-applied
+            # template, then its documented native schema-constrained endpoint.
+            # This is one generation, not a hidden failed-request retry.
+            formatted = post("apply-template", {
+                "messages": messages, "chat_template_kwargs": {"enable_thinking": False},
+            })
+            prompt = formatted["prompt"]
+            if not isinstance(prompt, str):
+                raise TypeError("server template must return a string")
+            decoded = post("completion", {
+                "prompt": prompt, "json_schema": self.decoding_schema(), "n_predict": 1536,
+                "temperature": self.temperature, "seed": seed, "stream": False,
+            })
+            content = str(decoded["content"])
         except Exception as exc:
             raise RuntimeError(f"GoalSpec llama.cpp request failed: {type(exc).__name__}") from exc
-        usage_data = decoded.get("usage", {})
         usage = PlannerUsage(
-            prompt_tokens=int(usage_data.get("prompt_tokens", 0)) if isinstance(usage_data, dict) else 0,
-            completion_tokens=int(usage_data.get("completion_tokens", 0)) if isinstance(usage_data, dict) else 0,
+            prompt_tokens=int(decoded["tokens_evaluated"]),
+            completion_tokens=int(decoded["timings"]["predicted_n"]),
             latency_ms=(time.perf_counter() - started) * 1000,
         )
         raw: dict[str, Any] | None = None

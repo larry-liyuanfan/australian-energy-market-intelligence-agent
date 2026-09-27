@@ -129,6 +129,11 @@ def main() -> None:
         if args.provider == "ollama"
         else LlamaCppPlanner(model=args.model, base_url=args.provider_url, temperature=args.temperature)
     )
+    # Preserve completed attempts if a provider/process fails later. A partial
+    # journal is diagnostic only; no final manifest/aggregate means no completed
+    # evaluation. Never silently append to or overwrite a previous run.
+    args.output.mkdir(parents=True, exist_ok=False)
+    progress = args.output / "predictions.partial.jsonl"
     rows: list[dict[str, Any]] = []
     for path_name in args.paths:
         path = AgentPath(path_name)
@@ -200,6 +205,13 @@ def main() -> None:
                                 "verification": run.verification,
                             }
                         )
+                        with progress.open("a", encoding="utf-8") as handle:
+                            handle.write(json.dumps(rows[-1], sort_keys=True) + "\n")
+                        print(json.dumps({
+                            "completed_attempts": len(rows), "path": path.value,
+                            "memory_mode": memory_mode.value, "seed": seed,
+                            "case_id": episode["case_id"], "turn_index": turn_index,
+                        }), flush=True)
     metrics = aggregate_rows(rows)
     thresholds = gate["thresholds"]
     hybrid = metrics.get("constrained_hybrid|structured_state", {})
@@ -249,7 +261,6 @@ def main() -> None:
     }
     metrics["promotion_checks"] = promotion_checks
     metrics["promotion_pass"] = all(promotion_checks.values())
-    args.output.mkdir(parents=True, exist_ok=False)
     predictions = args.output / "predictions.jsonl"
     predictions.write_text("\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
     metrics_path = args.output / "metrics.json"

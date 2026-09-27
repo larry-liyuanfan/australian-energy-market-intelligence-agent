@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from test_goal_compiler import InvalidPlanner
+import io
+import json
+from urllib.request import Request
+
+import pytest
+from test_goal_compiler import InvalidPlanner, replay_goal
 from test_model_agent import ScriptedPlanner
 
 from energy_agent.goal_compiler import GoalSpecAgent, LlamaCppGoalSpecPlanner
@@ -49,6 +54,34 @@ def test_goal_decoding_schema_rejects_bess_parent_key() -> None:
     assert "bess" not in sources["properties"]
     assert "bess.power_mw" in sources["properties"]
     assert "time_range" in sources["required"]
+
+
+def test_goal_native_schema_uses_server_template_and_counts_one_generation(monkeypatch: pytest.MonkeyPatch) -> None:
+    requests = []
+    goal = replay_goal()
+    formatted_prompt = "test-only model template\n<think>\n\n</think>\n\n"
+
+    def transport(request: Request, timeout: float) -> io.BytesIO:
+        assert 0 < timeout <= 90
+        payload = json.loads(request.data or b"{}")
+        requests.append((request.full_url, payload))
+        response = {"prompt": formatted_prompt} if request.full_url.endswith("apply-template") else {
+            "content": goal.model_dump_json(), "tokens_evaluated": 1400, "timings": {"predicted_n": 230},
+        }
+        return io.BytesIO(json.dumps(response).encode())
+
+    monkeypatch.setattr("energy_agent.goal_compiler.urlopen", transport)
+    planner = LlamaCppGoalSpecPlanner("test-only", "http://127.0.0.1:11627/v1")
+    outcome = planner.plan_goal([{"role": "user", "content": "test-only"}], 17)
+    assert [url.rsplit("/", 1)[-1] for url, _ in requests] == ["apply-template", "completion"]
+    assert requests[0][1]["chat_template_kwargs"] == {"enable_thinking": False}
+    assert requests[1][1]["prompt"] == formatted_prompt
+    assert requests[1][1]["json_schema"] == planner.decoding_schema()
+    assert requests[1][1]["n_predict"] == 1536 and requests[1][1]["seed"] == 17
+    assert outcome.goal_spec == goal
+    assert outcome.usage.prompt_tokens == 1400 and outcome.usage.completion_tokens == 230
+    with pytest.raises(ValueError, match="loopback"):
+        LlamaCppGoalSpecPlanner("test-only", "http://127.0.0.1.evil.invalid/v1").plan_goal([], 0)
 
 
 def test_hybrid_rejects_oracle_and_retrieval_uses_corrected_state() -> None:
