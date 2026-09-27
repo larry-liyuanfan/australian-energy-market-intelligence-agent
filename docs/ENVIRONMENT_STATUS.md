@@ -16,8 +16,8 @@ host details, local personal paths or restricted artifacts belong in this file.
 | Validation packages | pytest `9.1.1`, Ruff `0.16.3`, mypy `1.20.2` | Installed package metadata checked; test results remain in the actual run reports. |
 | API/schema packages | FastAPI `0.141.1`, Pydantic `2.13.4` | Installed package metadata checked. |
 | `uv` | Not found on PATH; optional | Current reproduction and Slurm scripts use `venv` and `pip`; no install needed. This does not assert absence everywhere on disk. |
-| Spartan Energy runtime | Dedicated environment and successful CPU preflight already recorded | CPU job `31365198` passed 216 tests, lint, types, all 20 region-day coverage checks and the corrected quarterly-context baseline. Further export-review changes require their own validation. GPU availability must be rechecked at submission, not inferred from this document. |
-| Real-model inference | Existing pinned Qwen3-8B / llama.cpp runtime available; new remediation inference not yet run at this checkpoint | GPU contention is a scheduling constraint, not a missing tool. No new model-success or promotion claim. |
+| Spartan Energy runtime | Dedicated environment and successful CPU preflight | Latest CPU job `31365441` passed 222 tests, lint, types, all 20 region-day coverage checks and the corrected quarterly-context baseline. GPU availability is checked at submission. |
+| Real-model inference | Pinned Qwen3-8B / llama.cpp inference executed; real-model recording passed in `31365444` | GoalSpec remains a real negative pilot (0/8 tasks). Frozen direct holdout `31365531` is running; a successful guarded demo is not planner promotion. |
 
 Installed `yeet/SKILL.md` SHA-256:
 `4829d4909081e1abf91507fb581e6f566ce7064001892414f32191895b08a595`.
@@ -43,7 +43,10 @@ the final P1 evidence-grounded demonstration. Period/topic grounding was correct
 and verified in `31365198`. Subsequent review found two exporter gaps: ignoring
 runtime verification failures, and screening a longer passage than the displayed
 quote. These are application fixes with rejection tests, not missing dependencies.
-No real-model remediation success or promotion is asserted by this tools record.
+Those export gaps and the model's chart/text-route mismatch are now corrected.
+The real-model recording passed 13 export checks in `31365444`; it remains
+explicitly runtime-assisted. A completed-case claim is supported, but a full
+holdout or model-promotion claim is not yet supported by this tools record.
 
 See [remediation review](REMEDIATION_REVIEW_20260927.md) for the P0/P1 execution
 record and [demo contract](INTERVIEW_DEMO.md) for the intended deliverable.

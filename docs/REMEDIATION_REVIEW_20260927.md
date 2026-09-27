@@ -1,6 +1,7 @@
 # Planner review and bounded P0/P1 remediation
 
-Status: implementation in progress; no new real-model result or promotion yet.
+Status: P0 development diagnosis and P1 real-model recording completed; the new
+frozen direct-tool holdout is running. No planner promotion decision is claimed.
 This follows the 26 September career strengthening plan. Existing v1 metrics,
 v2 benchmark labels and negative experiments remain unchanged.
 
@@ -90,6 +91,10 @@ The GoalSpec result is not rerun by that pilot. `31365356` remains a failed job
 (2:59 elapsed, 6,044,920 KiB MaxRSS); a successful substage is not a successful
 overall P1 export.
 
+The hash-bound [GoalSpec development summary](../artifacts/public/goal_spec_remediation_pilot_20260927.json)
+records that negative result and the overall failed-job boundary without publishing
+private predictions or official source documents.
+
 Infrastructure record: CPU preflight `31364397` failed after two seconds because
 this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
 established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
@@ -165,12 +170,22 @@ in the Energy artifact root.
   cannot be promoted. Progress messages contain counts, not quality scores, so
   scheduling observation does not require inspecting holdout outcomes mid-run.
 
-## P1 acceptance evidence still required
+## P1 accepted recording and remaining full evaluation
 
-One reproducible real SA1 decision replay: user request, actual model proposal,
+Job `31365444` completed in 4:04 with 5,656,984 KiB MaxRSS on code `7232306`.
+The corrected direct pilot again scored deterministic 4/4, pure LLM 2/8,
+hybrid 8/8; hybrid initial complete paths were still 4/8. Preflight `31365441`
+passed 222 tests, lint, strict types and all 20 region-days in 64 seconds.
+The real-model P1 export passed 13 checks and browser visual review. Its
+[recording and attribution](INTERVIEW_DEMO.md) include the user request, actual model proposal,
 deterministic additions, text and workbook evidence, publication-time labels,
 as-of forecast, battery schedule and independent historical settlement check.
-Deliver a local recorded-run demo, screenshot, two-minute narration, manifest,
-resource/cost record and review handoff. The demo can replay a captured real run
-without keeping a GPU or cloud service alive. It must say that it is a recorded
-run, and cannot imply live model serving or a public SLA.
+The page, compact response, screenshots, two-minute narration and resource/hash
+manifest are provided without requiring an always-on GPU or public service.
+
+After `sbatch --test-only` and an `afterok:31365444` dependency, frozen holdout
+job `31365531` was submitted at exact commit `72323060ad7b2314facd82cf8064f1f0c174b308`.
+It covers 504 scored turns (72 deterministic and 432 model attempts before
+replans). Only progress counts are inspected while it runs. Its full results,
+failure-separated aggregates and final comparison report remain pending; the
+completed P1 case is not a substitute for that outcome. No SG or resume change.

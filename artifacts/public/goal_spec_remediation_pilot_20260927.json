@@ -1,0 +1,60 @@
+{
+  "schema_version": "goal-spec-remediation-development-summary-v1",
+  "role": "real_model_negative_development_experiment_not_holdout",
+  "git_sha": "69b49df3167fa076846b29c78a3ec49a83320c6b",
+  "job": {
+    "id": "31365356",
+    "overall_state": "FAILED",
+    "goal_evaluation_exit": 0,
+    "independent_demo_export_exit": 1,
+    "elapsed_seconds": 179,
+    "batch_max_rss_kib": 6044920,
+    "requested_gpu": "one A100 1g.20gb MIG allocation",
+    "requested_cpus": 6,
+    "requested_memory_gib": 16
+  },
+  "runtime": {
+    "model": "Qwen3-8B-Q4_K_M.gguf",
+    "model_sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+    "llama_cpp_commit": "7798007a29a90e3053e799394da48cf53a2f8e0f",
+    "transport": "server apply-template then native completion with json_schema",
+    "temperature": 0.2,
+    "seeds": [17, 29],
+    "external_provider_billing_aud": 0,
+    "compute_cost_boundary": "Research allocation usage is reported as resources, not assumed free or converted using an invented tariff."
+  },
+  "source_hashes": {
+    "benchmark": "e477370225dfb69ad2a04934d2d38cd8f04390059fc8e5c074c74e27003aef33",
+    "gate": "8df915554658a935e1051b9757ab1c019e47606c4781f8cdd08964d8198732d2",
+    "private_predictions": "559bd88ffc671acb38261773f6b3e89da8c846f9d78dfe6b501b1c0a88bb01ca",
+    "metrics": "7e3d736e7823e4bf9f9ff9000c0f20d3f1182331f96a35452bd8a803886040af",
+    "stage_exit_codes": "aa6cc1e9ce0ce6305288882c7f8dfcf0661c07b69065654f8776729b5eb6fa69"
+  },
+  "development_metrics": {
+    "attempts": 8,
+    "episodes": 2,
+    "turns_per_seed": 4,
+    "goal_spec_valid_rate": 0.5,
+    "required_field_f1": 0.8571428571428571,
+    "compiled_path_rate": 0,
+    "compiled_task_success": 0,
+    "unsafe_tool_or_dsl_calls": 0,
+    "prompt_tokens": 12488,
+    "completion_tokens": 1704,
+    "p50_latency_ms": 6668.754464015365,
+    "p95_latency_ms": 10457.723576575518,
+    "retries": 0
+  },
+  "diagnosis": [
+    "Four second-turn objects assigned correction.source_turn=1 rather than current turn 2 and failed semantic validation.",
+    "Four schema-valid first-turn objects omitted required requested outputs, producing incomplete compiled paths.",
+    "The independent demo failed because chart modality was combined with a text-only retrieval route and an unscoped query; it was not published as successful."
+  ],
+  "decision": "Do not promote GoalSpec or run its full holdout; preserve the negative result. Direct-tool evaluation and runtime repair proceed separately.",
+  "boundaries": [
+    "This is a small authored development set, not an independent human study or a general Agent capability estimate.",
+    "Schema-constrained generation does not prove goal completeness, source attribution, or memory correctness.",
+    "Historical decision replay only; no live trading, bidding, investment return or public SLA claim.",
+    "Raw predictions, market records and official source documents remain private."
+  ]
+}

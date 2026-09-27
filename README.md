@@ -63,6 +63,11 @@ A hash-pinned Qwen3-8B/llama.cpp planner was evaluated on Spartan across 24 hold
 
 ## Local demo
 
+For an interview without a live GPU, use the [recorded real-Qwen replay](docs/INTERVIEW_DEMO.md).
+It includes the original model proposals, typed runtime corrections, official Q4
+text/source values and independently recomputed historical settlement. It is a
+captured guarded run, not a claim that the model autonomously planned every stage.
+
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 
 ![Historical decision replay demo](docs/assets/decision-replay-demo.png)

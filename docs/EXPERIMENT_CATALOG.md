@@ -30,6 +30,7 @@ This catalogue preserves negative and superseded results without allowing them t
 | `multimodal_qwen_q4_2024_20260822.json` | Fusion regression fixed but did not beat text |
 | `llm_agent_holdout_20260903.json` | Real Qwen3-8B structured hybrid reached 79.2% task success and 34.7% raw complete-path accuracy; promotion gate failed |
 | `VISUAL_GOAL_COMPILER_V2_EVALUATION.md` | GoalSpec development pilot missed schema quality; ViDoRe stopped after the preregistered infrastructure retry limit, so no holdout promotion claim was made |
+| `goal_spec_remediation_pilot_20260927.json` | Native schema transport works, but new four-turn/two-seed GoalSpec development achieved 0/8 task success; not selected for promotion |
 
 ## Supporting transport, not the online mainline
 
@@ -38,6 +39,7 @@ This catalogue preserves negative and superseded results without allowing them t
 | `multimodal_qwen_q1_2025_transport_20260822.json` | Same-author PDF page-routing transport; offline Qwen adapter |
 | `paper_driven_evaluation_20260821.json` | Method-inspired evaluation and exact-SHA execution |
 | `evidence_security_gate_20260821.json` | Development retrieval/security contracts, not live-LLM robustness |
+| `p1_recorded_replay_manifest_20260927.json` | One verified real-model guarded SA1 recording with explicit runtime attribution; not a planner holdout score or SG promotion |
 
 ## Superseded or preflight evidence
 

@@ -1,0 +1,58 @@
+{
+  "schema_version": "p1-recorded-replay-manifest-v1",
+  "status": "completed_recorded_real_model_case_not_planner_promotion",
+  "git_sha": "72323060ad7b2314facd82cf8064f1f0c174b308",
+  "trace_id": "064a4f46-8b06-41c0-b924-06022abd1ed6",
+  "preflight": {"job_id": "31365441", "state": "COMPLETED", "tests": 222, "elapsed_seconds": 64, "batch_max_rss_kib": 477520},
+  "pilot_and_demo": {"job_id": "31365444", "state": "COMPLETED", "elapsed_seconds": 244, "batch_max_rss_kib": 5656984},
+  "model": {
+    "name": "Qwen3-8B-Q4_K_M.gguf",
+    "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+    "llama_cpp_commit": "7798007a29a90e3053e799394da48cf53a2f8e0f",
+    "temperature": 0.2,
+    "seed": 17,
+    "prompt_tokens": 2423,
+    "completion_tokens": 510,
+    "end_to_end_seconds": 18.383670872077346,
+    "replans": 0,
+    "tool_retries": 0,
+    "external_provider_billing_aud": 0
+  },
+  "attribution": {
+    "model_accepted_stages": ["get_market_snapshot", "detect_price_events"],
+    "runtime_replaced_stages": ["search_official_evidence", "forecast_price_risk", "optimize_battery_dispatch"],
+    "runtime_event_dependency": "diagnose_price_event",
+    "original_erroneous_proposals_retained_in_recording": true,
+    "claim": "A successful guarded replay, not autonomous six-stage model planning."
+  },
+  "input_sha256": {
+    "data": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "data_manifest": "4d18a4f86e3daa13b5b7144b9f0939cb5bf5eba46a8d3ddbd0c442e8065dcc19",
+    "text_evidence": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "figure_records": "3fa2308d30c9ddd9e559680931a10af6472b8ad436b9f340b00629fb878c06a5",
+    "forecast_snapshots": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d"
+  },
+  "artifacts_sha256": {
+    "docs/demos/model-replay-20260927/index.html": "993b09cb298d1d5420e43fc43c5a1db9b1f8c3fae1df1943386ba960df8540ac",
+    "docs/demos/model-replay-20260927/recorded_run.json": "b8a6fd0aaa5788a5a3004822e5cf8ec7f8846cba2bb24eadfd763b144e91cda4",
+    "docs/assets/p1-model-replay-top-20260927.png": "79b9a5c1a5b344935b935dfea926bfbe54beec47b679a3029e89adb4edf79e86",
+    "docs/assets/p1-model-replay-workflow-20260927.png": "a7bd70726930256c3a09061829451c067a437f914888b1cb4ed8924cd912db23"
+  },
+  "verification": {
+    "independent_export_checks_passed": 13,
+    "browser_visual_review": "Top, forecast/SoC curves, complete attribution table and source metadata checked in the in-app browser.",
+    "new_public_text_secret_and_private_path_scan": "passed",
+    "new_dependency_scope": "No new third-party Python dependency; native model endpoint uses the existing standard-library HTTP client.",
+    "license_review": "Project and pinned llama.cpp MIT; Qwen official card Apache-2.0. Raw AEMO workbook/PDF and model weights not redistributed; official sources retain their own terms.",
+    "model_license_source": "https://huggingface.co/Qwen/Qwen3-8B-GGUF"
+  },
+  "boundaries": [
+    "One recorded SA1 day is not a holdout score, latency percentile, production SLA or proof of independent model reasoning.",
+    "Gross planned and realised amounts are distinct; an assumed AUD 50/MWh sensitivity is shown separately, not as an asset-specific cost estimate.",
+    "Retrospective quarterly context is not day-specific causal proof and does not enter forecast or optimisation inputs.",
+    "The as-of seasonal forecast is reconstructed retrospectively, not evidence of a forecast published on the historical day.",
+    "Research GPU allocation usage is not free; no invented commercial compute price is assigned.",
+    "Frozen 504-row holdout was submitted separately as job 31365531 and is not certified by this completed-case manifest.",
+    "No SG planner activation, public service exposure or current resume modification."
+  ]
+}

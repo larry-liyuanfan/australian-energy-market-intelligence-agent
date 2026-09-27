@@ -3,7 +3,24 @@
 The deliverable is a self-contained, recorded-run HTML page and compact JSON.
 It requires no live GPU, public API, browser key or cloud service. The recording
 labels the exact execution mode: deterministic baseline or real-model evaluation.
-The latter is available only after an actual Qwen3-8B request has been captured.
+The real-model recording is now available from job `31365444`, code `7232306`:
+[open/download the self-contained page](demos/model-replay-20260927/index.html),
+[compact response](demos/model-replay-20260927/recorded_run.json),
+and [hash-bound manifest](../artifacts/public/p1_recorded_replay_manifest_20260927.json).
+Open the HTML locally, or run `python -m http.server 8097 --bind 127.0.0.1
+--directory docs/demos/model-replay-20260927`. No private mounts or live model are
+needed to view this recording. Re-running inference still requires the inputs
+and allocated runtime described below.
+
+The case passed 13 export checks. Qwen's snapshot and event proposals were
+accepted; retrieval, forecast and dispatch were replaced by typed runtime guards,
+and event diagnosis was a runtime dependency. Its 2,423/510 prompt/completion
+tokens and 18.38 s elapsed time describe one sample, not a percentile or SLA.
+The full new holdout remains separate; this case does not promote the planner.
+
+![Recorded real-model replay](assets/p1-model-replay-top-20260927.png)
+
+![Model and runtime attribution](assets/p1-model-replay-workflow-20260927.png)
 
 ## Reproduce on an allocated Spartan compute node
 
@@ -74,8 +91,11 @@ Task: make one replay understandable and make planner measurements attributable.
 Action: diagnose the old pilot; apply sourced constraints without reparsing
 corrections; separate first proposals, guarded calls and execution; reject oracle
 substitution; verify input hashes and recompute battery settlement; label report
-publication precision. Result: use the completed run manifest and screenshot as
-the result evidence. Do not insert a new LLM accuracy until its real run finishes.
+publication precision. Result: a real-model SA1 recording passed 13 independent
+export checks, with two model-accepted stages and four explicitly runtime-owned
+stages. The independent GoalSpec development experiment still achieved 0/8 task
+success and was not promoted. Full planner accuracy must come from the completed
+frozen holdout, not this demonstration or development pilot.
 
 At most two candidate statements, pending completion evidence and career review:
 
