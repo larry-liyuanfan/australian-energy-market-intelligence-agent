@@ -78,6 +78,11 @@ The [application walkthrough](docs/demos/agent-application-20260927/index.html)
 separates that recording from a newly executed, opt-in **LangGraph** market workflow:
 SQLite pause/resume, sourced cross-turn correction and thread isolation on real
 AEMO records. See the [implementation, bounded audit and reproduction handoff](docs/AGENT_APPLICATION_HANDOFF_20260927.md).
+
+The [incremental replay extension](docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md)
+connects sourced state, optional model proposals, LangGraph and BESS in one opt-in
+entry. Four real-data CPU turns use 4/1/4/1 tool calls versus 4/4/4/4 for the same
+graph without reuse. This is a runtime result, **not a new Qwen quality or latency gain**.
 This graph uses deterministic planning, not new model inference; the default API
 and full BESS runtime are unchanged.
 

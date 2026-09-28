@@ -52,6 +52,7 @@ class PlannerOutcome:
     rejected_calls: int = 0
     validation_errors: tuple[str, ...] = ()
     content: str = ""
+    usage_known: bool = True
 
 
 class TurnPlanner(Protocol):
@@ -257,6 +258,7 @@ class LlamaCppPlanner:
     temperature: float = 0.0
     transport: Transport = _urlopen_transport
     name: str = "llama_cpp_local"
+    max_tokens: int | None = None
 
     @classmethod
     def from_environment(cls) -> LlamaCppPlanner | None:
@@ -288,6 +290,10 @@ class LlamaCppPlanner:
             "stream": False,
             "chat_template_kwargs": {"enable_thinking": False},
         }
+        if self.max_tokens is not None:
+            if not 1 <= self.max_tokens <= 2048:
+                raise ValueError("local planner max_tokens must be between 1 and 2048")
+            payload["max_tokens"] = self.max_tokens
         request = Request(
             f"{self.base_url.rstrip('/')}/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
@@ -321,6 +327,7 @@ class LlamaCppPlanner:
             rejected_calls=rejected,
             validation_errors=errors,
             content=str(message.get("content", "")),
+            usage_known=all(isinstance(usage.get(k), int) for k in ("prompt_tokens", "completion_tokens")),
         )
 
 

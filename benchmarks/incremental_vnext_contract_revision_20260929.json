@@ -1,0 +1,7 @@
+{
+  "schema_version": "vnext-contract-revision-v2",
+  "pre_model_revision": true,
+  "previous_sha256": "e12ba2c180052e450af9ea44783245c2ad64eaac52b9b5044d2598aa1cb15a73",
+  "reason": "v1 described second-turn outcomes in prose but did not specify numeric state or allowed fail-closed statuses. v2 makes those authored labels explicit before any model run; scenarios/wording/dates are unchanged. Paused lifecycle case permits first-turn validated without a final settlement.",
+  "real_model_consumed": false
+}

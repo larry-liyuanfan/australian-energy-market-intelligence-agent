@@ -1,0 +1,466 @@
+{
+  "schema_version": "incremental-cpu-contract-audit-v1",
+  "validation_date": "2026-09-29",
+  "data_track": "synthetic_contract_only",
+  "model_requests": 0,
+  "is_model_quality_result": false,
+  "source_summary_sha256": "ace4cba7e5eb48dfad05eb3178823258fa55f57643bd644dcfca030984410f3c",
+  "job": "31484808",
+  "job_terminal": "FAILED 127:0 after completed traversal: CUDA-linked --help on CPU lacked libcuda.so.1",
+  "source_archive_sha256": "728a7f95bac1ea796bd9630cace1d8e686e40ef677cee7c200e8322f16f250e2",
+  "groups": {
+    "legacy": {
+      "turn_rows": 48,
+      "authored_task_contract_matches": 43,
+      "runner_exceptions": 0,
+      "intervention_rows": [
+        {
+          "episode_id": "vnext-13",
+          "fault": "snapshot_content_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_forecast_price_risk_after_content_change",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "detect_price_events",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-14",
+          "fault": "evidence_version_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_search_official_evidence_after_content_change",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "detect_price_events",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-15",
+          "fault": "checkpoint_correction",
+          "kind": "checkpoint_lifecycle",
+          "exercised": false,
+          "expected_reason_or_outcome": "correction_of_observed_prior_interrupt",
+          "observed_reason_or_outcome": [],
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-16",
+          "fault": "thread_isolation",
+          "kind": "thread_lifecycle",
+          "exercised": true,
+          "expected_reason_or_outcome": "new_thread_does_not_inherit_region_or_date",
+          "observed_reason_or_outcome": [
+            "battery_energy_mwh",
+            "battery_power_mw",
+            "intent"
+          ],
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-17",
+          "fault": "empty_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "empty_result_or_model_clarify_stop_after_empty",
+          "observed_reason_or_outcome": null,
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-18",
+          "fault": "timeout_once",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "same_tool_retry_after_timeout_then_completed",
+          "observed_reason_or_outcome": [
+            "timeout",
+            "ok"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-19",
+          "fault": "malicious_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": null,
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-20",
+          "fault": "planner_unsafe",
+          "kind": "prompt_injection",
+          "exercised": false,
+          "expected_reason_or_outcome": "live_provider_observes_injection_without_unsafe_execution",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "detect_price_events",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-21",
+          "fault": "settlement_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:settlement_mismatch",
+          "observed_reason_or_outcome": null,
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-22",
+          "fault": "missing_interval",
+          "kind": "data_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "observed_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-23",
+          "fault": "forecast_signal_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:forecast_asof_or_signal_mismatch",
+          "observed_reason_or_outcome": null,
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-24",
+          "fault": "citation_hash_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": null,
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        }
+      ]
+    },
+    "full_rerun": {
+      "turn_rows": 48,
+      "authored_task_contract_matches": 48,
+      "runner_exceptions": 0,
+      "intervention_rows": [
+        {
+          "episode_id": "vnext-13",
+          "fault": "snapshot_content_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_forecast_price_risk_after_content_change",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-14",
+          "fault": "evidence_version_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_search_official_evidence_after_content_change",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-15",
+          "fault": "checkpoint_correction",
+          "kind": "checkpoint_lifecycle",
+          "exercised": true,
+          "expected_reason_or_outcome": "correction_of_observed_prior_interrupt",
+          "observed_reason_or_outcome": [
+            "interrupted_by_correction",
+            "completed"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-16",
+          "fault": "thread_isolation",
+          "kind": "thread_lifecycle",
+          "exercised": true,
+          "expected_reason_or_outcome": "new_thread_does_not_inherit_region_or_date",
+          "observed_reason_or_outcome": [
+            "battery_energy_mwh",
+            "battery_power_mw",
+            "intent"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-17",
+          "fault": "empty_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "empty_result_or_model_clarify_stop_after_empty",
+          "observed_reason_or_outcome": "empty_result",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-18",
+          "fault": "timeout_once",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "same_tool_retry_after_timeout_then_completed",
+          "observed_reason_or_outcome": [
+            "timeout",
+            "ok"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-19",
+          "fault": "malicious_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": "verification:citation_source_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-20",
+          "fault": "planner_unsafe",
+          "kind": "prompt_injection",
+          "exercised": false,
+          "expected_reason_or_outcome": "live_provider_observes_injection_without_unsafe_execution",
+          "observed_reason_or_outcome": [
+            "get_market_snapshot",
+            "search_official_evidence",
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-21",
+          "fault": "settlement_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:settlement_mismatch",
+          "observed_reason_or_outcome": "verification:settlement_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-22",
+          "fault": "missing_interval",
+          "kind": "data_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "observed_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-23",
+          "fault": "forecast_signal_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:forecast_asof_or_signal_mismatch",
+          "observed_reason_or_outcome": "verification:forecast_asof_or_signal_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-24",
+          "fault": "citation_hash_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": "verification:citation_source_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        }
+      ]
+    },
+    "incremental": {
+      "turn_rows": 48,
+      "authored_task_contract_matches": 48,
+      "runner_exceptions": 0,
+      "intervention_rows": [
+        {
+          "episode_id": "vnext-13",
+          "fault": "snapshot_content_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_forecast_price_risk_after_content_change",
+          "observed_reason_or_outcome": [
+            "forecast_price_risk",
+            "optimize_battery_dispatch"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-14",
+          "fault": "evidence_version_changed",
+          "kind": "version_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "fresh_search_official_evidence_after_content_change",
+          "observed_reason_or_outcome": [
+            "search_official_evidence"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-15",
+          "fault": "checkpoint_correction",
+          "kind": "checkpoint_lifecycle",
+          "exercised": true,
+          "expected_reason_or_outcome": "correction_of_observed_prior_interrupt",
+          "observed_reason_or_outcome": [
+            "interrupted_by_correction",
+            "completed"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-16",
+          "fault": "thread_isolation",
+          "kind": "thread_lifecycle",
+          "exercised": true,
+          "expected_reason_or_outcome": "new_thread_does_not_inherit_region_or_date",
+          "observed_reason_or_outcome": [
+            "battery_energy_mwh",
+            "battery_power_mw",
+            "intent"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-17",
+          "fault": "empty_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "empty_result_or_model_clarify_stop_after_empty",
+          "observed_reason_or_outcome": "empty_result",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-18",
+          "fault": "timeout_once",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "same_tool_retry_after_timeout_then_completed",
+          "observed_reason_or_outcome": [
+            "timeout",
+            "ok"
+          ],
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-19",
+          "fault": "malicious_evidence",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": "verification:citation_source_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-20",
+          "fault": "planner_unsafe",
+          "kind": "prompt_injection",
+          "exercised": false,
+          "expected_reason_or_outcome": "live_provider_observes_injection_without_unsafe_execution",
+          "observed_reason_or_outcome": [],
+          "target_outcome_verified": false,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-21",
+          "fault": "settlement_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:settlement_mismatch",
+          "observed_reason_or_outcome": "verification:settlement_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-22",
+          "fault": "missing_interval",
+          "kind": "data_mutation",
+          "exercised": true,
+          "expected_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "observed_reason_or_outcome": "historical replay requires complete realised market coverage",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-23",
+          "fault": "forecast_signal_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:forecast_asof_or_signal_mismatch",
+          "observed_reason_or_outcome": "verification:forecast_asof_or_signal_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        },
+        {
+          "episode_id": "vnext-24",
+          "fault": "citation_hash_conflict",
+          "kind": "tool_injection",
+          "exercised": true,
+          "expected_reason_or_outcome": "verification:citation_source_mismatch",
+          "observed_reason_or_outcome": "verification:citation_source_mismatch",
+          "target_outcome_verified": true,
+          "not_task_contract_score": true
+        }
+      ]
+    }
+  },
+  "caveats": [
+    "All 144 path-turns retained; a completed traversal is not an overall successful Slurm job.",
+    "43/48 legacy includes one status taxonomy mismatch; not a five-task natural/model quality improvement.",
+    "Target intervention scoring requires reachability and expected reason, separately from task status.",
+    "Model prompt injection is not exercised on CPU. Legacy has no checkpoint correction lifecycle.",
+    "Post-run fixes only narrow model-response attribution and disable proxy/redirects; CPU paths unchanged."
+  ]
+}

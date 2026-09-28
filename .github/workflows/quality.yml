@@ -63,4 +63,4 @@ jobs:
           python -m pip install pip==26.2.1
           python -m pip install -c requirements/agent-graph-py313.lock -e ".[graph,test]"
       - name: Execute graph persistence and archival-audit contracts
-        run: python -m pytest tests/test_graph_runtime.py tests/test_application_audit.py tests/test_application_demo.py
+        run: python -m pytest tests/test_graph_runtime.py tests/test_application_audit.py tests/test_application_demo.py tests/test_incremental_graph.py tests/test_incremental_evaluation.py

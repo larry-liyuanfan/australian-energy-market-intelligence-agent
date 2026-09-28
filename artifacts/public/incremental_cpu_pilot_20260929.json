@@ -1,0 +1,2403 @@
+{
+  "schema_version": "incremental-replay-cpu-pilot-v1",
+  "validation_date": "2026-09-29",
+  "execution": "real_official_data_deterministic_cpu_no_model",
+  "authored_turns": 4,
+  "unique_market_days": 1,
+  "regions": [
+    "SA1",
+    "VIC1"
+  ],
+  "market_rows": 576,
+  "model_calls": 0,
+  "model_tokens": 0,
+  "qwen_incremental_status": "not_run_pending_resource_release",
+  "records": [
+    {
+      "path": "legacy_deterministic_completion",
+      "turn": 1,
+      "question": "Replay SA1 2025-12-15 BESS 1MW/2MWh with official text evidence.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "actual_tool_calls": 6,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 177.48716835274877,
+        "realized_margin_aud": 401.8998134519839,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "wall_seconds_including_validation": 0.1635219999589026
+    },
+    {
+      "path": "legacy_deterministic_completion",
+      "turn": 2,
+      "question": "Change BESS to 1MW/3MWh; keep the region and date.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "actual_tool_calls": 6,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 239.90375415306153,
+        "realized_margin_aud": 647.8618500635234,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "wall_seconds_including_validation": 0.18096689996309578
+    },
+    {
+      "path": "legacy_deterministic_completion",
+      "turn": 3,
+      "question": "Correction: use VIC1; keep the date and battery.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "actual_tool_calls": 5,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 234.82036078128496,
+        "realized_margin_aud": 110.11405275344916,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "wall_seconds_including_validation": 0.16185909998603165
+    },
+    {
+      "path": "legacy_deterministic_completion",
+      "turn": 4,
+      "question": "Change efficiency to 80%; keep the region, date and battery size.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "actual_tool_calls": 5,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 242.56544278264016,
+        "realized_margin_aud": 106.03888909928675,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "wall_seconds_including_validation": 0.17092299996875226
+    },
+    {
+      "path": "full_rerun_graph",
+      "turn": 1,
+      "question": "Replay SA1 2025-12-15 BESS 1MW/2MWh with official text evidence.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 177.48716835274877,
+        "realized_margin_aud": 401.8998134519839,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "9dc5a87dec060aee9b0b0bad0948ef4841bdda6313e8a5f162fc6b906a315580",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        }
+      ],
+      "invalidations": [],
+      "wall_seconds_including_validation": 0.29466710006818175
+    },
+    {
+      "path": "full_rerun_graph",
+      "turn": 2,
+      "question": "Change BESS to 1MW/3MWh; keep the region and date.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 239.90375415306153,
+        "realized_margin_aud": 647.8618500635234,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "execute",
+          "source_turn": 2
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "execute",
+          "source_turn": 2
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "execute",
+          "source_turn": 2
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "execute",
+          "source_turn": 2
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "get_market_snapshot",
+          "reason": "full_rerun_requested",
+          "old_key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "new_key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde"
+        },
+        {
+          "name": "search_official_evidence",
+          "reason": "full_rerun_requested",
+          "old_key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "new_key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc"
+        },
+        {
+          "name": "forecast_price_risk",
+          "reason": "full_rerun_requested",
+          "old_key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "new_key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102"
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "full_rerun_requested",
+          "old_key": "9dc5a87dec060aee9b0b0bad0948ef4841bdda6313e8a5f162fc6b906a315580",
+          "new_key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c"
+        }
+      ],
+      "wall_seconds_including_validation": 0.3229979001916945
+    },
+    {
+      "path": "full_rerun_graph",
+      "turn": 3,
+      "question": "Correction: use VIC1; keep the date and battery.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 234.82036078128496,
+        "realized_margin_aud": 110.11405275344916,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "get_market_snapshot",
+          "reason": "full_rerun_requested",
+          "old_key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "new_key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811"
+        },
+        {
+          "name": "search_official_evidence",
+          "reason": "full_rerun_requested",
+          "old_key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "new_key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2"
+        },
+        {
+          "name": "forecast_price_risk",
+          "reason": "full_rerun_requested",
+          "old_key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "new_key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6"
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "full_rerun_requested",
+          "old_key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c",
+          "new_key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde"
+        }
+      ],
+      "wall_seconds_including_validation": 0.30712649994529784
+    },
+    {
+      "path": "full_rerun_graph",
+      "turn": 4,
+      "question": "Change efficiency to 80%; keep the region, date and battery size.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 242.56544278264016,
+        "realized_margin_aud": 106.03888909928675,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "execute",
+          "source_turn": 4
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "execute",
+          "source_turn": 4
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "execute",
+          "source_turn": 4
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "d90b8dc41c7ae2d14eb71a8f113e5249cb5afa6d66827a441b1d906f666e8c3f",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "execute",
+          "source_turn": 4
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "get_market_snapshot",
+          "reason": "full_rerun_requested",
+          "old_key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811",
+          "new_key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811"
+        },
+        {
+          "name": "search_official_evidence",
+          "reason": "full_rerun_requested",
+          "old_key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2",
+          "new_key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2"
+        },
+        {
+          "name": "forecast_price_risk",
+          "reason": "full_rerun_requested",
+          "old_key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6",
+          "new_key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6"
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "full_rerun_requested",
+          "old_key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde",
+          "new_key": "d90b8dc41c7ae2d14eb71a8f113e5249cb5afa6d66827a441b1d906f666e8c3f"
+        }
+      ],
+      "wall_seconds_including_validation": 0.3437191001139581
+    },
+    {
+      "path": "incremental_graph",
+      "turn": 1,
+      "question": "Replay SA1 2025-12-15 BESS 1MW/2MWh with official text evidence.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 177.48716835274877,
+        "realized_margin_aud": 401.8998134519839,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "9dc5a87dec060aee9b0b0bad0948ef4841bdda6313e8a5f162fc6b906a315580",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 2.0,
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 1,
+          "action": "execute",
+          "source_turn": 1
+        }
+      ],
+      "invalidations": [],
+      "wall_seconds_including_validation": 0.2990030001383275
+    },
+    {
+      "path": "incremental_graph",
+      "turn": 2,
+      "question": "Change BESS to 1MW/3MWh; keep the region and date.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 1,
+      "reuse": 3,
+      "settlement": {
+        "planned_margin_aud": 239.90375415306153,
+        "realized_margin_aud": 647.8618500635234,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "reuse",
+          "source_turn": 1
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "reuse",
+          "source_turn": 1
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "reuse",
+          "source_turn": 1
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "SA1"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "SA1",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 2,
+          "action": "execute",
+          "source_turn": 2
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "9dc5a87dec060aee9b0b0bad0948ef4841bdda6313e8a5f162fc6b906a315580",
+          "new_key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c"
+        }
+      ],
+      "wall_seconds_including_validation": 0.2826531999744475
+    },
+    {
+      "path": "incremental_graph",
+      "turn": 3,
+      "question": "Correction: use VIC1; keep the date and battery.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 4,
+      "reuse": 0,
+      "settlement": {
+        "planned_margin_aud": 234.82036078128496,
+        "realized_margin_aud": 110.11405275344916,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            }
+          },
+          "turn": 3,
+          "action": "execute",
+          "source_turn": 3
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "get_market_snapshot",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "f4321601f8a163e86d055732b0d7d4f73cddf54e2b8b2c432ab999a9ce45dbde",
+          "new_key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811"
+        },
+        {
+          "name": "search_official_evidence",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "82cd27a7fa24b3b21f1a4696524f9e998bcbdb344fd9ea40383e58c2cfffb7cc",
+          "new_key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2"
+        },
+        {
+          "name": "forecast_price_risk",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "a719e27fed34bb16dabf5523dfc66f390c1f7e0c80adcf93df0d7aafcd0ee102",
+          "new_key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6"
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "7309054370559dc5fc551e43190915d086a4c6eea4b81a33c95c4a40214e490c",
+          "new_key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde"
+        }
+      ],
+      "wall_seconds_including_validation": 0.32351070013828576
+    },
+    {
+      "path": "incremental_graph",
+      "turn": 4,
+      "question": "Change efficiency to 80%; keep the region, date and battery size.",
+      "status": "completed",
+      "checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true,
+        "same_settlement_as_legacy": true,
+        "model_not_called": true
+      },
+      "actual_tool_calls": 1,
+      "reuse": 3,
+      "settlement": {
+        "planned_margin_aud": 242.56544278264016,
+        "realized_margin_aud": 106.03888909928675,
+        "margin_basis": "historical_actual_settlement_after_as_of_schedule"
+      },
+      "provenance": [
+        {
+          "name": "get_market_snapshot",
+          "key": "2350cabf0a782d671909ab09887f23cde71da7eb228d57fd28d266f0788dc811",
+          "dependencies": [],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "reuse",
+          "source_turn": 3
+        },
+        {
+          "name": "search_official_evidence",
+          "key": "46387772cbbc412fec413df772d17b4c936db27bd39ab3e5c40fef91086d8bf2",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "reuse",
+          "source_turn": 3
+        },
+        {
+          "name": "forecast_price_risk",
+          "key": "091f98029781adcb22f2e557ad1f1e22212369a562d1961c1635a4fec8971aa6",
+          "dependencies": [
+            "get_market_snapshot"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "reuse",
+          "source_turn": 3
+        },
+        {
+          "name": "optimize_battery_dispatch",
+          "key": "d90b8dc41c7ae2d14eb71a8f113e5249cb5afa6d66827a441b1d906f666e8c3f",
+          "dependencies": [
+            "forecast_price_risk"
+          ],
+          "owner": "deterministic_baseline",
+          "constraint_sources": {
+            "regions": {
+              "key": "regions",
+              "value": [
+                "VIC1"
+              ],
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "region": {
+              "key": "region",
+              "value": "VIC1",
+              "source_turn": 3,
+              "source_type": "user"
+            },
+            "dates": {
+              "key": "dates",
+              "value": [
+                "2025-12-15"
+              ],
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "battery_power_mw": {
+              "key": "battery_power_mw",
+              "value": 1.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "battery_energy_mwh": {
+              "key": "battery_energy_mwh",
+              "value": 3.0,
+              "source_turn": 2,
+              "source_type": "user"
+            },
+            "intent": {
+              "key": "intent",
+              "value": "decision replay",
+              "source_turn": 4,
+              "source_type": "user"
+            },
+            "evidence_modality": {
+              "key": "evidence_modality",
+              "value": "text",
+              "source_turn": 1,
+              "source_type": "user"
+            },
+            "round_trip_efficiency": {
+              "key": "round_trip_efficiency",
+              "value": 0.8,
+              "source_turn": 4,
+              "source_type": "user"
+            }
+          },
+          "turn": 4,
+          "action": "execute",
+          "source_turn": 4
+        }
+      ],
+      "invalidations": [
+        {
+          "name": "optimize_battery_dispatch",
+          "reason": "arguments_dependency_or_version_changed",
+          "old_key": "e538c7a053717f5eb7840cb069b6d8ac253793074facb157c61d28d06444bfde",
+          "new_key": "d90b8dc41c7ae2d14eb71a8f113e5249cb5afa6d66827a441b1d906f666e8c3f"
+        }
+      ],
+      "wall_seconds_including_validation": 0.25518389977514744
+    }
+  ],
+  "real_missing_period_search_counts": [
+    0,
+    0
+  ],
+  "retrieval_dense_enabled": false,
+  "all_independent_checks_pass": true,
+  "boundaries": [
+    "4 authored turns on one day, not independent held-out model evaluation.",
+    "Timings include repeated full-input hash checks; 576 rows is not a million-row benchmark.",
+    "Tool-call reuse does not imply eliminated internal forecast or oracle computations.",
+    "Fault recovery model counterfactuals are separate explicitly labelled test doubles."
+  ]
+}

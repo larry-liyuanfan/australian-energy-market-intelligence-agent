@@ -1,0 +1,389 @@
+{
+  "schema_version": "incremental-agent-cpu-manifest-v1",
+  "validation_date": "2026-09-29",
+  "date_basis": "task Sydney date; remote scheduler clock differs, keep raw job IDs/elapsed logs",
+  "git_base": "4333f2862ff1f06a277c621f4bc3733c2dc1272e",
+  "delivery_sha_command": "git log -1 --format=%H -- artifacts/public/incremental_cpu_manifest_20260929.json",
+  "new_model_inference": false,
+  "gpu_jobs_submitted": 0,
+  "paid_api_calls": 0,
+  "new_live_model_metrics": null,
+  "cpu_rows_are_not_llm_pass_rate": true,
+  "runtime_bundle": {
+    "file": "energy-runtime-04.tar",
+    "sha256": "4cee7ea7d0602896fccda26b20c7f98506ba871529bfd4c1b53c83fcc3895122"
+  },
+  "revised_contract_bundle": {
+    "file": "energy-runtime-03.tar",
+    "sha256": "ca7922f39e10095232f01be8e6697a585df040b9cdd141ec668c69fddaca70c2"
+  },
+  "model_cache": {
+    "revision": "1d54a16a18cba0d8fbad4a16db801decc729e099",
+    "file": "Qwen3-8B-Q4_K_M.gguf",
+    "bytes": 5027783488,
+    "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+    "full_file_hash_verified": true,
+    "new_graph_model_load_verified": false
+  },
+  "private_inputs": {
+    "annual_parent": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "december_market": "4539f94624e603fc5d44572966c0ee5c24d976417e786a4e387d0711cabfa94f",
+    "official_text": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "december_snapshots": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d",
+    "november_archive": "793e781d5758629f91ebb72491ea903683094c00abd5bf4c97c1623e148e3fa6",
+    "november_market": "76547ea72e398391faccda799ad8aaaac3b9163374ce7d4a946dc7483795c4f2",
+    "november_snapshots": "ab4563e7d7c1f1e859f0acaa3432759bcb3403e7cca37314849f5b7f63be7fbb"
+  },
+  "cpu_jobs": [
+    {
+      "job": "31484156",
+      "state": "COMPLETED",
+      "exit": "0:0",
+      "seconds": 78,
+      "peak_rss_kib": 141236,
+      "role": "dependencies_inputs_model_download"
+    },
+    {
+      "job": "31484355",
+      "state": "COMPLETED",
+      "exit": "0:0",
+      "seconds": 80,
+      "peak_rss_kib": 1723208,
+      "role": "initial_synthetic_contracts"
+    },
+    {
+      "job": "31484808",
+      "state": "FAILED",
+      "exit": "127:0",
+      "seconds": 89,
+      "peak_rss_kib": 1964220,
+      "role": "revised_contracts_completed_then_invalid_cpu_cuda_help_check"
+    }
+  ],
+  "allocation_per_cpu_job": {
+    "cpus": 2,
+    "memory_gib": 4
+  },
+  "infrastructure_cost_aud": null,
+  "cost_boundary": "No paid provider requests; allocated CPU time is reported, university infrastructure price not supplied.",
+  "license_review": {
+    "scope": "41 optional Linux wheel metadata declarations, wheels remain private",
+    "licenses": [
+      {
+        "package": "aiosqlite",
+        "version": "0.22.1",
+        "declared_license": [
+          "License :: OSI Approved :: MIT License"
+        ]
+      },
+      {
+        "package": "annotated-types",
+        "version": "0.8.0",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "anyio",
+        "version": "4.15.1",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "certifi",
+        "version": "2026.7.22",
+        "declared_license": "MPL-2.0"
+      },
+      {
+        "package": "charset-normalizer",
+        "version": "3.5.1",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "distro",
+        "version": "1.9.0",
+        "declared_license": "Apache License, Version 2.0"
+      },
+      {
+        "package": "h11",
+        "version": "0.16.0",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "httpcore",
+        "version": "1.0.9",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "httpcore2",
+        "version": "2.13.1",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "httpx",
+        "version": "0.28.1",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "httpx2",
+        "version": "2.13.1",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "idna",
+        "version": "3.20",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "jsonpatch",
+        "version": "1.33",
+        "declared_license": "Modified BSD License"
+      },
+      {
+        "package": "jsonpointer",
+        "version": "3.1.1",
+        "declared_license": "Modified BSD License"
+      },
+      {
+        "package": "langchain-core",
+        "version": "1.6.5",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langchain-protocol",
+        "version": "0.0.19",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langgraph",
+        "version": "1.2.12",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langgraph-checkpoint",
+        "version": "4.2.0",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langgraph-checkpoint-sqlite",
+        "version": "3.1.1",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langgraph-prebuilt",
+        "version": "1.1.0",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langgraph-sdk",
+        "version": "0.4.5",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "langsmith",
+        "version": "0.14.1",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "orjson",
+        "version": "3.12.0",
+        "declared_license": "MPL-2.0 AND (Apache-2.0 OR MIT)"
+      },
+      {
+        "package": "ormsgpack",
+        "version": "1.12.2",
+        "declared_license": "Apache-2.0 OR MIT"
+      },
+      {
+        "package": "packaging",
+        "version": "26.3",
+        "declared_license": "Apache-2.0 OR BSD-2-Clause"
+      },
+      {
+        "package": "pydantic",
+        "version": "2.13.5",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "pydantic_core",
+        "version": "2.46.5",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "PyYAML",
+        "version": "6.0.3",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "requests",
+        "version": "2.34.2",
+        "declared_license": "Apache-2.0"
+      },
+      {
+        "package": "requests-toolbelt",
+        "version": "1.0.0",
+        "declared_license": "Apache 2.0"
+      },
+      {
+        "package": "sniffio",
+        "version": "1.3.1",
+        "declared_license": "MIT OR Apache-2.0"
+      },
+      {
+        "package": "sqlite-vec",
+        "version": "0.1.9",
+        "declared_license": "MIT License, Apache License, Version 2.0"
+      },
+      {
+        "package": "tenacity",
+        "version": "9.1.4",
+        "declared_license": "Apache 2.0"
+      },
+      {
+        "package": "truststore",
+        "version": "0.10.4",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "typing_extensions",
+        "version": "4.16.0",
+        "declared_license": "PSF-2.0"
+      },
+      {
+        "package": "typing-inspection",
+        "version": "0.4.4",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "urllib3",
+        "version": "2.8.0",
+        "declared_license": "MIT"
+      },
+      {
+        "package": "uuid_utils",
+        "version": "0.17.1",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "websockets",
+        "version": "16.1.1",
+        "declared_license": "BSD-3-Clause"
+      },
+      {
+        "package": "xxhash",
+        "version": "4.0.1",
+        "declared_license": "BSD-2-Clause"
+      },
+      {
+        "package": "zstandard",
+        "version": "0.25.0",
+        "declared_license": "BSD-3-Clause"
+      }
+    ],
+    "notes": "Certifi/orjson include MPL-2.0; no binary redistribution in GitHub. Not a legal opinion or whole-base-environment audit."
+  },
+  "checks": {
+    "real_pilot_path_turns": 12,
+    "real_pilot_unique_days": 1,
+    "synthetic_contract_path_turns": 144,
+    "ruff": "passed",
+    "mypy": "89 sources passed",
+    "secret_scan": "executed; no matches",
+    "github_ci": "inspect delivery commit run, not older green badges"
+  },
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "42519e4ff85bbb1268e5696ca64ee0fb44605d46551cbdef11b98fa5eca13c8d"
+    },
+    {
+      "path": ".github/workflows/quality.yml",
+      "sha256": "b880a4d79040b4e9aabaa286a11f2f9f3d9b950cac74dcd014458a468b739648"
+    },
+    {
+      "path": "artifacts/public/incremental_cpu_pilot_20260929.json",
+      "sha256": "a880aa530e49ac21fe66bb2337cf260bfeca64d0d72daa1ae88e6bc3d74d6ea9"
+    },
+    {
+      "path": "benchmarks/incremental_vnext_contract_revision_20260929.json",
+      "sha256": "fa0b871909c127922e71a3c0d019bcd403e50f884fb8f3bff851ba0f5bccbfd1"
+    },
+    {
+      "path": "benchmarks/incremental_vnext_holdout_20260929.jsonl",
+      "sha256": "e12ba2c180052e450af9ea44783245c2ad64eaac52b9b5044d2598aa1cb15a73"
+    },
+    {
+      "path": "benchmarks/incremental_vnext_holdout_v2_20260929.jsonl",
+      "sha256": "9de3945eb6cbbf0868f76b9eb204c12ade8b9c5d8f443a5b1ea70dd239ce474f"
+    },
+    {
+      "path": "benchmarks/incremental_vnext_protocol_20260929.json",
+      "sha256": "c04eee50e4ad3274464970a756bb31f5d53839e6ebb8fa22e48f191de317bdc2"
+    },
+    {
+      "path": "docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md",
+      "sha256": "912252d5575bd8d01c6555b0b1147c997b93f32f593494a89a06fbd107729519"
+    },
+    {
+      "path": "requirements/agent-graph-linux-py311-wheels.json",
+      "sha256": "5870f247363406672fcdf3483c0f65d932f2e467f0b2783d5fba86acb4e22b3a"
+    },
+    {
+      "path": "scripts/build_incremental_handoff.py",
+      "sha256": "127efcb2bc1dfae8611643fe77b876562b9aee078537f5323bd3783b2fbc8c4d"
+    },
+    {
+      "path": "scripts/check_local_model_owner.py",
+      "sha256": "8ae70ad539c41347aba1de1796f728f06fafb9c22f1258568e9fe1e3e71e9513"
+    },
+    {
+      "path": "scripts/evaluate_incremental_pilot.py",
+      "sha256": "9a21664978bff981e2f768c0efaf00c741204d3650d11aa4fe52322fd75c4e1a"
+    },
+    {
+      "path": "scripts/prepare_incremental_inputs.py",
+      "sha256": "7232f9ed88e17b3068a2a492e45918a3d5aed492210550fa6d9621391c08b919"
+    },
+    {
+      "path": "scripts/run_incremental_replay.py",
+      "sha256": "f360b87a3e3e06e5f7f24da22d2e63538c9702c0ae716da95d13f5cd8470eac4"
+    },
+    {
+      "path": "scripts/run_incremental_vnext.py",
+      "sha256": "7af37d95864834227ac8bc05d42328c22f811e8eb083d09de79f81d12420ab0c"
+    },
+    {
+      "path": "scripts/slurm/incremental_contracts.sbatch",
+      "sha256": "00f52dbd00b3031dc44726caba431651a974da967bcd65b40d86930237363654"
+    },
+    {
+      "path": "scripts/slurm/incremental_model.sbatch",
+      "sha256": "c3985ab37d42a4725dd3d2448cb2417669442f1e27d7a849eff1b9a94e95cfbf"
+    },
+    {
+      "path": "scripts/slurm/incremental_prepare.sbatch",
+      "sha256": "29d0b1f38ce9bef25cb34af233f117f31f41eeecf04bd678f979f59df3928444"
+    },
+    {
+      "path": "src/energy_agent/incremental_evaluation.py",
+      "sha256": "5fd7161eb50da3201db21101a428c1b25a63a472deea453663f9d6b88241c10f"
+    },
+    {
+      "path": "src/energy_agent/incremental_graph.py",
+      "sha256": "562f99b856e8bbd766380f0f6a0b2954983f49683c20a47788ccb9f6a8ea42ad"
+    },
+    {
+      "path": "src/energy_agent/loopback.py",
+      "sha256": "86caae8775d97053f6acb998e7a2c2ac4fdf57800944b63fe976a1c26c0bfbf7"
+    },
+    {
+      "path": "src/energy_agent/providers.py",
+      "sha256": "ccb38c086e55684c0a6c06b5c14ed3b02392fae9585263b9b6923aa1b6c19023"
+    },
+    {
+      "path": "tests/test_incremental_evaluation.py",
+      "sha256": "7ec37c4855a125364ab6b94c145dc6662db8e94ae4963ba8f5016f8503f9f53d"
+    },
+    {
+      "path": "tests/test_incremental_graph.py",
+      "sha256": "faf7aee0439e7e58f9194d75d411178cbc9617c6918cddc63e0149f809bcc447"
+    }
+  ]
+}
