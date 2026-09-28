@@ -36,7 +36,11 @@ module load GCC/13.3.0 CMake/3.31.8 CUDA/12.4.1
 ENV=/data/gpfs/projects/punim2936/portfolio_20260820/energy-agent/planner-remediation-20260927/env
 PYTHON="$ENV/venv/bin/python"
 export LD_LIBRARY_PATH="$ENV/llama-runtime:/apps/easybuild-2022/easybuild/software/Compiler/GCCcore/11.3.0/Python/3.11.3/lib:${LD_LIBRARY_PATH:-}"
-export PYTHONDONTWRITEBYTECODE=1 LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false OMP_NUM_THREADS=6
+: "${SLURM_CPUS_PER_TASK:?Slurm CPU allocation required}"
+[[ "$SLURM_CPUS_PER_TASK" =~ ^[1-9][0-9]*$ ]] || exit 2
+ENERGY_CPU_THREADS="$SLURM_CPUS_PER_TASK"
+export PYTHONDONTWRITEBYTECODE=1 LANGSMITH_TRACING=false LANGCHAIN_TRACING_V2=false
+export OMP_NUM_THREADS="$ENERGY_CPU_THREADS" OMP_THREAD_LIMIT="$ENERGY_CPU_THREADS"
 (cd "$TASK/wheels" && sha256sum --check SHA256SUMS)
 "$PYTHON" -m pip install --no-index --no-compile --ignore-installed --find-links "$TASK/wheels" --target "$TASK/deps" langgraph==1.2.12 langgraph-checkpoint-sqlite==3.1.1
 export PYTHONPATH="$TASK/src:$TASK/deps"
@@ -66,7 +70,13 @@ MODEL_ID="energy-${SLURM_JOB_ID}-$(basename "$TASK")"
 "$PYTHON" scripts/check_local_model_owner.py --port 11629
 "$ENV/llama-runtime/llama-server" --help > "$TASK/runtime-help.txt"
 grep -q -- '--alias' "$TASK/runtime-help.txt"
+grep -Eq -- '--threads[[:space:]]' "$TASK/runtime-help.txt"
+grep -Eq -- '--threads-batch[[:space:]]' "$TASK/runtime-help.txt"
+printf 'slurm_cpus_per_task=%s\nllama_threads=%s\nllama_threads_batch=%s\nOMP_NUM_THREADS=%s\nOMP_THREAD_LIMIT=%s\n' \
+ "$SLURM_CPUS_PER_TASK" "$ENERGY_CPU_THREADS" "$ENERGY_CPU_THREADS" "$OMP_NUM_THREADS" "$OMP_THREAD_LIMIT" \
+ | tee "$TASK/runtime-threads.txt"
 "$ENV/llama-runtime/llama-server" --model "$TASK/model.gguf" --alias "$MODEL_ID" --host 127.0.0.1 --port 11629 \
+ --threads "$ENERGY_CPU_THREADS" --threads-batch "$ENERGY_CPU_THREADS" \
  --ctx-size 16384 --n-gpu-layers 99 --parallel 1 --jinja --reasoning-format none --no-webui > "$TASK/model-server.log" 2>&1 &
 SERVER_PID=$!
 finish() {
@@ -74,9 +84,9 @@ finish() {
  kill "$SERVER_PID" 2>/dev/null || true
  # One persistent archive, including failed attempts; scratch is Slurm-owned.
  if [[ -d "$TASK/results" ]]; then
-  tar -czf "$RUN/${ENERGY_STAGE}-$SLURM_JOB_ID.tar.gz" -C "$TASK" model-server.log results
+  tar -czf "$RUN/${ENERGY_STAGE}-$SLURM_JOB_ID.tar.gz" -C "$TASK" model-server.log runtime-help.txt runtime-threads.txt results
  else
-  tar -czf "$RUN/${ENERGY_STAGE}-$SLURM_JOB_ID.tar.gz" -C "$TASK" model-server.log
+  tar -czf "$RUN/${ENERGY_STAGE}-$SLURM_JOB_ID.tar.gz" -C "$TASK" model-server.log runtime-help.txt runtime-threads.txt
  fi
  exit "$status"
 }

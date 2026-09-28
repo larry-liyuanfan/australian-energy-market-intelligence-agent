@@ -170,3 +170,68 @@ def test_provider_token_budget_is_sent() -> None:
         return b'{"choices":[{"message":{"tool_calls":[]}}],"usage":{"prompt_tokens":5,"completion_tokens":1}}'
     LlamaCppPlanner(transport=transport, max_tokens=512).plan_turn([], base(), 8, 17)
     assert seen[0]["max_tokens"] == 512
+
+
+@pytest.mark.parametrize("cost", [None, 50, 20, 0])
+def test_answer_cost_source_default_and_explicit(tmp_path: Path, cost: int | None) -> None:
+    question = QUESTION + (f" Use degradation cost {cost}." if cost is not None else "")
+    with SqliteSaver.from_conn_string(str(tmp_path / "s.sqlite")) as saver:
+        result = invoke_replay(build_incremental_graph(base(), saver), "A", question=question)
+    assert result["status"] == "completed"
+    assert f"AUD {50 if cost is None else cost}/MWh discharged" in result["answer"]
+    constraints = result["conversation"]["constraints"]
+    if cost is None:
+        assert "default assumption" in result["answer"]
+        assert "user-supplied" not in result["answer"]
+        assert "degradation_cost_aud_mwh" not in constraints
+    else:
+        assert "user-supplied constraint from turn 1" in result["answer"]
+        assert "default assumption" not in result["answer"]
+        assert constraints["degradation_cost_aud_mwh"]["source_turn"] == 1
+
+
+def test_answer_cost_source_override_and_cached_followup(tmp_path: Path) -> None:
+    with SqliteSaver.from_conn_string(str(tmp_path / "s.sqlite")) as saver:
+        graph = build_incremental_graph(base(), saver)
+        invoke_replay(graph, "A", question=QUESTION + " Use degradation cost 20.")
+        changed = invoke_replay(graph, "A", question="Change degradation cost to 30.")
+        assert changed["status"] == "completed"
+        assert [c["name"] for c in changed["calls"]] == [STAGES[3]]
+        assert "AUD 30/MWh discharged (user-supplied constraint from turn 2)" in changed["answer"]
+        again = invoke_replay(graph, "A", question="Keep everything unchanged.")
+        assert again["status"] == "completed" and not again["calls"]
+        assert "user-supplied constraint from turn 2" in again["answer"]
+        assert again["settlement"] == changed["settlement"]
+
+
+def test_answer_source_change_with_same_cost_reuses_calculation(tmp_path: Path) -> None:
+    with SqliteSaver.from_conn_string(str(tmp_path / "s.sqlite")) as saver:
+        graph = build_incremental_graph(base(), saver)
+        default = invoke_replay(graph, "A", question=QUESTION)
+        explicit = invoke_replay(graph, "A", question="Use degradation cost 50.")
+        assert explicit["status"] == "completed" and not explicit["calls"]
+        assert explicit["settlement"] == default["settlement"]
+        assert "user-supplied constraint from turn 2" in explicit["answer"]
+        assert explicit["artifact_dependencies"]["answer"] != default["artifact_dependencies"]["answer"]
+        assert explicit["artifact_dependencies"]["dispatch"] == default["artifact_dependencies"]["dispatch"]
+        other = invoke_replay(graph, "B", question=QUESTION)
+        assert "default assumption" in other["answer"] and "user-supplied" not in other["answer"]
+
+
+@pytest.mark.parametrize("action", ["approve", "correct"])
+def test_answer_cost_source_checkpoint_restart(tmp_path: Path, action: str) -> None:
+    path = str(tmp_path / "s.sqlite")
+    registry = base()
+    with SqliteSaver.from_conn_string(path) as saver:
+        paused = invoke_replay(build_incremental_graph(registry, saver), "A",
+                               question=QUESTION + " Use degradation cost 20.", pause_after=STAGES[2])
+        assert paused["__interrupt__"]
+    command = {"action": action}
+    if action == "correct":
+        command["question"] = "Change degradation cost to 30."
+    with SqliteSaver.from_conn_string(path) as saver:
+        result = invoke_replay(build_incremental_graph(registry, saver), "A", resume=command)
+    assert result["status"] == "completed"
+    value, turn = (30, 2) if action == "correct" else (20, 1)
+    assert f"AUD {value}/MWh discharged (user-supplied constraint from turn {turn})" in result["answer"]
+    assert result["conversation"]["constraints"]["degradation_cost_aud_mwh"]["source_turn"] == turn

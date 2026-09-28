@@ -376,9 +376,14 @@ def build_incremental_graph(registry: ToolRegistry, saver: Any, *, planner: Turn
                          "answer_inputs": keys}
             refs = sorted({e["evidence_id"] for r in s["results"].values() for e in r["evidence"]})
             args = s["plan"][-1]["arguments"]
+            cost = args["variable_degradation_cost_aud_per_mwh_discharged"]
+            cost_constraint = conversation.constraints.get("degradation_cost_aud_mwh")
+            cost_source = (f"user-supplied constraint from turn {cost_constraint.source_turn}"
+                           if cost_constraint else "default assumption")
             answer = (f"{args['region']} {args['window']['start']}: forecast-plan net operating proxy AUD "
                       f"{settlement['planned_margin_aud']:.2f}; actual historical settlement proxy AUD "
-                      f"{settlement['realized_margin_aud']:.2f}. A user-supplied cycling-cost sensitivity is included. "
+                      f"{settlement['realized_margin_aud']:.2f}. Cycling-cost sensitivity: AUD {cost:g}/MWh discharged "
+                      f"({cost_source}). "
                       "Official reports are retrospective context, not daily causal proof. " + BOUNDARY + " "
                       + " ".join(f"[@{ref}]" for ref in refs))
             artifacts["answer"] = digest([artifacts, answer])
