@@ -10,8 +10,8 @@
   "new_live_model_metrics": null,
   "cpu_rows_are_not_llm_pass_rate": true,
   "runtime_bundle": {
-    "file": "energy-runtime-04.tar",
-    "sha256": "4cee7ea7d0602896fccda26b20c7f98506ba871529bfd4c1b53c83fcc3895122"
+    "file": "energy-runtime-05.tar",
+    "sha256": "3bc36b1575637b6d9f901735914015ca9b147dac9da6da80a4834f2ab349d45e"
   },
   "revised_contract_bundle": {
     "file": "energy-runtime-03.tar",
@@ -319,7 +319,7 @@
     },
     {
       "path": "docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md",
-      "sha256": "912252d5575bd8d01c6555b0b1147c997b93f32f593494a89a06fbd107729519"
+      "sha256": "a49e8d2266eed9a4560335eec66358ec0877edca24f8878845ba1a46be644984"
     },
     {
       "path": "requirements/agent-graph-linux-py311-wheels.json",
@@ -331,7 +331,7 @@
     },
     {
       "path": "scripts/check_local_model_owner.py",
-      "sha256": "8ae70ad539c41347aba1de1796f728f06fafb9c22f1258568e9fe1e3e71e9513"
+      "sha256": "f55fa9a5d3a79d5c449589834b2768bc4c93a9153aaa7992bd24ff74023324d3"
     },
     {
       "path": "scripts/evaluate_incremental_pilot.py",
@@ -379,7 +379,7 @@
     },
     {
       "path": "tests/test_incremental_evaluation.py",
-      "sha256": "7ec37c4855a125364ab6b94c145dc6662db8e94ae4963ba8f5016f8503f9f53d"
+      "sha256": "6b0e3fe975a2e27576f3475c04b403bb24eaaa00052bc7efc617f0ab5db4bcb6"
     },
     {
       "path": "tests/test_incremental_graph.py",

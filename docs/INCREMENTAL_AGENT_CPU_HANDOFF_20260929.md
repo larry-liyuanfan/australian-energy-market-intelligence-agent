@@ -96,6 +96,14 @@ Evidence: [CPU contract audit](../artifacts/public/incremental_contract_cpu_2026
 the three CPU jobs including the failed post-check, exact private-input/model hashes and
 declared wheel licenses. Runtime archives and raw attempt journals remain private.
 
+The first delivery CI (`36446118448`) caught a Linux `/proc/PID/fd` enumeration
+race: a descriptor closed before `readlink`, rejecting even the test's own
+listener. The follow-up reads each link once and tolerates only a vanished
+descriptor; permission failures, absent live listener ownership and wrong model
+identity still reject. A portable regression and the actual Linux ownership
+test cover that distinction. Inspect the latest delivery SHA's CI rather than
+claiming the initial run passed.
+
 ## Reproduce and demonstrate
 
 Use the already pinned optional graph environment from the previous handoff locally. For Spartan, 41 hash-pinned Linux CPython 3.11 wheels (13,679,421 bytes) were prepared and installed in node-local scratch, with successful LangGraph/SQLite/SciPy/Pydantic imports. No shared environment was changed. Private input hashes are in the new run manifest. `run_incremental_replay.py --help` documents the CLI; `evaluate_incremental_pilot.py --help` documents the three-path CPU comparison.

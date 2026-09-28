@@ -9,10 +9,24 @@ import urllib.request
 from pathlib import Path
 
 
+def socket_inodes(pid: int) -> set[str]:
+    inodes: set[str] = set()
+    for fd in Path(f"/proc/{pid}/fd").iterdir():
+        try:
+            link = os.readlink(fd)
+        except FileNotFoundError:
+            # A non-listening fd may close between enumeration and readlink.
+            # Missing /proc directory, permission errors and absent listener
+            # ownership still fail closed; never accept based on this skip.
+            continue
+        if link.startswith("socket:["):
+            inodes.add(link[8:-1])
+    return inodes
+
+
 def check_owner(pid: int, port: int, model_id: str) -> None:
     os.kill(pid, 0)
-    inodes = {os.readlink(fd)[8:-1] for fd in Path(f"/proc/{pid}/fd").iterdir()
-              if os.readlink(fd).startswith("socket:[")}
+    inodes = socket_inodes(pid)
     expected = f"0100007F:{port:04X}"
     listeners = [line.split() for line in Path("/proc/net/tcp").read_text().splitlines()[1:]]
     if not any(row[1] == expected and row[3] == "0A" and row[9] in inodes for row in listeners):

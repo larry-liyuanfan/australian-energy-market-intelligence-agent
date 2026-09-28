@@ -4,12 +4,13 @@ import os
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 
 import pytest
 
 from energy_agent.incremental_evaluation import normalize_usage, score_intervention, usage_accounting
-from scripts.check_local_model_owner import check_owner
+from scripts.check_local_model_owner import check_owner, socket_inodes
 
 
 def test_flat_nested_and_unknown_usage() -> None:
@@ -105,3 +106,24 @@ def test_listener_ownership_and_model_identity() -> None:
         finally:
             server.shutdown()
             worker.join(timeout=2)
+
+
+def test_disappearing_fd_does_not_skip_listener_ownership(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[str] = []
+
+    def readlink(path: Path) -> str:
+        seen.append(path.name)
+        if path.name == "closed":
+            raise FileNotFoundError("descriptor closed")
+        if path.name == "denied":
+            raise PermissionError("proc unavailable")
+        return "socket:[123]"
+
+    monkeypatch.setattr(os, "readlink", readlink)
+    monkeypatch.setattr(Path, "iterdir", lambda self: iter([Path("closed"), Path("listener")]))
+    assert socket_inodes(1) == {"123"} and seen == ["closed", "listener"]
+    monkeypatch.setattr(Path, "iterdir", lambda self: iter([Path("closed")]))
+    assert socket_inodes(1) == set()
+    monkeypatch.setattr(Path, "iterdir", lambda self: iter([Path("denied")]))
+    with pytest.raises(PermissionError):
+        socket_inodes(1)
