@@ -1,0 +1,31 @@
+{
+  "schema_version": "incremental-confirmation-freeze-v1",
+  "frozen_before_submission": true,
+  "runtime_git_sha": "b9791d3f134172c2ebba9ac9f5e8c619ec247cbb",
+  "bundle": "energy-runtime-06.tar",
+  "source_bundle_sha256": "b54b2a54289f560c351c1955973c555f4d4548fc01e85e878c96d1203cc59b67",
+  "launcher_sha256": "ef3c27ef8e2d909a83a3f1ef3357ae4af8ccd67099ad3e212d344a95b3cc8fab",
+  "parent_bundle_sha256": "3bc36b1575637b6d9f901735914015ca9b147dac9da6da80a4834f2ab349d45e",
+  "parent_public_report_sha256": "8f3b473098dad1caa4f9729125a5791c0812999e318a93ace06e38d4daa07ecd",
+  "changes": [
+    "Final answer attributes default cost to an assumption and explicit cost to its sourced user turn; no calculation or model-context change.",
+    "Inference and batch threads plus OMP settings explicitly follow validated SLURM_CPUS_PER_TASK; preserve actual help and runtime log."
+  ],
+  "unchanged": ["model", "planner prompts", "action strategy", "four development questions", "seed 17", "three execution paths", "frozen full scenarios, gold and thresholds", "data and snapshots"],
+  "release_id": "trip-31489994-terminal-energy-pilot-20260929-cost-source-threads-v1",
+  "allocation": {"mig": "1g.20gb:1", "cpus": 6, "memory_gib": 16, "scratch_mib": 10000, "time_limit_seconds": 1800},
+  "development_pilot": {"authored_turns": 4, "paths": ["legacy", "full_rerun", "incremental"], "seeds": [17], "path_turns": 12},
+  "confirmation_checks": [
+    "All 12 path-turns complete with actual provider request accounting, retaining failures and costs.",
+    "Four sourced states and dispatch parameters match the original manually authored pilot expectations.",
+    "All nine independent calculation/citation checks pass on every path-turn.",
+    "Each planned and realized settlement matches job 31490840 within 0.00001 AUD.",
+    "All eight graph answers label AUD 50/MWh discharged as default assumption; no user-supplied cost claim.",
+    "Actual runtime supports both thread flags, logs n_threads = 6, and recorded requested inference/batch/OMP limits all equal 6."
+  ],
+  "cpu_regression": {"incremental_graph_tests_passed": 20, "new_parameterized_cases": 8, "ruff": "passed", "strict_mypy": "passed for changed source", "bash_syntax": "passed", "secret_scan": "passed", "independent_diff_review": "no blocker"},
+  "thread_support_preflight": "Both exact option strings found in the linked libllama-common binary. Login-node help cannot load libcuda; help checks run inside the sole authorized GPU allocation before model load.",
+  "full_run_authorized": false,
+  "quality_pass_receipt_created": false,
+  "limitations": ["This is a repair confirmation on development cases, not holdout or general model-quality evidence.", "Two runtime changes and shared prefix cache prohibit old/new latency speedup claims.", "No recovery choice can be claimed unless a recovery opportunity is actually observed.", "Original jobs 31490736 and 31490840 and their costs remain part of the record."]
+}

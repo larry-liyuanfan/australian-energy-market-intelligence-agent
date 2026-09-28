@@ -85,9 +85,10 @@ entry. Four real-data CPU turns use 4/1/4/1 tool calls versus 4/4/4/4 for the sa
 graph without reuse. This is a runtime result, **not a new Qwen quality or latency gain**.
 The subsequent [real Qwen integration pilot](docs/INCREMENTAL_LIVE_PILOT_20260929.md)
 retains all 12 model responses and their costs: integration succeeded, but no model
-benefit or recovery gain was demonstrated, and an answer-attribution defect remains.
-This graph uses deterministic planning, not new model inference; the default API
-and full BESS runtime are unchanged.
+benefit or recovery gain was demonstrated. Its answer-attribution defect is preserved
+in the original record and repaired in a [separate confirmation pilot](docs/INCREMENTAL_CONFIRMATION_20260929.md).
+The recorded CPU graph is deterministic; real model proposals are opt-in. The
+default API and full BESS runtime are unchanged.
 
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 
