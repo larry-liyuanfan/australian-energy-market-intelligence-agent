@@ -89,6 +89,9 @@ benefit or recovery gain was demonstrated. Its answer-attribution defect is pres
 in the original record and repaired in a [separate confirmation pilot](docs/INCREMENTAL_CONFIRMATION_20260929.md).
 The recorded CPU graph is deterministic; real model proposals are opt-in. The
 default API and full BESS runtime are unchanged.
+The [frozen November full run](docs/INCREMENTAL_FULL_EVALUATION_20260929.md)
+retains all 432 path-turn records. It supports runtime guarding and reuse, but
+does not establish model superiority, recovered evidence or a latency gain.
 
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 

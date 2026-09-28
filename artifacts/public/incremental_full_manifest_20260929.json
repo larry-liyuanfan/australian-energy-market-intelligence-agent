@@ -1,0 +1,43 @@
+{
+  "schema_version": "incremental-full-terminal-manifest-v1",
+  "release_id": "energy-confirmation-31491560-full-v2-20260929",
+  "runtime_git_sha": "b9791d3f134172c2ebba9ac9f5e8c619ec247cbb",
+  "source_bundle_sha256": "b54b2a54289f560c351c1955973c555f4d4548fc01e85e878c96d1203cc59b67",
+  "launcher_sha256": "ef3c27ef8e2d909a83a3f1ef3357ae4af8ccd67099ad3e212d344a95b3cc8fab",
+  "integration_receipt_sha256": "2fb80631737a5474020a5b5c4db1b3f253dd1826c7225e49c55f28e8748c22fa",
+  "summarizer_git_sha": "cc13dbe0d2b4542ff8b38fcd97bde6ef47afcef0",
+  "summarizer_sha256": "863344db7e1e33297069c9310c61b84bf1856e02a2dd9190af3bce0f9972e3cf",
+  "public_summary_sha256": "102e33a05c5e06116ea117ab07b7ca1c7a94293a2af80bee92388767561c00f7",
+  "private_archive": {"name": "full-31492138.tar.gz", "bytes": 40606330, "sha256": "7767b4d7d0465037ec2533afa72c70e0b70e2f66a4d6f08009a60d625624d11b", "local_remote_hashes_match": true},
+  "private_file_sha256": {
+    "attempts.jsonl": "528e21df3daa9b11d3deff92324042a8413b050a9d02e09ae8ecf24b87c4351f",
+    "summary.json": "47c948782e674ca21e81fbc047be87015c56dea2773fc82aede94230be60c728",
+    "model-server.log": "0fe2eaf6133339272373066cfdff0fb58ac9adc9f7a880570cec3a69301d55c4",
+    "runtime-help.txt": "b926c19cc4ef3a631617f27487c9e3ac002a8c847c079b7efd2d026325066261",
+    "runtime-threads.txt": "83b3c8b704e4a5f3e7c2cb2d8be84846f172c3283da0d511587349bcc629e62c",
+    "full-31492138.out": "eed6aad94fbb589fa67c8b6238e0430cdc31f5e883623325bb4a665d6f147cb3",
+    "full-31492138.err": "b149d8b785dce1d8c1d65acfdcc453c5cc8a5ea9fdb6c359d8f0a403da447694"
+  },
+  "inputs": {
+    "scenario_sha256": "9de3945eb6cbbf0868f76b9eb204c12ade8b9c5d8f443a5b1ea70dd239ce474f",
+    "november_archive_sha256": "793e781d5758629f91ebb72491ea903683094c00abd5bf4c97c1623e148e3fa6",
+    "november_market_sha256": "76547ea72e398391faccda799ad8aaaac3b9163374ce7d4a946dc7483795c4f2",
+    "november_snapshots_sha256": "ab4563e7d7c1f1e859f0acaa3432759bcb3403e7cca37314849f5b7f63be7fbb",
+    "official_evidence_sha256": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "official_market_rows": 2304,
+    "asof_snapshots": 8
+  },
+  "model": {"name": "Qwen3-8B-Q4_K_M.gguf", "revision": "1d54a16a18cba0d8fbad4a16db801decc729e099", "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785", "alias": "energy-31492138-energy-model.tQjri5", "seeds": [17,29,43]},
+  "job": {"id": 31492138, "state": "COMPLETED", "exit_code": "0:0", "elapsed_seconds": 7252, "max_rss_kib": 8589688, "total_cpu_sacct_display": "02:02:03", "observer_step_cpu_seconds": [0.101,0.090,0.022,0.022], "start_cluster_local": "2026-09-29T04:58:26", "end_cluster_local": "2026-09-29T06:59:18", "hard_limit_seconds": 18000, "automatic_requeue": false},
+  "allocation": {"mig": "1g.20gb:1", "cpu": 6, "ram_gib": 16, "scratch_mib": 10000, "observed_inference_threads": 6, "requested_batch_threads": 6, "observed_batch_threads": null, "OMP_NUM_THREADS": 6, "OMP_THREAD_LIMIT": 6, "gpu_peak_memory_mib": null},
+  "accounting": {"expected_slots": 432, "observed_slots": 432, "missing_slots": 0, "duplicate_slots": 0, "partial_tail": false, "provider_requests": 459, "provider_responses": 459, "provider_exceptions": 0, "unknown_usage_requests": 0, "prompt_tokens": 1403484, "completion_tokens": 184191, "all_tool_records": 1869, "status_filtered_executed_tool_attempts": 1869, "skipped_tool_records": 0, "summed_row_wall_seconds": 7188.855316510424, "paid_provider_cost_aud": 0, "infrastructure_cost_aud": null, "raw_summary_totals_match_recomputed": true},
+  "rewrite_execution_audit": {"matching_model_owned_calls": 6, "skipped": 0, "status_error_empty_result": 6, "new_validated_evidence": 0, "clarify_choices": 0, "stop_choices": 0, "scope": "vnext-17 turn2; both Graph paths; all three seeds; inspected original current-row calls, not just summarizer count"},
+  "campaign_including_pilots": {"job_ids": [31490736,31490840,31491560,31492138], "allocated_mig_seconds_including_failure": 7615, "provider_requests": 483, "prompt_tokens": 1497954, "completion_tokens": 191115, "paid_provider_cost_aud": 0, "infrastructure_cost_aud": null},
+  "gpu_released": true,
+  "second_full_job_submitted": false,
+  "new_model_inference_after_full": false,
+  "original_runtime_scenarios_scores_or_traces_modified": false,
+  "promotion": "Not promoted. Runtime safety/reuse evidence is distinct from model gain; no no-model baseline or controlled latency comparison in this full run.",
+  "economic_boundary": "Historical operating proxies only. Cost sensitivities are sourced user constraints or explicit defaults; not investment returns, trading or automatic bidding. CAPEX, fixed O&M, network fees and FCAS excluded.",
+  "remaining_defects": ["vnext-07 turn2 zero cycling-cost dispatch times out on all paths/seeds despite available evidence and forecast; unchanged frozen failure.", "Legacy completion labels include 12 controlled-fault rows that fail independent numerical/citation checks.", "Nested dispatch economic_boundary retains generic user-supplied sensitivity wording for a default-cost case; final graph answer attribution was repaired, but this is not a complete wording-provenance certification."]
+}
