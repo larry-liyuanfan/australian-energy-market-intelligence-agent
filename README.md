@@ -83,6 +83,9 @@ The [incremental replay extension](docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.m
 connects sourced state, optional model proposals, LangGraph and BESS in one opt-in
 entry. Four real-data CPU turns use 4/1/4/1 tool calls versus 4/4/4/4 for the same
 graph without reuse. This is a runtime result, **not a new Qwen quality or latency gain**.
+The subsequent [real Qwen integration pilot](docs/INCREMENTAL_LIVE_PILOT_20260929.md)
+retains all 12 model responses and their costs: integration succeeded, but no model
+benefit or recovery gain was demonstrated, and an answer-attribution defect remains.
 This graph uses deterministic planning, not new model inference; the default API
 and full BESS runtime are unchanged.
 
