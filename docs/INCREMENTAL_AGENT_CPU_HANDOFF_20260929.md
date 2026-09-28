@@ -90,6 +90,44 @@ CPU contract traversal is protocol QA, not a model comparison. The graph paths e
 
 No new end-to-end model task score, token saving, pass@1/pass^k, stability interval or production SLA exists yet. The earlier frozen Qwen negative result is unchanged.
 
+### Required real-model recovery report — not run
+
+The eventual authorized model handoff must separate **normal integration/overhead**
+from **recovery decisions**. Matching the canonical four-step plan only establishes
+that proposals can be accepted and executed under the fixed runtime contract; it
+does not demonstrate an improved decision. Likewise, the frozen `empty_evidence`
+intervention always returns empty results. A successful abstention or failure
+contract on that case cannot establish evidence-recovery gain. Do not change the
+fault or add tasks to manufacture a positive result.
+
+For each recovery opportunity, report this ledger from retained attempts and tool
+outputs, with one row per path/episode/turn/seed and additional rows for retries:
+
+| Required field | Reporting rule |
+| --- | --- |
+| Opportunity and provenance | Episode, turn, seed, path, source/data versions; distinguish deliberately persistent-empty injection from a naturally missing report. |
+| Model observation and choice | Record successful response, provider failure or invalid response separately; then parsed rewrite / clarify / stop / invalid choice. A failed request followed by fallback is not an observed model decision. |
+| Actual next action and owner | Show the executed tool name and validated query/arguments, or no further tool call for clarification/stop; distinguish accepted model choice from deterministic fallback and same-argument retry. |
+| New evidence | Record evidence counts before/after, newly returned source IDs and source validation outcome. For clarify/stop, mark retrieval not attempted, not successful recovery. For a rewrite with zero new sources, report zero evidence gain. New IDs alone do not establish answer usefulness or semantic support. |
+| Calls and attempts | Show all provider requests, successful responses, tool attempts, retries and fallbacks, including failed/rejected attempts. Separate initial planning from recovery; also report whole-turn totals. |
+| Tokens, time and cost | Show prompt/completion tokens for every measured request, unknown-usage counts, model latency and whole-turn wall time. Report recovery-only wall time only if separately recorded; otherwise mark unavailable, not an invented sum of component times. Label partial totals as lower bounds; report infrastructure price as unavailable if no price basis exists. |
+| Outcome and comparator | Keep authored task-status match, exercised target intervention, independent citation/settlement checks and evidence gained as separate fields. Compare the observed deterministic next action and its costs on the same case; never infer a counterfactual outcome from an unexecuted choice. |
+
+Aggregate rewrite/clarify/stop/invalid/provider-failure counts by path and seed.
+State both denominators: all recovery opportunities and successful model responses.
+Do not drop requests that failed before parsing or combine normal turns with the
+recovery subset to inflate success. Report paired measured costs where available;
+runtime cache reuse and fewer domain-tool calls remain runtime effects, not model
+reasoning improvements. Normal turns should be titled **integration and overhead**,
+not model benefit.
+
+The report must allow conclusions such as **valid recovery choice, no new evidence**,
+**safe runtime fallback after model failure**, or **no benefit over deterministic
+execution at greater cost**. A model-benefit claim requires additional evidence
+already measured within the authorized protocol, not merely a passing contract.
+All real-model rows and aggregates remain **not run** in this CPU handoff. This
+reporting clarification changes no frozen labels, code, model, holdout or CPU result.
+
 Evidence: [CPU contract audit](../artifacts/public/incremental_contract_cpu_20260929.json),
 [run/installation manifest](../artifacts/public/incremental_cpu_manifest_20260929.json) and
 [Linux wheel hashes](../requirements/agent-graph-linux-py311-wheels.json). The manifest records

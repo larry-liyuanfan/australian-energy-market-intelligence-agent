@@ -319,7 +319,7 @@
     },
     {
       "path": "docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md",
-      "sha256": "a49e8d2266eed9a4560335eec66358ec0877edca24f8878845ba1a46be644984"
+      "sha256": "064be70ed97e7926f8f9cdc9d50aebaa1e77c64eca77173fb82e60b666d5a83b"
     },
     {
       "path": "requirements/agent-graph-linux-py311-wheels.json",
