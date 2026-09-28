@@ -1,0 +1,185 @@
+{
+  "schema_version": "energy-langgraph-real-demo-v1",
+  "execution_mode": "live_local_deterministic_graph_no_LLM",
+  "data_track": "official_aemo_archival_subset",
+  "data_sha256": "4539f94624e603fc5d44572966c0ee5c24d976417e786a4e387d0711cabfa94f",
+  "source_archive_sha256": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+  "market_rows": 576,
+  "checks": {
+    "first_success": true,
+    "corrected_success": true,
+    "comparison_success": true,
+    "pause_before_tools": true,
+    "restored_date_source_turn_1": true,
+    "corrected_region_source_turn_2": true,
+    "resume_did_not_duplicate_user_turn": true,
+    "no_cross_thread_date_inheritance": true,
+    "original_runtime_equal_first": true,
+    "original_runtime_equal_correction": true,
+    "original_runtime_equal_comparison": true,
+    "other_thread_did_not_modify_A": true,
+    "independent_comparison_thread": true
+  },
+  "completed_business_turns": 3,
+  "process_invocations": 6,
+  "cross_process_interrupt_resumes": 2,
+  "private_checkpoint_sha256": "94616f780b81ce2087db5806a3930b36ed251e697f225dcf15db526ba2d6614e",
+  "checkpoint_backend": "langgraph.checkpoint.sqlite.SqliteSaver",
+  "versions": {
+    "langgraph": "1.2.12",
+    "langgraph-checkpoint": "4.2.0",
+    "langgraph-checkpoint-sqlite": "3.1.1",
+    "langchain-core": "1.6.5"
+  },
+  "invocation_wall_seconds_including_python_startup": {
+    "a1_pause": 1.2713047000579536,
+    "a1_resume": 1.2422289999667555,
+    "a2_pause": 1.2456256999867037,
+    "a2_resume": 1.2712258999235928,
+    "b1_comparison": 1.2302026000106707,
+    "c1_missing_date": 1.2827534000389278
+  },
+  "model_calls": 0,
+  "model_tokens": 0,
+  "new_gpu_jobs": 0,
+  "tool_attempts_completed_turns": 6,
+  "case_summaries": [
+    {
+      "question": "Show the SA1 market snapshot for 2025-12-15 with official evidence.",
+      "answer": "At 2025-12-15T00:00:00+10:00, SA1 spot price was AUD 76.95/MWh and demand was 1325.68 MW. [@aemo-dispatch-12m]\nThe linked AEMO archive supplies numeric provenance, not a causal explanation. [@aemo-dispatch-12m]",
+      "events": [
+        "normalise",
+        "plan:deterministic",
+        "approval:approved",
+        "execute:get_market_snapshot",
+        "verify:passed",
+        "execute:search_official_evidence",
+        "verify:passed",
+        "answer:deterministic_template"
+      ],
+      "constraints": {
+        "regions": {
+          "key": "regions",
+          "value": [
+            "SA1"
+          ],
+          "source_turn": 1,
+          "source_type": "user"
+        },
+        "region": {
+          "key": "region",
+          "value": "SA1",
+          "source_turn": 1,
+          "source_type": "user"
+        },
+        "dates": {
+          "key": "dates",
+          "value": [
+            "2025-12-15"
+          ],
+          "source_turn": 1,
+          "source_type": "user"
+        }
+      },
+      "citation_ids": [
+        "aemo-dispatch-12m"
+      ]
+    },
+    {
+      "question": "Correction: use VIC1; keep the date.",
+      "answer": "At 2025-12-15T00:00:00+10:00, VIC1 spot price was AUD 71.10/MWh and demand was 4249.87 MW. [@aemo-dispatch-12m]\nThe linked AEMO archive supplies numeric provenance, not a causal explanation. [@aemo-dispatch-12m]",
+      "events": [
+        "normalise",
+        "plan:deterministic",
+        "approval:approved",
+        "execute:get_market_snapshot",
+        "verify:passed",
+        "execute:search_official_evidence",
+        "verify:passed",
+        "answer:deterministic_template"
+      ],
+      "constraints": {
+        "regions": {
+          "key": "regions",
+          "value": [
+            "VIC1"
+          ],
+          "source_turn": 2,
+          "source_type": "user"
+        },
+        "region": {
+          "key": "region",
+          "value": "VIC1",
+          "source_turn": 2,
+          "source_type": "user"
+        },
+        "dates": {
+          "key": "dates",
+          "value": [
+            "2025-12-15"
+          ],
+          "source_turn": 1,
+          "source_type": "user"
+        }
+      },
+      "citation_ids": [
+        "aemo-dispatch-12m"
+      ]
+    },
+    {
+      "question": "Compare SA1 and VIC1 market records for 2025-12-15 with official evidence.",
+      "answer": "For the requested historical window, SA1: mean AUD -42.20/MWh across 288 intervals; VIC1: mean AUD 18.48/MWh across 288 intervals. [@aemo-dispatch-12m]\nThe linked AEMO archive supplies numeric provenance, not a causal explanation. [@aemo-dispatch-12m]",
+      "events": [
+        "normalise",
+        "plan:deterministic",
+        "approval:approved",
+        "execute:compare_region_period",
+        "verify:passed",
+        "execute:search_official_evidence",
+        "verify:passed",
+        "answer:deterministic_template"
+      ],
+      "constraints": {
+        "regions": {
+          "key": "regions",
+          "value": [
+            "SA1",
+            "VIC1"
+          ],
+          "source_turn": 1,
+          "source_type": "user"
+        },
+        "region": {
+          "key": "region",
+          "value": "SA1",
+          "source_turn": 1,
+          "source_type": "user"
+        },
+        "dates": {
+          "key": "dates",
+          "value": [
+            "2025-12-15"
+          ],
+          "source_turn": 1,
+          "source_type": "user"
+        },
+        "intent": {
+          "key": "intent",
+          "value": "region comparison",
+          "source_turn": 1,
+          "source_type": "user"
+        }
+      },
+      "citation_ids": [
+        "aemo-dispatch-12m"
+      ]
+    }
+  ],
+  "boundaries": [
+    "Three completed business turns, not a quality benchmark or production SLA.",
+    "Persistent local SQLite, not distributed durability, authentication or exactly-once execution.",
+    "Graph adapter validates market snapshot/comparison/coverage only; full BESS demo uses the original runtime.",
+    "Transient retry was tested with explicit synthetic faults, not a real dependency outage.",
+    "Read-only tools can be repeated after interruption; no trading/bidding side effects."
+  ]
+}

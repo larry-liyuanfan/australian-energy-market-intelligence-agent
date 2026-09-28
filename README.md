@@ -49,7 +49,7 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 
 **Official figures.** A lightweight serving route reads precompiled QED workbook figure records containing figure identity, image hashes and bounded previews of the underlying source cells. A source-disjoint Q1 2026 holdout reached **MRR 0.9667 / Recall@5 1.00**, versus text-chunk MRR 0.7308, on 20 author-curated queries. This proves figure routing and source-cell provenance, not VLM reasoning or answer correctness.
 
-**Optional visual research.** Qwen3-VL-Embedding-2B page retrieval remains an offline Spartan adapter. It is not loaded into the small SG API. Its positive transport and negative fusion experiments are retained in the [experiment catalogue](docs/EXPERIMENT_CATALOG.md), not presented as the online product path.
+**Optional visual research.** Qwen3-VL-Embedding-2B page retrieval remains an offline Spartan adapter. It is not loaded into the small SG API. Its positive transport and negative fusion experiments are retained in the [experiment catalogue](docs/EXPERIMENT_CATALOG.md), not presented as the online product path. The newer ViDoRe/GoalSpec v2 run stopped without a holdout claim after the frozen infrastructure retry limit; see the [evaluation status](docs/VISUAL_GOAL_COMPILER_V2_EVALUATION.md).
 
 ## Three verified results that matter
 
@@ -62,6 +62,36 @@ The eight Pydantic tools are unchanged: `get_market_snapshot`, `compare_region_p
 A hash-pinned Qwen3-8B/llama.cpp planner was evaluated on Spartan across 24 holdout turns, four memory policies and three sampled seeds. Structured-state constrained hybrid reached **57/72 (79.2%)** task success, versus **28/72 (38.9%)** for pure LLM, with zero unsafe tool/DSL calls and 100% citation, settlement and bounded-replan checks. The model itself produced the complete required tool path on only **25/72 (34.7%)** attempts, so the preregistered gate failed and the deterministic DAG remains the serving path. See the [planner/memory report](docs/LLM_AGENT_PLANNER_MEMORY_EVALUATION.md) and [public aggregate](artifacts/public/llm_agent_holdout_20260903.json).
 
 ## Local demo
+
+The completed [v3 remediation report](docs/PLANNER_REMEDIATION_V3_EVALUATION.md)
+keeps that decision: structured hybrid finished 54/54 new sampled turns but only
+18/54 initial model paths, while deterministic already finished 18/18. This is
+runtime-assisted success without measured model-quality uplift, not promotion
+or a directly comparable improvement over the earlier differently scored set.
+
+For an interview without a live GPU, use the [recorded real-Qwen replay](docs/INTERVIEW_DEMO.md).
+It includes the original model proposals, typed runtime corrections, official Q4
+text/source values and independently recomputed historical settlement. It is a
+captured guarded run, not a claim that the model autonomously planned every stage.
+
+The [application walkthrough](docs/demos/agent-application-20260927/index.html)
+separates that recording from a newly executed, opt-in **LangGraph** market workflow:
+SQLite pause/resume, sourced cross-turn correction and thread isolation on real
+AEMO records. See the [implementation, bounded audit and reproduction handoff](docs/AGENT_APPLICATION_HANDOFF_20260927.md).
+
+The [incremental replay extension](docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md)
+connects sourced state, optional model proposals, LangGraph and BESS in one opt-in
+entry. Four real-data CPU turns use 4/1/4/1 tool calls versus 4/4/4/4 for the same
+graph without reuse. This is a runtime result, **not a new Qwen quality or latency gain**.
+The subsequent [real Qwen integration pilot](docs/INCREMENTAL_LIVE_PILOT_20260929.md)
+retains all 12 model responses and their costs: integration succeeded, but no model
+benefit or recovery gain was demonstrated. Its answer-attribution defect is preserved
+in the original record and repaired in a [separate confirmation pilot](docs/INCREMENTAL_CONFIRMATION_20260929.md).
+The recorded CPU graph is deterministic; real model proposals are opt-in. The
+default API and full BESS runtime are unchanged.
+The [frozen November full run](docs/INCREMENTAL_FULL_EVALUATION_20260929.md)
+retains all 432 path-turn records. It supports runtime guarding and reuse, but
+does not establish model superiority, recovered evidence or a latency gain.
 
 The package serves a dependency-free interface at `/` with three bounded cases, DAG progress, forecast and SoC plots, official citations, planned versus realised margin, verification results and the full trace.
 

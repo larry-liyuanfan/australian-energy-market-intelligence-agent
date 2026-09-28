@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import statistics
 from datetime import timedelta
 from typing import Any
 
 from .battery import optimize_dispatch, threshold_dispatch
 from .evidence import EvidenceIndex
+from .evidence_scope import prepare_evidence_hits, query_scope
 from .forecast import seasonal_conformal
 from .market import MarketStore, robust_events
 from .schemas import TOOL_MODELS, Evidence, StrictModel, ToolResult
@@ -122,10 +125,12 @@ class ToolRegistry:
         if name == "search_official_evidence":
             if self.evidence_index is not None:
                 multimodal_search = getattr(self.evidence_index, "search_multimodal", None)
+                count = max(args.top_k, 100) if query_scope(args.query) else args.top_k
                 if args.retrieval_mode == "multimodal_fusion" and callable(multimodal_search):
-                    hits = multimodal_search(args.query, args.top_k, args.preferred_modality)
+                    hits = multimodal_search(args.query, count, args.preferred_modality)
                 else:
-                    hits = self.evidence_index.search(args.query, args.top_k)
+                    hits = self.evidence_index.search(args.query, count)
+                hits = prepare_evidence_hits(hits, args.query, args.top_k)
                 evidence = [
                     Evidence(
                         evidence_id=hit["chunk_id"],
@@ -134,13 +139,16 @@ class ToolRegistry:
                         published_at=hit["published_at"],
                         retrieved_at=hit["retrieved_at"],
                         sha256=hit["sha256"],
-                        snippet=hit["text"][:500],
+                        snippet=hit["text"],
+                        source_text_start=hit["source_text_start"],
                         evidence_type="explanatory",
                         score=hit["score"],
                         modality=hit.get("modality", "text"),
                         source_page=hit.get("page_number"),
                         asset_id=hit.get("asset_id"),
                         asset_sha256=hit.get("asset_sha256"),
+                        figure_id=hit.get("figure_id"),
+                        source_cell_preview=hit.get("source_cell_preview"),
                         retrieval_scores={
                             key: float(value)
                             for key, value in hit.get("component_scores", {}).items()
@@ -160,6 +168,7 @@ class ToolRegistry:
                         "hits": len(evidence),
                         "modalities": sorted({item.modality for item in evidence}),
                         "preferred_modality": args.preferred_modality,
+                        "scope_checks": {hit["chunk_id"]: hit.get("scope_checks") for hit in hits},
                     },
                     evidence=evidence,
                 )
@@ -198,6 +207,9 @@ class ToolRegistry:
                     "training_cutoff": args.window.start.isoformat(),
                     "history_intervals": len(history),
                 }
+            forecast_data["signal_sha256"] = hashlib.sha256(
+                json.dumps(forecast_data["point"], separators=(",", ":"), allow_nan=False).encode()
+            ).hexdigest()
             return ToolResult(
                 tool_name=name,
                 data=forecast_data,
@@ -303,6 +315,12 @@ class ToolRegistry:
                 "objective": args.objective,
                 "settlement_mode": args.settlement_mode,
                 "signal_intervals": len(signal),
+                "signal_sha256": hashlib.sha256(
+                    json.dumps(signal, separators=(",", ":"), allow_nan=False).encode()
+                ).hexdigest(),
+                "variable_degradation_cost_aud_per_mwh_discharged": (
+                    args.variable_degradation_cost_aud_per_mwh_discharged
+                ),
                 "planned_margin_aud": planned_margin,
                 "realized_margin_aud": realized_margin,
                 "oracle_regret_aud": oracle_regret,

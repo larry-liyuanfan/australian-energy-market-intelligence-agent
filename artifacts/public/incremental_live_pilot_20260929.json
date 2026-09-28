@@ -1,0 +1,962 @@
+{
+  "schema_version": "incremental-live-pilot-v1",
+  "validation_date": "2026-09-29",
+  "executed_runtime_git_sha": "6026fa9c668a01163c4fd31f1df0d82d6a88cf75",
+  "bundle_sha256": "3bc36b1575637b6d9f901735914015ca9b147dac9da6da80a4834f2ab349d45e",
+  "data_track": "official_AEMO_development_pilot_not_holdout",
+  "authored_business_turns": 4,
+  "unique_market_days": 1,
+  "market_rows": 576,
+  "seeds": [
+    17
+  ],
+  "path_turns": 12,
+  "model": "Qwen3-8B-Q4_K_M.gguf",
+  "model_revision": "1d54a16a18cba0d8fbad4a16db801decc729e099",
+  "model_sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+  "server_binary_sha256": "1ea585cf863473bfffb36dfd8725c7f6722b0f47d0a7cdd91e082ff3d6fc54d5",
+  "server_identity": "energy-31490840-energy-model.0Js3ML",
+  "model_loaded": true,
+  "owner_and_model_identity_check_passed": true,
+  "successful_job": {
+    "job_id": 31490840,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "elapsed_seconds": 173,
+    "peak_rss_kib": 8003276,
+    "total_cpu_seconds": 172.798
+  },
+  "infrastructure_failure": {
+    "job_id": 31490736,
+    "state": "FAILED",
+    "exit_code": "1:0",
+    "elapsed_seconds": 18,
+    "peak_rss_kib": 5307172,
+    "total_cpu_seconds": 13.401,
+    "model_loaded": true,
+    "evaluation_provider_requests": 0,
+    "reason": "libssl.so.1.1 unavailable while importing LangGraph after model startup",
+    "fix": "Inherited OpenSSL 1.1 and SQLite 3.42 library paths only; no source/model/task/resource change"
+  },
+  "resource_scope": {
+    "allocation_each": {
+      "mig": "1g.20gb:1",
+      "cpus": 6,
+      "memory_gib": 16,
+      "scratch_mib": 10000,
+      "limit_seconds": 1800
+    },
+    "total_mig_allocation_seconds_including_failure": 191,
+    "gpu_memory_observation_mib": 6972,
+    "gpu_memory_observation_at_job_elapsed_seconds": 85,
+    "gpu_memory_observed_pid": 250136,
+    "gpu_memory_peak_mib": null,
+    "infrastructure_price_aud": null,
+    "paid_api_cost_aud": 0,
+    "server_default_threads_observed": 32,
+    "note": "Three read-only srun observer steps stayed inside the same allocation; no extra GPU job. Slurm allocation is 6 CPUs, not a claim of 6 server threads."
+  },
+  "groups": {
+    "legacy": {
+      "provider_requests": 4,
+      "provider_responses": 4,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 15683,
+      "completion_tokens": 996,
+      "wall_seconds": 48.32753770239651,
+      "actual_calls": [
+        6,
+        6,
+        5,
+        5
+      ],
+      "reuse": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "accepted_canonical_calls": null
+    },
+    "full_rerun": {
+      "provider_requests": 4,
+      "provider_responses": 4,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 15776,
+      "completion_tokens": 1233,
+      "wall_seconds": 54.81881505995989,
+      "actual_calls": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "reuse": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "accepted_canonical_calls": [
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    "incremental": {
+      "provider_requests": 4,
+      "provider_responses": 4,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 15776,
+      "completion_tokens": 1233,
+      "wall_seconds": 50.473777927458286,
+      "actual_calls": [
+        4,
+        1,
+        4,
+        1
+      ],
+      "reuse": [
+        0,
+        3,
+        0,
+        3
+      ],
+      "accepted_canonical_calls": [
+        1,
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  "checks": {
+    "manual_state_and_dispatch": true,
+    "all_nine_independent_checks": true,
+    "equal_settlement_across_paths": true
+  },
+  "rows": [
+    {
+      "path": "legacy",
+      "turn": 1,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 2.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 2388,
+      "completion_tokens": 435,
+      "wall_seconds": 18.324093962088227,
+      "rejected": null,
+      "actual_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "diagnose_price_event",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "legacy_not_tagged": 6
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 177.48716835274877,
+      "realized_margin_aud": 401.899813451984,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": null,
+      "legacy_recorded_fallback_calls": 3
+    },
+    {
+      "path": "legacy",
+      "turn": 2,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 3944,
+      "completion_tokens": 192,
+      "wall_seconds": 9.310616036877036,
+      "rejected": null,
+      "actual_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "diagnose_price_event",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "legacy_not_tagged": 6
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 239.90375415306153,
+      "realized_margin_aud": 647.8618500635235,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": null,
+      "legacy_recorded_fallback_calls": 5
+    },
+    {
+      "path": "legacy",
+      "turn": 3,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4494,
+      "completion_tokens": 217,
+      "wall_seconds": 11.14243939705193,
+      "rejected": null,
+      "actual_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "legacy_not_tagged": 5
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 234.82036078128496,
+      "realized_margin_aud": 110.11405275344924,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence"
+      ],
+      "initial_exact_accepted_tools": null,
+      "legacy_recorded_fallback_calls": 3
+    },
+    {
+      "path": "legacy",
+      "turn": 4,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text",
+        "round_trip_efficiency": 0.8
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4857,
+      "completion_tokens": 152,
+      "wall_seconds": 9.550388306379318,
+      "rejected": null,
+      "actual_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "legacy_not_tagged": 5
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 242.56544278264016,
+      "realized_margin_aud": 106.03888909928686,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": null,
+      "legacy_recorded_fallback_calls": 5
+    },
+    {
+      "path": "full_rerun",
+      "turn": 1,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 2.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 2414,
+      "completion_tokens": 435,
+      "wall_seconds": 15.76311600022018,
+      "rejected": [
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "model_accepted": 1,
+        "system_completion": 3
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 177.48716835274877,
+      "realized_margin_aud": 401.899813451984,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [
+        "get_market_snapshot"
+      ],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "full_rerun",
+      "turn": 2,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 3636,
+      "completion_tokens": 192,
+      "wall_seconds": 9.008366744965315,
+      "rejected": [
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "system_completion": 4
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 239.90375415306153,
+      "realized_margin_aud": 647.8618500635235,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "full_rerun",
+      "turn": 3,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4845,
+      "completion_tokens": 454,
+      "wall_seconds": 20.087646335363388,
+      "rejected": [
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "model_accepted": 1,
+        "system_completion": 3
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 234.82036078128496,
+      "realized_margin_aud": 110.11405275344924,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [
+        "get_market_snapshot"
+      ],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "full_rerun",
+      "turn": 4,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text",
+        "round_trip_efficiency": 0.8
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4881,
+      "completion_tokens": 152,
+      "wall_seconds": 9.959685979411006,
+      "rejected": [
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "system_completion": 4
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 242.56544278264016,
+      "realized_margin_aud": 106.03888909928686,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "incremental",
+      "turn": 1,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 2.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 2414,
+      "completion_tokens": 435,
+      "wall_seconds": 15.7578390147537,
+      "rejected": [
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "model_accepted": 1,
+        "system_completion": 3
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 177.48716835274877,
+      "realized_margin_aud": 401.899813451984,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [
+        "get_market_snapshot"
+      ],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "incremental",
+      "turn": 2,
+      "state_values": {
+        "regions": [
+          "SA1"
+        ],
+        "region": "SA1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 3636,
+      "completion_tokens": 192,
+      "wall_seconds": 8.936642546206713,
+      "rejected": [
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "system_completion": 1
+      },
+      "runtime_reuse": 3,
+      "recovery_attempts": [],
+      "planned_margin_aud": 239.90375415306153,
+      "realized_margin_aud": 647.8618500635235,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "incremental",
+      "turn": 3,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text"
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4845,
+      "completion_tokens": 454,
+      "wall_seconds": 20.085452392697334,
+      "rejected": [
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "get_market_snapshot",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "model_accepted": 1,
+        "system_completion": 3
+      },
+      "runtime_reuse": 0,
+      "recovery_attempts": [],
+      "planned_margin_aud": 234.82036078128496,
+      "realized_margin_aud": 110.11405275344924,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "get_market_snapshot",
+        "detect_price_events",
+        "search_official_evidence",
+        "forecast_price_risk",
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [
+        "get_market_snapshot"
+      ],
+      "legacy_recorded_fallback_calls": null
+    },
+    {
+      "path": "incremental",
+      "turn": 4,
+      "state_values": {
+        "regions": [
+          "VIC1"
+        ],
+        "region": "VIC1",
+        "dates": [
+          "2025-12-15"
+        ],
+        "battery_power_mw": 1.0,
+        "battery_energy_mwh": 3.0,
+        "intent": "decision replay",
+        "evidence_modality": "text",
+        "round_trip_efficiency": 0.8
+      },
+      "source_state_matches_expected": true,
+      "dispatch_scope_matches_expected": true,
+      "independent_checks": {
+        "power_limits": true,
+        "charge_discharge_exclusive": true,
+        "soc_limits": true,
+        "initial_terminal_soc": true,
+        "energy_balance": true,
+        "planned_cashflow": true,
+        "realized_cashflow": true,
+        "signal_binding": true,
+        "citation_location": true
+      },
+      "status": "completed",
+      "provider_requests": 1,
+      "provider_responses": 1,
+      "provider_exceptions": 0,
+      "unknown_usage": 0,
+      "prompt_tokens": 4881,
+      "completion_tokens": 152,
+      "wall_seconds": 5.69384397380054,
+      "rejected": [
+        "optimize_battery_dispatch"
+      ],
+      "actual_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "executed_owners": {
+        "system_completion": 1
+      },
+      "runtime_reuse": 3,
+      "recovery_attempts": [],
+      "planned_margin_aud": 242.56544278264016,
+      "realized_margin_aud": 106.03888909928686,
+      "margin_basis": "historical_actual_settlement_after_as_of_schedule",
+      "initial_proposed_tools": [
+        "optimize_battery_dispatch"
+      ],
+      "initial_exact_accepted_tools": [],
+      "legacy_recorded_fallback_calls": null
+    }
+  ],
+  "quality_defects": {
+    "default_cycling_cost_mislabeled_user_supplied": [
+      "full_rerun:1",
+      "full_rerun:2",
+      "full_rerun:3",
+      "full_rerun:4",
+      "incremental:1",
+      "incremental:2",
+      "incremental:3",
+      "incremental:4"
+    ],
+    "cycling_cost_policy_aud_mwh_discharged": 50,
+    "actual_user_cost_constraint_provided": false
+  },
+  "recovery": {
+    "opportunities": 0,
+    "model_choices": [],
+    "actual_recovery_actions": [],
+    "new_evidence_from_recovery": null,
+    "cost": null,
+    "status": "not_exercised; no rewrite/clarify/stop or recovery gain validated"
+  },
+  "promotion": {
+    "full_run_authorized": false,
+    "quality_pass_receipt_created": false,
+    "model_gain_demonstrated": false,
+    "status": "pilot integration observed; preserve quality defect and await coordinator review"
+  },
+  "limitations": [
+    "One seed, four linked authored turns on one day; not 12 independent tasks or a held-out quality rate.",
+    "Canonical path is deterministic. Exact proposal acceptance is a strict runtime-contract diagnostic, not general tool-use accuracy.",
+    "Prompt token counts are logical usage, not uncached prefill. Shared llama.cpp prefix cache confounds ordered timing: full turn4 prefill2482 vs incremental turn4 prefill1.",
+    "No recovery opportunity. Persistent-empty contract success alone cannot establish a model benefit.",
+    "Default 50 AUD/MWh cycling-cost sensitivity is not supplied by the user; eight template answers mislabel it.",
+    "Settlement remains a historical net operating proxy under assumed variable cost, not investment return; CAPEX/network/FCAS excluded."
+  ],
+  "private_source_input_sha256": {
+    "annual_parent": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "market_subset": "4539f94624e603fc5d44572966c0ee5c24d976417e786a4e387d0711cabfa94f",
+    "official_text": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "forecast_snapshots": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d"
+  },
+  "private_job_log_sha256": {
+    "pilot-31490736.out": "436e80f073bb83b971f3ceadad76cd78df556d94e68dd070e21f370f7c44cb86",
+    "pilot-31490736.err": "4595aca02ffe41973f9b72f14a0e37bd597017dce36a8c4ea85ec3bccf9cbc2f",
+    "pilot-31490840.out": "39f6abf8a9c918d2b0c97cfe7b128871cf7ec0b55e9e3e32e394a51784985703",
+    "pilot-31490840.err": "b149d8b785dce1d8c1d65acfdcc453c5cc8a5ea9fdb6c359d8f0a403da447694"
+  },
+  "private_artifact_hashes": {
+    "attempts.jsonl": "8423782d844f1d88b731d1b8cc4df8c2afe3d867697bafdd95d81a9f7f0a9405",
+    "summary.json": "353eaf67ede0b8a9620e729f13bf83f5a8e154100985042f18451aa7fe10e99b",
+    "model-server.log": "ed182d69fcf05b6275f5fcb3e94840931a99401cbfb20a049df5daf2eada0db4"
+  },
+  "private_archive_sha256": {
+    "31490736": "b15711afe80b41dc9d48c55a608448fa7ebdea8aca5e7260d307916554f4a1df",
+    "31490840": "485580b6814536a7c405124ac1d9b1f8945545e038cc59e2e551433da36789c9"
+  }
+}

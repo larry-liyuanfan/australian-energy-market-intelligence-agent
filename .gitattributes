@@ -1,0 +1,29 @@
+# Recorded artifacts have byte-level manifest hashes; preserve LF on Windows.
+.gitattributes text eol=lf
+.github/workflows/quality.yml text eol=lf
+docs/demos/**/index.html text eol=lf
+docs/demos/**/recorded_run.json text eol=lf
+docs/assets/p1-model-replay-*.png -text
+artifacts/public/planner_remediation_holdout_v3_20260927.json text eol=lf
+artifacts/public/agent_application_*_20260927.json text eol=lf
+artifacts/public/langgraph_real_demo_20260927.json text eol=lf
+docs/AGENT_APPLICATION_HANDOFF_20260927.md text eol=lf
+requirements/agent-graph-py313.lock text eol=lf
+scripts/audit_agent_application.py text eol=lf
+scripts/evaluate_langgraph_demo.py text eol=lf
+scripts/render_agent_application.py text eol=lf
+scripts/run_langgraph_market.py text eol=lf
+scripts/slurm/agent_application_audit.sbatch text eol=lf
+src/energy_agent/graph_runtime.py text eol=lf
+src/energy_agent/application_demo.html text eol=lf
+src/energy_agent/incremental*.py text eol=lf
+src/energy_agent/loopback.py text eol=lf
+src/energy_agent/providers.py text eol=lf
+scripts/*incremental*.py text eol=lf
+scripts/check_local_model_owner.py text eol=lf
+scripts/slurm/incremental*.sbatch text eol=lf
+tests/test_incremental*.py text eol=lf
+benchmarks/incremental* text eol=lf
+artifacts/public/incremental* text eol=lf
+requirements/agent-graph-linux-py311-wheels.json text eol=lf
+docs/INCREMENTAL_AGENT_CPU_HANDOFF_20260929.md text eol=lf

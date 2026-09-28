@@ -20,6 +20,14 @@ jobs:
           cache: pip
       - name: Install project and quality tools
         run: python -m pip install --upgrade pip && python -m pip install -e ".[test,ml,search,redis,workbook]"
+      - name: Install and verify secret scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep
+          command -v rg
+          rg --version
       - name: Unit and contract tests
         # `python -m` keeps the checked-out repository root on sys.path so the
         # audited one-off pipeline modules under scripts/ are importable on
@@ -37,10 +45,22 @@ jobs:
           docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 check rules /etc/prometheus/alerts.yml
           docker run --rm --entrypoint promtool -v "$PWD/deploy:/etc/prometheus:ro" prom/prometheus:v3.5.0 test rules /etc/prometheus/alerts_test.yml
       - name: High-confidence secret scan
-        shell: bash
+        run: python scripts/secret_scan.py
+
+  graph-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      LANGSMITH_TRACING: "false"
+      LANGCHAIN_TRACING_V2: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install isolated optional graph extra with exact constraints
         run: |
-          if rg --hidden --glob '!.git/**' --glob '!.venv/**' \
-            '(-----BEGIN (RSA |OPENSSH |EC )?PRIVATE KEY-----|sk-[A-Za-z0-9]{20,}|gh[opsu]_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,})' .; then
-            echo "High-confidence secret pattern found"
-            exit 1
-          fi
+          python -m pip install pip==26.2.1
+          python -m pip install -c requirements/agent-graph-py313.lock -e ".[graph,test]"
+      - name: Execute graph persistence and archival-audit contracts
+        run: python -m pytest tests/test_graph_runtime.py tests/test_application_audit.py tests/test_application_demo.py tests/test_incremental_graph.py tests/test_incremental_evaluation.py

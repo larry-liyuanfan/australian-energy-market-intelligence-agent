@@ -1,0 +1,106 @@
+{
+  "schema_version": "planner-remediation-delivery-v3",
+  "status": "completed_not_promoted",
+  "evaluation_git_sha": "72323060ad7b2314facd82cf8064f1f0c174b308",
+  "publication_base_git_sha": "1b7f68160b8e4bfdb19d9d4f62b77a1952167557",
+  "job": {
+    "id": "31365531", "state": "COMPLETED", "exit_code": "0:0",
+    "elapsed_seconds": 3732, "batch_max_rss_kib": 11281388,
+    "allocated_cpus": 6, "allocated_host_memory_gib": 16,
+    "gpu": "one A100 MIG 1g.20gb allocation",
+    "allocated_mig_hours": 1.0366666666666666,
+    "allocated_cpu_hours": 6.22, "measured_total_cpu_seconds": 3684,
+    "external_provider_billing_aud": 0,
+    "compute_cost_boundary": "University allocation usage reported, not free compute or an invented commercial GPU tariff."
+  },
+  "coverage": {
+    "episodes": 10, "turns": 18, "scored_rows": 504,
+    "path_memory_groups": 12, "path_memory_track_groups": 24,
+    "non_tool_fault_turns": 11, "fault_injected_turns": 7,
+    "memory_required_turns": 8, "deterministic_seed": 0,
+    "model_seeds": [17, 29, 43], "temperature": 0.2,
+    "unique_case_turns_per_group": 18,
+    "holdout_complete_region_days": 15, "intervals_per_day": 288,
+    "figure_mount": false
+  },
+  "model": {
+    "name": "Qwen3-8B-Q4_K_M.gguf",
+    "sha256": "d98cdcbd03e17ce47681435b5150e34c1417f50b5c0019dd560e4882c5745785",
+    "hf_revision": "1d54a16a18cba0d8fbad4a16db801decc729e099",
+    "llama_cpp_commit": "7798007a29a90e3053e799394da48cf53a2f8e0f",
+    "server_binary_sha256": "1ea585cf863473bfffb36dfd8725c7f6722b0f47d0a7cdd91e082ff3d6fc54d5",
+    "python": "3.11.3", "context_size": 16384, "parallel": 1,
+    "requests": 549, "initial_requests": 432, "replans": 117,
+    "prompt_tokens": 1394985, "completion_tokens": 95306,
+    "rejected_model_calls": 29, "unsafe_tool_or_dsl_calls": 0,
+    "all_path_retries": 139, "deterministic_retries": 22,
+    "max_observed_tool_attempts": 7, "tool_attempt_budget": 8,
+    "max_observed_planner_attempts": 3, "replan_budget": 2
+  },
+  "sha256": {
+    "public_summary": "ff3b02a6e403e2977968ae735adbb1df861202e4d72805ca587ac1b85f7dbed4",
+    "original_compute_summary": "04cb8b7c743f7a7f5db3fdbbebf4ecee1ccc3d67bf63462f7e8c6dbd2580eeb6",
+    "private_predictions": "b67f56902e58305ab5bb771dfd0b3d0858aeeb5f17d510ca0c739f9044d21780",
+    "private_metrics": "f4e21868ad44f2c20ec4fe4671ad3d25decf94a6b528d313fc165b6c0652e4f6",
+    "private_run_manifest": "6e11d1ac84b1973883f348296fecdd45ef9c0b77e1faa41a188fb47c29366ccf",
+    "private_environment": "03d6257f6b054e4651d7ab78fa8e34ee2c285778e72e7e073b23b140c61a715c",
+    "benchmark": "f46f5900c7a1ab4764b9ebe316e85601b32c5d5cdcbbf95107ffeba29c996d99",
+    "gate": "dde0d38db6c3b7183b2ad02fb63a9e5f9f5e15074107f146bc97b35a7838a8f3",
+    "market_data": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "data_manifest": "4d18a4f86e3daa13b5b7144b9f0939cb5bf5eba46a8d3ddbd0c442e8065dcc19",
+    "text_evidence": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "forecast_snapshots": "b27f3b192dc1726e9b6abfc390b655b411fe5e4f32b062d9c859a8e69e03b48d"
+  },
+  "promotion": {
+    "passed": false,
+    "candidate": "constrained_hybrid|structured_state",
+    "task_success": "54/54",
+    "initial_complete_path": "18/54",
+    "initial_selected_parameter_accuracy": 0.8888888888888888,
+    "memory_required_task_success": "hybrid 24/24; deterministic 8/8",
+    "failed_conditions": ["initial_complete_path_ge_0.90", "initial_selected_parameters_ge_0.90", "beats_deterministic_memory_required_subset"],
+    "serving_decision": "Keep deterministic DAG; no SG model activation."
+  },
+  "verification": {
+    "terminal_scheduler_state_and_exit_checked": true,
+    "final_predictions_line_count_and_sha_checked": true,
+    "metrics_benchmark_gate_sha_checked": true,
+    "actual_seed_and_case_turn_coverage_checked": true,
+    "diagnostic_revision": "cooccurring-observations-r1: rename only; frozen metrics and manifest unchanged",
+    "public_summary_secret_pii_private_path_scan": "passed independent local scoped pattern scan; not evidence from the invalid historical CI scans",
+    "preflight_job": "31365441", "preflight_tests": 222,
+    "post_export_local_tests": 226,
+    "post_export_lint_and_strict_mypy": "passed; 74 checked source files",
+    "test_warning": "One Starlette/httpx deprecation warning; no test failure or dependency upgrade.",
+    "pre_publication_ci_commit": "1b7f68160b8e4bfdb19d9d4f62b77a1952167557",
+    "pre_publication_ci_run": "36286722679",
+    "pre_publication_ci_status": "success",
+    "historical_ci_secret_scan": {
+      "status": "invalid_not_executed",
+      "affected_runs": ["36286722679", "36289310946"],
+      "affected_commits": ["1b7f68160b8e4bfdb19d9d4f62b77a1952167557", "9a2cb64c417b65b5ab9ac6441fafe10ece25b562"],
+      "observed_error": "rg: command not found",
+      "interpretation": "Overall reported success is preserved as historical scheduler status, not secret-scan evidence."
+    },
+    "scanner_repair_local_validation": {
+      "tests_passed": 237, "new_scanner_tests": 11,
+      "ruff": "passed", "strict_mypy_source_files": 75,
+      "actual_bounded_scan": "completed: no matches",
+      "real_fixture_tests": "clean and hidden matching fixtures passed; missing rg is a failure, not a skip",
+      "implementation": "CI installs/verifies ripgrep; scripts/secret_scan.py treats only rg exit 1 as clean and fails closed on launch, timeout or other errors without echoing scanner output.",
+      "ci_boundary": "Local evidence only; the repaired commit requires its own CI logs. Old green runs are not reused as scan proof."
+    },
+    "p1_case_manifest": "artifacts/public/p1_recorded_replay_manifest_20260927.json",
+    "dependency_audit_scope": "docs/ENVIRONMENT_STATUS.md"
+  },
+  "boundaries": [
+    "Authored disjoint tasks, not external human-labelled generalisation or 504 independent tasks.",
+    "No tuning, relabelling or new model evaluation after reading this holdout.",
+    "Initial model planning, guarded completion and final execution are separate.",
+    "Citation/settlement/memory metrics have the restricted definitions in the report; no blanket semantic or attribution correctness.",
+    "No-memory task success waives recall; all other scoring requirements still apply.",
+    "Fault injection is separately aggregated; no figure-grounding accuracy is measured by this text-only holdout.",
+    "Historical replay and operating proxies only; not live trading, investment return, production SLA or general reasoning ability.",
+    "The PR remains a separate feature delivery, not a merged or newly deployed model release; current resume unchanged."
+  ]
+}

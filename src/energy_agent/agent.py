@@ -56,10 +56,12 @@ class EnergyAgent:
                 self.traces.popitem(last=False)
                 self.trace_evictions += 1
 
-    def _plan(self, request: AgentQueryRequest) -> list[tuple[str, dict[str, object]]]:
+    def _plan(
+        self, request: AgentQueryRequest, *, case: DecisionCase | None = None
+    ) -> list[tuple[str, dict[str, object]]]:
         if self.planner_provider is not None:
             return self.planner_provider.plan(request.question, self.registry, request.max_tool_calls)
-        case = self._build_case(request)
+        case = case or self._build_case(request)
         text = request.question.lower()
         region = case.region
         window = case.window.model_dump(mode="json")

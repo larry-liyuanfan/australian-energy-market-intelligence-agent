@@ -124,6 +124,9 @@ class Evidence(StrictModel):
     source_page: int | None = Field(default=None, ge=1)
     asset_id: str | None = None
     asset_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    figure_id: str | None = None
+    source_cell_preview: str | None = Field(default=None, max_length=500)
+    source_text_start: int = Field(default=0, ge=0)
     retrieval_scores: dict[str, float] = Field(default_factory=dict)
 
 

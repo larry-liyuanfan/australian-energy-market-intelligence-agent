@@ -16,6 +16,7 @@ from energy_agent.llm_evaluation import aggregate_rows, load_episodes, score_tur
 from energy_agent.market import fixture_store, load_dispatch_store
 from energy_agent.model_agent import AgentPath, ConversationMemory, MemoryMode, ModelDrivenAgent
 from energy_agent.providers import LlamaCppPlanner, OllamaPlanner
+from energy_agent.remediation import score_remediation_turn, validate_market_windows
 from energy_agent.schemas import ToolResult
 from energy_agent.snapshots import ForecastSnapshotStore, load_forecast_snapshots
 from energy_agent.tools import ToolRegistry
@@ -106,6 +107,8 @@ def main() -> None:
     )
     parser.add_argument("--seeds", nargs="+", type=int)
     parser.add_argument("--max-episodes", type=int)
+    parser.add_argument("--scoring-version", choices=("v1", "v3"), default="v1")
+    parser.add_argument("--preflight-only", action="store_true")
     args = parser.parse_args()
     if not 0.0 < args.temperature <= 2.0:
         parser.error("--temperature must be in (0, 2] so multi-seed evaluation performs real sampling")
@@ -115,11 +118,22 @@ def main() -> None:
     if args.max_episodes:
         episodes = episodes[: args.max_episodes]
     base_registry = build_registry(args)
+    coverage = validate_market_windows(episodes, base_registry.store) if args.scoring_version == "v3" else None
+    if args.preflight_only:
+        if coverage is None:
+            parser.error("--preflight-only requires --scoring-version v3")
+        print(json.dumps(coverage))
+        return
     planner = (
         OllamaPlanner(model=args.model, base_url=args.provider_url, temperature=args.temperature)
         if args.provider == "ollama"
         else LlamaCppPlanner(model=args.model, base_url=args.provider_url, temperature=args.temperature)
     )
+    # Preserve completed attempts if a provider/process fails later. A partial
+    # journal is diagnostic only; no final manifest/aggregate means no completed
+    # evaluation. Never silently append to or overwrite a previous run.
+    args.output.mkdir(parents=True, exist_ok=False)
+    progress = args.output / "predictions.partial.jsonl"
     rows: list[dict[str, Any]] = []
     for path_name in args.paths:
         path = AgentPath(path_name)
@@ -146,7 +160,10 @@ def main() -> None:
                             memory_mode=memory_mode,
                             seed=seed,
                         )
-                        score = score_turn(run, turn_spec)
+                        score = (
+                            score_remediation_turn(run, turn_spec) if args.scoring_version == "v3"
+                            else score_turn(run, turn_spec)
+                        )
                         rows.append(
                             {
                                 "case_id": episode["case_id"],
@@ -166,6 +183,11 @@ def main() -> None:
                                 "expected_parameters": turn_spec.get("expected", {}),
                                 "model_proposed_tools": [call.name for call in run.model_proposed_calls],
                                 "model_proposed_arguments": [call.arguments for call in run.model_proposed_calls],
+                                "initial_model_proposed_calls": [
+                                    call.model_dump(mode="json") for call in run.initial_model_proposed_calls
+                                ],
+                                "planner_attempts": run.planner_attempts,
+                                "guarded_calls": [call.model_dump(mode="json") for call in run.guarded_calls],
                                 "executed_arguments": [
                                     call.arguments for call in run.tool_calls if call.status == "ok"
                                 ],
@@ -183,6 +205,13 @@ def main() -> None:
                                 "verification": run.verification,
                             }
                         )
+                        with progress.open("a", encoding="utf-8") as handle:
+                            handle.write(json.dumps(rows[-1], sort_keys=True) + "\n")
+                        print(json.dumps({
+                            "completed_attempts": len(rows), "path": path.value,
+                            "memory_mode": memory_mode.value, "seed": seed,
+                            "case_id": episode["case_id"], "turn_index": turn_index,
+                        }), flush=True)
     metrics = aggregate_rows(rows)
     thresholds = gate["thresholds"]
     hybrid = metrics.get("constrained_hybrid|structured_state", {})
@@ -232,7 +261,6 @@ def main() -> None:
     }
     metrics["promotion_checks"] = promotion_checks
     metrics["promotion_pass"] = all(promotion_checks.values())
-    args.output.mkdir(parents=True, exist_ok=True)
     predictions = args.output / "predictions.jsonl"
     predictions.write_text("\n".join(json.dumps(row, sort_keys=True) for row in rows) + "\n", encoding="utf-8")
     metrics_path = args.output / "metrics.json"
@@ -247,7 +275,10 @@ def main() -> None:
         "provider": planner.name,
         "model": args.model,
         "sampling_temperature": args.temperature,
-        "model_runtime_is_real": True,
+        "model_runtime_is_real": any(row["model_requests"] > 0 for row in rows)
+        if args.scoring_version == "v3" else any(row["path"] != "deterministic" for row in rows),
+        "scoring_version": args.scoring_version,
+        "market_coverage_preflight": coverage,
         "benchmark_sha256": sha256(args.benchmark),
         "gate_sha256": sha256(args.gate),
         "data_track": "official_aemo" if args.data else "explicit_synthetic_fixture",

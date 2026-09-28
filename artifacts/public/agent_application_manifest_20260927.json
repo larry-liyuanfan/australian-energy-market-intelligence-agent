@@ -1,0 +1,144 @@
+{
+  "schema_version": "energy-agent-application-manifest-v1",
+  "package_label": "20260927",
+  "source_base_git_sha": "d204c8ea823e81c2c507f03e1110618547c70798",
+  "publication_git_sha_resolution": "git log -1 --format=%H -- artifacts/public/agent_application_manifest_20260927.json",
+  "branch": "codex/energy-visual-goal-compiler-v2",
+  "change_boundary": "Optional graph and archival audit only; no new model inference, GPU job, deployment or career-material write.",
+  "hashes": [
+    {
+      "path": "scripts/audit_agent_application.py",
+      "sha256": "d424ebd042d65a896f4753fc7415105417c4de6cee93bc2d03e595e645387e83"
+    },
+    {
+      "path": "scripts/evaluate_langgraph_demo.py",
+      "sha256": "592073b12de36f630b715f10d338f9eaaa97b9341203fd394df8ca6cc6432d82"
+    },
+    {
+      "path": "scripts/render_agent_application.py",
+      "sha256": "b6235fbd5b1e40f859c0e0fb6319d5dea064f55f5a44c1bb7b14d3661e38331f"
+    },
+    {
+      "path": "scripts/run_langgraph_market.py",
+      "sha256": "d80223fd484f343ba10d15ed215791d4d7e49866cf0d909d76b0449ab271f174"
+    },
+    {
+      "path": "scripts/slurm/agent_application_audit.sbatch",
+      "sha256": "9d114a672d924cf25a8ebecf207452b60099506853cec494ab35e7b102e7570c"
+    },
+    {
+      "path": "src/energy_agent/graph_runtime.py",
+      "sha256": "d52393885fe9567ef8029f50038ceb543a152e8c4af32db65066cc8788d67038"
+    },
+    {
+      "path": "src/energy_agent/application_demo.html",
+      "sha256": "89e215e695506704dff1c495e49e6fe69b9d5c8112bf7b88e9a7a6374acbe072"
+    },
+    {
+      "path": "requirements/agent-graph-py313.lock",
+      "sha256": "4aed4467a871e0b6214f0611ea7e160795dfa58a752884d5e1cb32f9c1dd874b"
+    },
+    {
+      "path": "artifacts/public/agent_application_audit_20260927.json",
+      "sha256": "d58b396e0d4097d12517112c97eefcc488d8de9a999d78177cdee80879a9b2b1"
+    },
+    {
+      "path": "artifacts/public/langgraph_real_demo_20260927.json",
+      "sha256": "c7b847f8ceed159d13421e633f9954d86b87c7d25457e9fc8c660b57eb469745"
+    },
+    {
+      "path": "docs/demos/agent-application-20260927/index.html",
+      "sha256": "08e797ea57f823899d8d4d3e53a3fd6fe9eb45c51d3a82aa14642533a3e67777"
+    },
+    {
+      "path": "docs/AGENT_APPLICATION_HANDOFF_20260927.md",
+      "sha256": "7140ef95a6ebbb84c1116f2bc759a584b28abec42dbdb2103b89326b869f42a0"
+    },
+    {
+      "path": "artifacts/public/planner_remediation_holdout_v3_20260927.json",
+      "sha256": "ff3b02a6e403e2977968ae735adbb1df861202e4d72805ca587ac1b85f7dbed4"
+    },
+    {
+      "path": "docs/demos/model-replay-20260927/index.html",
+      "sha256": "993b09cb298d1d5420e43fc43c5a1db9b1f8c3fae1df1943386ba960df8540ac"
+    },
+    {
+      "path": "docs/demos/model-replay-20260927/recorded_run.json",
+      "sha256": "b8a6fd0aaa5788a5a3004822e5cf8ec7f8846cba2bb24eadfd763b144e91cda4"
+    }
+  ],
+  "source_data": {
+    "private_subset_sha256": "4539f94624e603fc5d44572966c0ee5c24d976417e786a4e387d0711cabfa94f",
+    "parent_archive_sha256": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "market_rows": 576,
+    "private_inputs_not_published": true
+  },
+  "archival_audit": {
+    "job_id": "31372698",
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "allocated_cpus": 1,
+    "requested_memory_gib": 1,
+    "elapsed_seconds": 3,
+    "max_rss_kib": 35696,
+    "checks_passed": 21,
+    "checks_total": 21,
+    "p1_case_denominator": 1,
+    "p1_interval_denominator": 288,
+    "holdout_retained_rows": 504,
+    "authored_turns": 18,
+    "holdout_answer_denominator": 0,
+    "earlier_failed_attempts": [
+      {
+        "job_id": "31372559",
+        "reason": "wrong figure manifest hash",
+        "elapsed_seconds": 3,
+        "max_rss_kib": 19128
+      },
+      {
+        "job_id": "31372651",
+        "reason": "missing optional archived battery fields needed existing default resolution",
+        "elapsed_seconds": 4,
+        "max_rss_kib": 27036
+      }
+    ]
+  },
+  "graph_execution": {
+    "implementation": "actual LangGraph StateGraph plus SqliteSaver",
+    "planner": "deterministic",
+    "completed_business_turns": 3,
+    "process_invocations": 6,
+    "cross_process_resumes": 2,
+    "checks_passed": 13,
+    "checks_total": 13,
+    "model_calls": 0,
+    "model_tokens": 0,
+    "new_gpu_jobs": 0,
+    "checkpoint_public": false,
+    "workflow_scope": "real snapshot, user correction, comparison; coverage support not real-case evaluated; no BESS graph migration"
+  },
+  "local_validation": {
+    "targeted_tests_passed": 23,
+    "ruff": "passed",
+    "strict_mypy_source_files": 5,
+    "secret_scan": "completed, no matches",
+    "dependency_vulnerability_audit": "no known vulnerabilities after isolated pip upgrade to 26.2.1; editable project skipped",
+    "full_suite_rerun_locally": false,
+    "publication_ci": "inspect PR head run; do not infer success from prior green runs"
+  },
+  "environment": {
+    "python": "3.13",
+    "langgraph": "1.2.12",
+    "langgraph_checkpoint_sqlite": "3.1.1",
+    "langchain_core": "1.6.5",
+    "pip": "26.2.1",
+    "constraints": "requirements/agent-graph-py313.lock",
+    "external_tracing": false
+  },
+  "limitations": [
+    "Functional smoke demonstration, not quality benchmark, hard latency bound or public SLA.",
+    "SQLite is local persistence, not distributed durability, authentication or exactly-once execution.",
+    "The new HTML is a deterministic presentation of recordings, not a live LLM answer.",
+    "No new billing amount inferred: historical zero provider billing is not free compute."
+  ]
+}

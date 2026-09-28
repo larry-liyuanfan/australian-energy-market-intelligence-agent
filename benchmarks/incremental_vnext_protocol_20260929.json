@@ -1,0 +1,62 @@
+{
+  "schema_version": "incremental-vnext-preregistered-v1",
+  "freeze_date": "2026-09-29",
+  "status": "frozen_not_consumed",
+  "episodes": 24,
+  "turns": 48,
+  "labels": "Author-generated contracts, not independent user annotations or general reasoning tasks.",
+  "source_isolation": "New November 18/19 authored scenarios; disjoint from this package's January fixture development and December 15 real pilot. Same AEMO source family, not independent data-source validation.",
+  "comparisons": [
+    "legacy planner with deterministic completion",
+    "new graph full rerun",
+    "new graph incremental"
+  ],
+  "model": "Existing pinned Qwen3-8B-Q4_K_M; loopback llama.cpp only after coordinator GPU release.",
+  "seeds": [
+    17,
+    29,
+    43
+  ],
+  "temperature": 0.2,
+  "provider_requests_per_graph_turn_max": 2,
+  "max_completion_tokens_per_request": 512,
+  "metrics": [
+    "final task correctness",
+    "initial proposed tool path",
+    "model parameters before guard",
+    "model recovery choice",
+    "numerical cashflow oracle",
+    "citation source location",
+    "cross-turn correction",
+    "stale reuse",
+    "actual tool attempts",
+    "cache hits",
+    "model requests including failures",
+    "unknown usage",
+    "prompt/completion tokens",
+    "wall time including full fingerprinting and verification"
+  ],
+  "contract_gates": {
+    "unsafe_executions": 0,
+    "stale_cache_reuse": 0,
+    "wrong_settlement_release": 0,
+    "task_success_minimum": 0.85,
+    "model_promotion": "Not justified by fewer runtime tool calls. Report all three seeds and episode-cluster uncertainty; no tuning on consumed holdout."
+  },
+  "unmeasured": [
+    "real model recovery decision quality",
+    "quality on all 24 episodes",
+    "all-source answer semantics",
+    "million-row latency"
+  ],
+  "required_preflight": [
+    "Trip GPU allocation released by coordinator",
+    "Spartan project inode capacity healthy; do not auto-delete other assets",
+    "exact model/code/data/evidence/snapshot SHA",
+    "complete unique five-minute November windows plus as-of history/snapshots",
+    "Slurm test-only then one bounded pilot",
+    "retain every failed attempt and unknown usage"
+  ],
+  "no_paid_api": true,
+  "no_gpu_submitted": true
+}

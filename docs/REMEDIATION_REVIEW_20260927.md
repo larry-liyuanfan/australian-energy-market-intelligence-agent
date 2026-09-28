@@ -1,0 +1,226 @@
+# Planner review and bounded P0/P1 remediation
+
+Status: P0 diagnosis, frozen direct-tool holdout, final comparison review and P1
+real-model recording completed. The model is not promoted. See the
+[final report](PLANNER_REMEDIATION_V3_EVALUATION.md) and
+[bounded completion handoff](P0_P1_HANDOFF_20260927.md).
+This follows the 26 September career strengthening plan. Existing v1 metrics,
+v2 benchmark labels and negative experiments remain unchanged.
+
+Tool installation and readiness are recorded separately in
+[environment status](ENVIRONMENT_STATUS.md). Browser review of the first
+numerically valid P1 recording found irrelevant gas-market/following-quarter
+figures: citation presence does not establish relevance, so that preview remains
+unaccepted. The correction and accepted replacement recording are documented
+below; the earlier preview is not retroactively relabelled as successful.
+
+Preflight `31365151` failed the security regression suite after dated queries
+were scoped too broadly. Quarter filtering now requires an explicit quarter
+request, preserving daily-event retrieval and the existing injected-evidence
+tests. The 24 failures remain recorded. Independent review also supplied gas
+body-text, other-region/NEM and unsafe URL-scheme counterexamples; each has a
+regression test. The scope screen is not described as semantic entailment.
+
+Preflight `31365171` passed the full suite, lint, types and all 20 region-day
+coverage checks. It compiled 117 figures from the official Q4 2025 workbook
+(source SHA `5c2881adf33b78e3bd4e7772bbefd1461631208c6d6a6c14048cf815d83e08f9`),
+then correctly rejected the demo: returned snippets/source previews had lost
+regional/topic support, and a report figure catalogue ranked as explanatory text.
+Retrieval now checks the actual returned passage, excludes catalogue passages and
+retains exact requested-region source rows with original labels and units. The
+raw workbook stays private and is not edited or redistributed.
+
+Preflight `31365198` completed in 62 seconds (479,704 KiB batch MaxRSS), with
+216 tests, Ruff, strict mypy, all 20 region-day checks and an 11-check deterministic
+SA1 recording. Browser review confirmed the gross/sensitivity separation and
+quarterly-context labels; GitHub quality run `36283626257` also passed. This is
+not a model run. Independent review then reproduced two exporter false accepts:
+an explicitly failed runtime citation check, and a short displayed quote whose
+support occurred only in hidden text. The exporter now rejects failed/missing
+required runtime checks, independently validates digest formats, and scope-screens
+the exact displayed quote with source-character offsets. Same-URL link-only items
+are labelled as such and cannot satisfy visible text grounding. Digest-format
+checks are not described as rehashing original documents.
+
+Real-model development pilot `31365278` completed the direct-tool comparison:
+deterministic 4/4, pure LLM 2/8, constrained hybrid 8/8 final task success;
+hybrid initial complete paths were 4/8, so runtime completion remains material.
+The job then failed on its first GoalSpec request before the demo export.
+Its 3:46 elapsed / 6,271,336 KiB MaxRSS and failed state remain recorded.
+The server grammar expected JSON immediately after the assistant prefix, while
+Qwen's template had already appended an empty thinking block. This matches the
+upstream [structured-output issue](https://github.com/ggml-org/llama.cpp/issues/23775);
+that similarity is diagnostic context, not proof from a different model/runtime.
+The pinned server documentation and source were checked: `/apply-template`
+returns the model-formatted prompt and `/completion` accepts `json_schema`.
+The bounded compatibility repair uses those native endpoints for GoalSpec only,
+with the same model, prompt, schema, temperature, seed and token cap, one total
+request-time budget and one generation. It does not disable schema validation or
+silently fall back to unconstrained JSON. Direct-tool results are preserved and
+are not rerun for this independent GoalSpec/demo retry.
+
+The direct pilot used 16 real generations, 42,056 prompt / 3,558 completion
+tokens, 134.73 s total model latency and 137.69 s end-to-end task time. The full
+direct holdout has 432 model turns plus 72 deterministic turns. Scaling the
+measured 8.61 s/model turn gives about 62 minutes before fault replans/setup.
+A single 150-minute allocation allows about 2x task-time headroom plus setup;
+16 GiB host RAM is retained above the measured 5.98 GiB batch RSS. These are
+scheduling estimates, not promised latency or actual resource consumption.
+The holdout script refuses planner/scorer/benchmark drift from the accepted
+direct pilot; the subsequent changes are journaling and independent GoalSpec/demo
+compatibility. No holdout outputs are used to select prompts or thresholds.
+
+Retry `31365356` used the native GoalSpec interface successfully: eight sampled
+attempts, 12,488 prompt / 1,704 completion tokens, 50% valid GoalSpec rate,
+required-field F1 0.8571 and **0/8 compiled task success**. Every second-turn
+correction incorrectly attributed its correction record to source turn 1 rather
+than turn 2. First-turn valid objects omitted required requested outputs, so a
+recognised comparison/forecast intent did not compile into a complete path.
+This is a real negative development result: schema-constrained generation did
+not solve goal completeness or memory attribution. GoalSpec is not selected for
+the full holdout or the serving path, and no additional model/schema tuning is
+started merely to make its score positive. The old v2 findings remain unchanged.
+
+The same job's independent P1 export failed: Qwen proposed `preferred_modality=
+chart` together with `retrieval_mode=hybrid_rerank`, and an unscoped date-only
+query; execution returned five text citations from mismatched report periods.
+The explicit text-plus-source-values export gate rejected it. Hybrid runtime now
+checks retrieval route, requested modality, publication filter and canonical
+region/date/quarter scope; compatible model query expansions are still permitted.
+The raw erroneous proposal remains in the private trace, and replacement calls
+are attributed to runtime rather than the model. Because this changed direct
+execution, a new direct development pilot was required before freezing holdout;
+it subsequently completed as `31365444`. The GoalSpec result was not rerun by
+that pilot. `31365356` remains a failed job
+(2:59 elapsed, 6,044,920 KiB MaxRSS); a successful substage is not a successful
+overall P1 export.
+
+The hash-bound [GoalSpec development summary](../artifacts/public/goal_spec_remediation_pilot_20260927.json)
+records that negative result and the overall failed-job boundary without publishing
+private predictions or official source documents.
+
+Infrastructure record: CPU preflight `31364397` failed after two seconds because
+this Spartan allocation did not export `SLURM_TMPDIR`. The replacement uses the
+established `SLURM_TMPDIR` → `TMPDIR` → job-unique `/tmp` path convention. No
+model request occurred. The scheduler recommended the newer `sapphire` CPU
+partition, which is now explicit in the preflight script.
+
+CPU preflight `31364416` completed in 80 seconds (482,180 KiB batch MaxRSS),
+including the full suite and coverage checks for 5 development and 15 holdout
+region-days. P1 preflight `31364486` passed tests/lint/types but failed at export:
+official report metadata contains date-only publication values. The exporter now
+treats missing time/zone precision conservatively as retrospective-only. Review
+also added actual market-file digest verification before parsing; manifest claims
+alone no longer establish the input hash. Both failures remain in the run record.
+
+P1 retry `31364532` passed all calculation checks but could not serialize an event
+diagnosis timestamp into the compact JSON. Diagnosis now uses the canonical
+Pydantic JSON serialization; a regression test includes an actual datetime.
+The failed export is not a published demonstration.
+
+## Findings from existing artifacts and code
+
+1. **Pilot data mismatch.** The four-turn GoalSpec pilot used 4–5 August 2025;
+   its real store starts on 18 August 2025. Direct forecast/dispatch failures
+   therefore combine planning error and unavailable market history. A successful
+   Slurm exit and JSON artifact validator did not establish valid task coverage.
+2. **Invalid GoalSpec output.** In private job `30003769`, three outputs used
+   the forbidden `field_sources.bess` parent key; another selected decision replay
+   with `bess=null`. One also used `official_evidence` as a modality. Every output
+   ended its day at 23:59:59. That time error affects semantics but was not rejected
+   by the old schema. Required outputs were also missing. The second turns invented
+   2023 dates after invalid first turns discarded their user context.
+3. **Correction reparsing.** Sourced state correctly replaces a region, but the
+   previous direct runtime reparsed the original correction sentence and appended
+   JSON as natural language. That reintroduced the old region and lost comparison
+   intent. Model proposals cannot fix a wrong deterministic fallback contract.
+4. **Attribution and scoring.** Old `model_proposed_calls` concatenates initial
+   and replan calls; it is not strictly first-attempt planning. GoalSpec counts
+   deterministic recovery as model replanning. Substring argument checks can miss
+   extra regions, wrong interval endpoints and omitted economic constraints.
+5. **P1 evidence/decision boundary.** Official reports are retrospective context,
+   not necessarily published at decision time. Figure IDs/cell previews need to
+   survive into the demonstrator. Forecast and dispatch must use the same complete
+   signal; net-of-sensitivity margins must display their explicit cost assumption.
+
+Evidence: `docs/VISUAL_GOAL_COMPILER_V2_EVALUATION.md`,
+`docs/LLM_AGENT_PLANNER_MEMORY_EVALUATION.md`, private pilot job `30003769`
+predictions/manifest and the source modules referenced in those reports. Only
+compact summaries and hashes may be published; private row-level artifacts remain
+in the Energy artifact root.
+
+## Fixed experiment scope, before new inference
+
+- Real Qwen3-8B Q4_K_M, pinned llama.cpp, one Iris Spartan 20 GB A100 MIG job at a
+  time. No model retraining, 14B expansion or ViDoRe run.
+- Four-turn, covered October development pilot diagnoses schema/interface fixes.
+  GoalSpec remains experimental: schema conformity alone does not validate source
+  attribution or justify making model-generated state factual memory.
+- New v3 holdout: 10 episodes / 18 turns; deterministic, pure LLM and constrained
+  hybrid; four memory modes; seeds 17/29/43 at temperature 0.2 for model paths.
+  Prompts/dates are disjoint from the older sets. Labels are author-written, not
+  independent human evaluation. Fault-injected episodes are reported separately.
+- Data preflight requires all 288 interval timestamps plus prior history for every
+  region/day before any model request. No zero-row market answer counts as success.
+- Keep the v1 threshold values; raw path now means initial proposal, and argument
+  scoring checks canonical typed values. New scores are not numerically comparable
+  to v1 as an A/B lift. Report model proposal, guarded plan and execution separately.
+- Deterministic recovery gets the same bounded tool-attempt budget. Model replans
+  and deterministic retries remain distinct. Retry tokens and time are included.
+- Run the new holdout once after the pilot decision and code freeze. Report all
+  failures and uncertainty; no relabelling or tuning on its outputs.
+- The evaluator journals each completed attempt privately before continuing.
+  An interrupted `predictions.partial.jsonl` is not a completed evaluation and
+  cannot be promoted. Progress messages contain counts, not quality scores, so
+  scheduling observation does not require inspecting holdout outcomes mid-run.
+
+## Reading the frozen v3 metrics
+
+These definitions clarify the existing scorer; they do not change its labels,
+thresholds or executing code. The final report must retain the following limits.
+
+| Reported field | What it measures / does not establish |
+| --- | --- |
+| Task success | Post-execution composite of required tool path, selected parameters and structural checks, not initial model planning or answer-semantic accuracy. `no_memory` explicitly waives the recall condition; its path/parameter checks still apply. Disclose that policy when comparing the four modes. |
+| Initial model complete path | Required tool names appear in order in the first validated proposal. Later replans and runtime additions do not count as initial planning. |
+| Model parameter accuracy | Exact checks on proposed non-search calls: region sets, timestamps, windows and the specified battery fields/objective/settlement mode. Omitted tools are penalised by the separate path metric; search query semantics and every possible tool argument are not covered by this average. |
+| Citation correctness | The scorer requires citations with HTTPS URLs and 64-character hashes. Runtime also checks hexadecimal hash format. Neither is independent document rehashing, source entailment, or human-judged answer support. |
+| Settlement consistency | Correct presence/absence of planned and realised fields for the returned margin basis; no-dispatch turns pass by non-applicability. This aggregate is not an independent cash-flow or battery-constraint proof. The P1 exporter performs those additional checks for its recorded case. |
+| Memory recall / contamination | Retention of expected region/date values in sourced constraint state, and absence of benchmark-specific forbidden values from active state/executed structured arguments. Battery edits are additionally checked in dispatch parameters. This metric does not verify source-turn attribution, all remembered facts or all possible contamination. |
+| Unsafe tool/DSL calls | Counts rejected unsafe/unknown proposal errors, not only executed calls. Rejection, runtime replacement and actual execution must remain separately attributed. Zero on this finite suite is not universal injection resistance. |
+| Stability and latency | Repeated-seed turn-level pass rates and measured end-to-end time including recovery; turns within an episode and seeds of one prompt are correlated. Wilson intervals are descriptive, not independent-task generalisation guarantees or a service SLA. |
+
+The direct holdout uses real market data, official text evidence and forecast
+snapshots; its Slurm command does not mount workbook figure records. A chart
+request exercising text recovery therefore does not establish figure-grounding
+accuracy. The independently recorded P1 case does mount the 117 Q4 figures and
+has its own visible-source checks. Fault-injected and non-fault tracks must be
+reported separately; the latter still includes the explicit prompt-injection
+case and is not synonymous with benign ordinary queries.
+
+## P1 accepted recording and completed full evaluation
+
+Job `31365444` completed in 4:04 with 5,656,984 KiB MaxRSS on code `7232306`.
+The corrected direct pilot again scored deterministic 4/4, pure LLM 2/8,
+hybrid 8/8; hybrid initial complete paths were still 4/8. Preflight `31365441`
+passed 222 tests, lint, strict types and all 20 region-days in 64 seconds.
+The real-model P1 export passed 13 checks and browser visual review. Its
+[recording and attribution](INTERVIEW_DEMO.md) include the user request, actual model proposal,
+deterministic additions, text and workbook evidence, publication-time labels,
+as-of forecast, battery schedule and independent historical settlement check.
+The page, compact response, screenshots, two-minute narration and resource/hash
+manifest are provided without requiring an always-on GPU or public service.
+
+After `sbatch --test-only` and an `afterok:31365444` dependency, frozen holdout
+job `31365531` was submitted at exact commit `72323060ad7b2314facd82cf8064f1f0c174b308`.
+It completed in 1:02:12, exit 0:0, with 11,281,388 KiB batch MaxRSS. All 504 scored
+turns (72 deterministic and 432 initial model attempts) are present, with 549
+actual model requests including 117 replans. Only progress counts were inspected
+while it ran. Structured hybrid scored 54/54 final tasks but only 18/54 initial
+complete model paths and 88.9% selected parameters; deterministic was 18/18.
+Three promotion conditions failed. The full comparison and fault-separated
+aggregates are published in the final report; no post-result tuning or rerun was
+performed. Publication review renamed the compact's misleading failure-cause
+label to co-occurring failed-row observations, without changing metrics, task
+labels or gates; four exporter tests cover the diagnostic-only transformation.
+No SG or resume change.

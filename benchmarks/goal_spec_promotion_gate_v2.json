@@ -1,0 +1,29 @@
+{
+  "schema_version": "goal-spec-promotion-gate-v2",
+  "preregistered_before_model_execution": true,
+  "benchmark": "benchmarks/goal_spec_holdout_v2.jsonl",
+  "episodes": 18,
+  "turns": 36,
+  "source_separation": "All dates, wording, and compound combinations are absent from v1 development and holdout files.",
+  "seeds": [101, 307, 911],
+  "sampling_temperature": 0.2,
+  "candidate_system": "qwen3_14b_goal_spec",
+  "thresholds": {
+    "goal_spec_required_field_f1": 0.9,
+    "compiled_task_success": 0.85,
+    "citation_correctness": 0.95,
+    "settlement_consistency": 0.95,
+    "replanning_success_rate": 0.95,
+    "memory_recall": 0.9,
+    "state_contamination_rate": 0.0,
+    "unsafe_tool_or_dsl_calls": 0
+  },
+  "comparison_systems": [
+    "deterministic",
+    "qwen3_8b_direct_tool",
+    "qwen3_8b_goal_spec",
+    "qwen3_14b_goal_spec"
+  ],
+  "reporting_rule": "Report raw GoalSpec or raw direct-tool output, compiled DAG, executed result, all three valid sampling seeds, retries, tokens, P50/P95 latency, peak GPU memory, Slurm resources, hashes, and failures separately.",
+  "promotion_rule": "Every candidate threshold must pass; otherwise the Singapore loopback service remains deterministic. Passing permits a loopback gate only and does not enable a public or production model planner."
+}

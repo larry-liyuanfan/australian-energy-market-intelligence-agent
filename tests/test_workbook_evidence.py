@@ -84,6 +84,8 @@ def test_typed_tool_routes_workbook_chart_without_exposing_a_file_path() -> None
     )
     assert result.evidence[0].modality == "chart"
     assert result.evidence[0].asset_id == "qed-figure-002-image-001"
+    assert result.evidence[0].figure_id == "Figure 2"
+    assert result.evidence[0].source_cell_preview
     assert "path" not in result.evidence[0].model_dump()
 
 

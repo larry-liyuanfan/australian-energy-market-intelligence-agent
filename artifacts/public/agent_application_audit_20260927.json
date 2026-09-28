@@ -1,0 +1,828 @@
+{
+  "schema_version": "agent-application-archival-audit-v1",
+  "source_sha256": {
+    "predictions": "b67f56902e58305ab5bb771dfd0b3d0858aeeb5f17d510ca0c739f9044d21780",
+    "benchmark": "f46f5900c7a1ab4764b9ebe316e85601b32c5d5cdcbbf95107ffeba29c996d99",
+    "frozen_manifest": "bbcad7e6a7e0cc8e263c513b5ff731913db846c2c809d7dfcbc292ec2e5c96b5",
+    "p1_full_run": "a289fdac14e01d93d9748672496cde4a0710d2104efc484723a5aabfa67fbd61",
+    "p1_compact": "b8a6fd0aaa5788a5a3004822e5cf8ec7f8846cba2bb24eadfd763b144e91cda4",
+    "p1_manifest": "7173c2877ec1a4789bf570a10de65c8c06fe81807045bde5b674bea7e428d6be",
+    "market": "9025d32d1d949dfc1e23329384428241a37e00131d306d3fe6478a898b209567",
+    "evidence": "9c56543061843f95b9eec85e62be5a1fec50dcc85e971197e0c50fbf00aee3cc",
+    "figures": "3fa2308d30c9ddd9e559680931a10af6472b8ad436b9f340b00629fb878c06a5",
+    "workbook": "5c2881adf33b78e3bd4e7772bbefd1461631208c6d6a6c14048cf815d83e08f9"
+  },
+  "holdout": {
+    "rows": 504,
+    "distinct_turns": 18,
+    "retained_payload_counts": {
+      "answer": 0,
+      "results": 0,
+      "citations": 0,
+      "resolved_constraints": 0
+    },
+    "definition": "Independent latest-turn structured request scope, including missing scoped tools. Not frozen task success or answer accuracy. Coverage tool accepts region only; report-query prose is not scope-scored.",
+    "answer_level_denominator": 0,
+    "unavailable": "No final answer text, citation objects, source-turn state or full schedules retained in these 504 rows; cannot retrospectively verify 18-turn answer semantics, citation grounding or cash flow.",
+    "by_path_memory": {
+      "constrained_hybrid|full_history": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 41,
+        "executed_complete_request_scope_matches": 54,
+        "executed_mismatch_observations": {},
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 33
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 21
+          }
+        },
+        "latency_p50_seconds": 7.852824015542865,
+        "latency_p95_seconds": 17.86464731581509,
+        "mean_tool_attempts": 3.388888888888889,
+        "model_requests": 60,
+        "replans": 6,
+        "tool_retries": 6,
+        "prompt_tokens": 168663,
+        "completion_tokens": 11545
+      },
+      "constrained_hybrid|no_memory": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 26,
+        "executed_complete_request_scope_matches": 30,
+        "executed_mismatch_observations": {
+          "compare_region_period:regions": 3,
+          "compare_region_period:window": 3,
+          "missing:compare_region_period": 6,
+          "detect_price_events:window": 9,
+          "forecast_price_risk:window": 9,
+          "missing:get_market_snapshot": 12,
+          "missing:optimize_battery_dispatch": 9,
+          "missing:detect_price_events": 3,
+          "missing:forecast_price_risk": 3,
+          "detect_price_events:region": 3
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 15
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 15
+          }
+        },
+        "latency_p50_seconds": 7.56362090818584,
+        "latency_p95_seconds": 21.71409417875111,
+        "mean_tool_attempts": 3.4444444444444446,
+        "model_requests": 96,
+        "replans": 42,
+        "tool_retries": 42,
+        "prompt_tokens": 208014,
+        "completion_tokens": 13254
+      },
+      "constrained_hybrid|sliding_window": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 41,
+        "executed_complete_request_scope_matches": 51,
+        "executed_mismatch_observations": {
+          "detect_price_events:window": 3,
+          "forecast_price_risk:window": 3,
+          "missing:get_market_snapshot": 3,
+          "missing:optimize_battery_dispatch": 3
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 30
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 21
+          }
+        },
+        "latency_p50_seconds": 7.857522347941995,
+        "latency_p95_seconds": 23.551124054938555,
+        "mean_tool_attempts": 3.4444444444444446,
+        "model_requests": 66,
+        "replans": 12,
+        "tool_retries": 12,
+        "prompt_tokens": 194391,
+        "completion_tokens": 12145
+      },
+      "constrained_hybrid|structured_state": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 39,
+        "executed_complete_request_scope_matches": 54,
+        "executed_mismatch_observations": {},
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 33
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 21
+          }
+        },
+        "latency_p50_seconds": 5.820418259128928,
+        "latency_p95_seconds": 22.56729666888714,
+        "mean_tool_attempts": 3.388888888888889,
+        "model_requests": 60,
+        "replans": 6,
+        "tool_retries": 6,
+        "prompt_tokens": 166923,
+        "completion_tokens": 10424
+      },
+      "deterministic|full_history": {
+        "rows": 18,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": null,
+        "executed_complete_request_scope_matches": 18,
+        "executed_mismatch_observations": {},
+        "by_track": {
+          "real_task": {
+            "rows": 11,
+            "executed_scope_matches": 11
+          },
+          "fault_injected": {
+            "rows": 7,
+            "executed_scope_matches": 7
+          }
+        },
+        "latency_p50_seconds": 0.22809298895299435,
+        "latency_p95_seconds": 0.8007906395941973,
+        "mean_tool_attempts": 3.388888888888889,
+        "model_requests": 0,
+        "replans": 0,
+        "tool_retries": 2,
+        "prompt_tokens": 0,
+        "completion_tokens": 0
+      },
+      "deterministic|no_memory": {
+        "rows": 18,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": null,
+        "executed_complete_request_scope_matches": 10,
+        "executed_mismatch_observations": {
+          "compare_region_period:regions": 1,
+          "compare_region_period:window": 1,
+          "missing:compare_region_period": 2,
+          "detect_price_events:window": 3,
+          "forecast_price_risk:window": 3,
+          "missing:get_market_snapshot": 4,
+          "missing:optimize_battery_dispatch": 3,
+          "missing:detect_price_events": 1,
+          "missing:forecast_price_risk": 1,
+          "detect_price_events:region": 1
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 11,
+            "executed_scope_matches": 5
+          },
+          "fault_injected": {
+            "rows": 7,
+            "executed_scope_matches": 5
+          }
+        },
+        "latency_p50_seconds": 0.24631214700639248,
+        "latency_p95_seconds": 0.7874950487166643,
+        "mean_tool_attempts": 3.4444444444444446,
+        "model_requests": 0,
+        "replans": 0,
+        "tool_retries": 14,
+        "prompt_tokens": 0,
+        "completion_tokens": 0
+      },
+      "deterministic|sliding_window": {
+        "rows": 18,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": null,
+        "executed_complete_request_scope_matches": 17,
+        "executed_mismatch_observations": {
+          "detect_price_events:window": 1,
+          "forecast_price_risk:window": 1,
+          "missing:get_market_snapshot": 1,
+          "missing:optimize_battery_dispatch": 1
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 11,
+            "executed_scope_matches": 10
+          },
+          "fault_injected": {
+            "rows": 7,
+            "executed_scope_matches": 7
+          }
+        },
+        "latency_p50_seconds": 0.23997986875474453,
+        "latency_p95_seconds": 0.7750800717622042,
+        "mean_tool_attempts": 3.4444444444444446,
+        "model_requests": 0,
+        "replans": 0,
+        "tool_retries": 4,
+        "prompt_tokens": 0,
+        "completion_tokens": 0
+      },
+      "deterministic|structured_state": {
+        "rows": 18,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": null,
+        "executed_complete_request_scope_matches": 18,
+        "executed_mismatch_observations": {},
+        "by_track": {
+          "real_task": {
+            "rows": 11,
+            "executed_scope_matches": 11
+          },
+          "fault_injected": {
+            "rows": 7,
+            "executed_scope_matches": 7
+          }
+        },
+        "latency_p50_seconds": 0.23514587804675102,
+        "latency_p95_seconds": 0.7873621806502342,
+        "mean_tool_attempts": 3.388888888888889,
+        "model_requests": 0,
+        "replans": 0,
+        "tool_retries": 2,
+        "prompt_tokens": 0,
+        "completion_tokens": 0
+      },
+      "pure_llm|full_history": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 41,
+        "executed_complete_request_scope_matches": 41,
+        "executed_mismatch_observations": {
+          "optimize_battery_dispatch:plan_settlement_separation": 1,
+          "missing:detect_price_events": 9,
+          "missing:forecast_price_risk": 6,
+          "missing:get_market_snapshot": 12
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 26
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 15
+          }
+        },
+        "latency_p50_seconds": 7.40391892939806,
+        "latency_p95_seconds": 21.350154526531696,
+        "mean_tool_attempts": 2.4444444444444446,
+        "model_requests": 60,
+        "replans": 6,
+        "tool_retries": 6,
+        "prompt_tokens": 156226,
+        "completion_tokens": 11796
+      },
+      "pure_llm|no_memory": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 26,
+        "executed_complete_request_scope_matches": 26,
+        "executed_mismatch_observations": {
+          "compare_region_period:regions": 3,
+          "compare_region_period:window": 3,
+          "missing:compare_region_period": 6,
+          "optimize_battery_dispatch:plan_settlement_separation": 1,
+          "missing:detect_price_events": 9,
+          "missing:forecast_price_risk": 12,
+          "missing:get_market_snapshot": 15,
+          "missing:optimize_battery_dispatch": 9,
+          "detect_price_events:window": 3
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 14
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 12
+          }
+        },
+        "latency_p50_seconds": 5.579888019710779,
+        "latency_p95_seconds": 21.744616037234664,
+        "mean_tool_attempts": 2.388888888888889,
+        "model_requests": 81,
+        "replans": 27,
+        "tool_retries": 27,
+        "prompt_tokens": 175262,
+        "completion_tokens": 13650
+      },
+      "pure_llm|sliding_window": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 38,
+        "executed_complete_request_scope_matches": 38,
+        "executed_mismatch_observations": {
+          "optimize_battery_dispatch:plan_settlement_separation": 1,
+          "missing:detect_price_events": 9,
+          "missing:forecast_price_risk": 9,
+          "missing:get_market_snapshot": 15,
+          "detect_price_events:window": 3,
+          "missing:optimize_battery_dispatch": 3
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 23
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 15
+          }
+        },
+        "latency_p50_seconds": 7.383286472409964,
+        "latency_p95_seconds": 22.663380227982998,
+        "mean_tool_attempts": 2.5555555555555554,
+        "model_requests": 66,
+        "replans": 12,
+        "tool_retries": 12,
+        "prompt_tokens": 168805,
+        "completion_tokens": 12063
+      },
+      "pure_llm|structured_state": {
+        "rows": 54,
+        "distinct_turns": 18,
+        "initial_complete_request_scope_matches": 39,
+        "executed_complete_request_scope_matches": 39,
+        "executed_mismatch_observations": {
+          "missing:detect_price_events": 9,
+          "missing:forecast_price_risk": 6,
+          "missing:get_market_snapshot": 15
+        },
+        "by_track": {
+          "real_task": {
+            "rows": 33,
+            "executed_scope_matches": 27
+          },
+          "fault_injected": {
+            "rows": 21,
+            "executed_scope_matches": 12
+          }
+        },
+        "latency_p50_seconds": 5.267252007499337,
+        "latency_p95_seconds": 21.358719024807215,
+        "mean_tool_attempts": 2.0555555555555554,
+        "model_requests": 60,
+        "replans": 6,
+        "tool_retries": 6,
+        "prompt_tokens": 156701,
+        "completion_tokens": 10429
+      }
+    },
+    "examples": [
+      {
+        "case_id": "v3-regional-edit",
+        "turn_index": 2,
+        "path": "deterministic",
+        "seed": 0,
+        "expected": {
+          "regions": [
+            "SA1",
+            "QLD1"
+          ],
+          "date": "2025-11-07"
+        },
+        "initial_scope_errors": null,
+        "executed_scope_errors": [],
+        "executed_scoped_arguments": [
+          {
+            "name": "compare_region_period",
+            "arguments": {
+              "regions": [
+                "SA1",
+                "QLD1"
+              ],
+              "window": {
+                "end": "2025-11-08T00:00:00+10:00",
+                "start": "2025-11-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case_id": "v3-battery-horizon",
+        "turn_index": 3,
+        "path": "deterministic",
+        "seed": 0,
+        "expected": {
+          "region": "NSW1",
+          "date": "2026-02-07",
+          "battery_power_mw": 1.5,
+          "battery_energy_mwh": 3,
+          "round_trip_efficiency": 0.87
+        },
+        "initial_scope_errors": null,
+        "executed_scope_errors": [],
+        "executed_scoped_arguments": [
+          {
+            "name": "get_market_snapshot",
+            "arguments": {
+              "at": "2026-02-07T00:00:00+10:00",
+              "region": "NSW1"
+            }
+          },
+          {
+            "name": "detect_price_events",
+            "arguments": {
+              "region": "NSW1",
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          },
+          {
+            "name": "forecast_price_risk",
+            "arguments": {
+              "horizon_intervals": 288,
+              "region": "NSW1",
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          },
+          {
+            "name": "optimize_battery_dispatch",
+            "arguments": {
+              "battery": {
+                "energy_mwh": 3.0,
+                "power_mw": 1.5,
+                "round_trip_efficiency": 0.87
+              },
+              "region": "NSW1",
+              "settlement_mode": "historical_replay",
+              "variable_degradation_cost_aud_per_mwh_discharged": 50.0,
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case_id": "v3-regional-edit",
+        "turn_index": 2,
+        "path": "pure_llm",
+        "seed": 17,
+        "expected": {
+          "regions": [
+            "SA1",
+            "QLD1"
+          ],
+          "date": "2025-11-07"
+        },
+        "initial_scope_errors": [],
+        "executed_scope_errors": [],
+        "executed_scoped_arguments": [
+          {
+            "name": "compare_region_period",
+            "arguments": {
+              "regions": [
+                "SA1",
+                "QLD1"
+              ],
+              "window": {
+                "end": "2025-11-08T00:00:00+10:00",
+                "start": "2025-11-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case_id": "v3-battery-horizon",
+        "turn_index": 3,
+        "path": "pure_llm",
+        "seed": 17,
+        "expected": {
+          "region": "NSW1",
+          "date": "2026-02-07",
+          "battery_power_mw": 1.5,
+          "battery_energy_mwh": 3,
+          "round_trip_efficiency": 0.87
+        },
+        "initial_scope_errors": [
+          "missing:detect_price_events",
+          "missing:forecast_price_risk",
+          "missing:get_market_snapshot"
+        ],
+        "executed_scope_errors": [
+          "missing:detect_price_events",
+          "missing:forecast_price_risk",
+          "missing:get_market_snapshot"
+        ],
+        "executed_scoped_arguments": [
+          {
+            "name": "optimize_battery_dispatch",
+            "arguments": {
+              "battery": {
+                "energy_mwh": 3.0,
+                "initial_soc_fraction": 0.5,
+                "max_soc_fraction": 0.9,
+                "min_soc_fraction": 0.1,
+                "power_mw": 1.5,
+                "round_trip_efficiency": 0.87,
+                "terminal_soc_fraction": 0.5
+              },
+              "objective": "forecast",
+              "region": "NSW1",
+              "settlement_mode": "historical_replay",
+              "variable_degradation_cost_aud_per_mwh_discharged": 0.0,
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case_id": "v3-regional-edit",
+        "turn_index": 2,
+        "path": "constrained_hybrid",
+        "seed": 17,
+        "expected": {
+          "regions": [
+            "SA1",
+            "QLD1"
+          ],
+          "date": "2025-11-07"
+        },
+        "initial_scope_errors": [],
+        "executed_scope_errors": [],
+        "executed_scoped_arguments": [
+          {
+            "name": "compare_region_period",
+            "arguments": {
+              "regions": [
+                "SA1",
+                "QLD1"
+              ],
+              "window": {
+                "end": "2025-11-08T00:00:00+10:00",
+                "start": "2025-11-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "case_id": "v3-battery-horizon",
+        "turn_index": 3,
+        "path": "constrained_hybrid",
+        "seed": 17,
+        "expected": {
+          "region": "NSW1",
+          "date": "2026-02-07",
+          "battery_power_mw": 1.5,
+          "battery_energy_mwh": 3,
+          "round_trip_efficiency": 0.87
+        },
+        "initial_scope_errors": [
+          "missing:detect_price_events",
+          "missing:forecast_price_risk",
+          "missing:get_market_snapshot"
+        ],
+        "executed_scope_errors": [],
+        "executed_scoped_arguments": [
+          {
+            "name": "get_market_snapshot",
+            "arguments": {
+              "at": "2026-02-07T00:00:00+10:00",
+              "region": "NSW1"
+            }
+          },
+          {
+            "name": "detect_price_events",
+            "arguments": {
+              "region": "NSW1",
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          },
+          {
+            "name": "forecast_price_risk",
+            "arguments": {
+              "horizon_intervals": 288,
+              "region": "NSW1",
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          },
+          {
+            "name": "optimize_battery_dispatch",
+            "arguments": {
+              "battery": {
+                "energy_mwh": 3.0,
+                "power_mw": 1.5,
+                "round_trip_efficiency": 0.87
+              },
+              "region": "NSW1",
+              "settlement_mode": "historical_replay",
+              "variable_degradation_cost_aud_per_mwh_discharged": 50.0,
+              "window": {
+                "end": "2026-02-08T00:00:00+10:00",
+                "start": "2026-02-07T00:00:00+10:00"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "p1": {
+    "case_denominator": 1,
+    "archived_natural_language_answer_count": 0,
+    "checks": {
+      "power_limits": true,
+      "charge_discharge_exclusive": true,
+      "soc_limits": true,
+      "initial_terminal_soc": true,
+      "energy_balance": true,
+      "complete_unique_day": true,
+      "question_constraints_match_executed_plan": true,
+      "compact_question_scope_matches": true,
+      "trace_identity": true,
+      "forecast_as_of": true,
+      "forecast_signal_snapshot_and_cutoff_identity": true,
+      "schedule_hash": true,
+      "compact_planned_gross_aud": true,
+      "compact_realised_gross_aud": true,
+      "compact_sensitivity_cost_aud": true,
+      "compact_planned_operating_proxy_aud": true,
+      "compact_realised_operating_proxy_aud": true,
+      "tool_plan_cashflow": true,
+      "tool_realised_cashflow": true,
+      "market_summary": true,
+      "all_citations_locate_in_archived_source_records": true
+    },
+    "checks_passed": 21,
+    "checks_total": 21,
+    "calculation": {
+      "intervals": 288,
+      "max_energy_residual_mwh": 2.220446049250313e-16,
+      "planned_gross_aud": 253.38183219678984,
+      "realised_gross_aud": 477.794477296025,
+      "sensitivity_cost_aud": 75.89466384404109,
+      "planned_operating_proxy_aud": 177.48716835274877,
+      "realised_operating_proxy_aud": 401.8998134519839,
+      "discharged_mwh": 1.5178932768808218
+    },
+    "battery_default_boundary": "Missing optional fields in retained calls are resolved with the existing BatterySpec defaults; this is effective executed input, not evidence the model explicitly proposed those values.",
+    "citations": [
+      {
+        "evidence_id": "aemo-qed-q4-2025-figure-012",
+        "display_role": "visible_evidence",
+        "checks": {
+          "official_url_and_record": true,
+          "source_digest_matches": true,
+          "figure_id_matches": true,
+          "asset_digest_matches_manifest": true,
+          "preview_rows_locate_in_source": true
+        }
+      },
+      {
+        "evidence_id": "aemo-qed-q4-2025-0040",
+        "display_role": "visible_evidence",
+        "checks": {
+          "official_url_and_record": true,
+          "source_digest_matches": true,
+          "excerpt_locates_in_source_chunk": true
+        }
+      },
+      {
+        "evidence_id": "aemo-qed-q4-2025-figure-011",
+        "display_role": "visible_evidence",
+        "checks": {
+          "official_url_and_record": true,
+          "source_digest_matches": true,
+          "figure_id_matches": true,
+          "asset_digest_matches_manifest": true,
+          "preview_rows_locate_in_source": true
+        }
+      },
+      {
+        "evidence_id": "aemo-qed-q4-2025-0024",
+        "display_role": "source_link_only",
+        "checks": {
+          "official_url_and_record": true,
+          "source_digest_matches": true
+        }
+      },
+      {
+        "evidence_id": "aemo-qed-q4-2025-figure-023",
+        "display_role": "visible_evidence",
+        "checks": {
+          "official_url_and_record": true,
+          "source_digest_matches": true,
+          "figure_id_matches": true,
+          "asset_digest_matches_manifest": true,
+          "preview_rows_locate_in_source": true
+        }
+      }
+    ],
+    "citation_count": 5,
+    "citation_denominators": {
+      "source_records": 5,
+      "visible_text_excerpts": 1,
+      "figure_previews": 3,
+      "source_link_only": 1
+    },
+    "limitations": [
+      "Source-record location is not semantic entailment or day-specific causal support.",
+      "PDF page numbers and original spreadsheet coordinates are absent; do not invent them.",
+      "No optimiser rerun; this validates the recorded schedule, not optimality or oracle regret."
+    ],
+    "sourced_constraints": {
+      "regions": {
+        "key": "regions",
+        "value": [
+          "SA1"
+        ],
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "region": {
+        "key": "region",
+        "value": "SA1",
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "dates": {
+        "key": "dates",
+        "value": [
+          "2025-12-15"
+        ],
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "battery_power_mw": {
+        "key": "battery_power_mw",
+        "value": 1.0,
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "battery_energy_mwh": {
+        "key": "battery_energy_mwh",
+        "value": 2.0,
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "intent": {
+        "key": "intent",
+        "value": "decision replay",
+        "source_turn": 1,
+        "source_type": "user"
+      },
+      "evidence_modality": {
+        "key": "evidence_modality",
+        "value": "chart",
+        "source_turn": 1,
+        "source_type": "user"
+      }
+    },
+    "memory_boundary": "One-turn sourced state. Efficiency 90% matches the question/executed plan but has no separately retained source-turn constraint; multi-turn attribution is not proven by this case.",
+    "model_accepted_stages": 2,
+    "runtime_owned_stages": 4,
+    "metrics": {
+      "provider": "llama_cpp_local",
+      "model": "Qwen3-8B-Q4_K_M.gguf",
+      "seed": 17,
+      "prompt_tokens": 2423,
+      "completion_tokens": 510,
+      "provider_cost_aud": 0.0,
+      "planner_latency_ms": 17598.04280102253,
+      "end_to_end_latency_ms": 18383.670872077346,
+      "steps": 6,
+      "retries": 0,
+      "replans": 0,
+      "rejected_model_calls": 0,
+      "unsafe_tool_or_dsl_calls": 0,
+      "duplicate_calls": 0,
+      "fallback_calls": 3
+    }
+  },
+  "boundary": "Post-hoc independent archival business checks; no model calls, score rewriting, new labels, optimisation or promotion."
+}
